@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Pasteur Inventory</title>
+    <!-- Tailwind CSS para design moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca QRCode.js para geração de QR Codes de forma rápida e offline -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* Estilos de impressão personalizados para isolar a etiqueta ou o relatório */
+        @media print {
+            body * { visibility: hidden !important; }
+            .print-active, .print-active * { visibility: visible !important; }
+            .print-active { 
+                position: absolute !important; 
+                left: 50% !important; 
+                top: 50% !important; 
+                transform: translate(-50%, -50%) !important; 
+                width: 100% !important; 
+                max-width: 320px !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .no-print { display: none !important; }
+        }
+        
+        /* Animação de erro na digitação de senha */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .error-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
+
+    <!-- TELA DE LOGIN E SEGURANÇA BLOQUEADA -->
+    <div id="telaLogin" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-[9999] transition-all duration-300">
+        <div class="bg-white p-8 rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 text-center mx-4">
+            <!-- Logótipo Pasteur em Destaque na Tela de Segurança -->
+            <div class="flex justify-center mb-6">
+                <svg class="w-16 h-18" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 10C50 10 90 60 90 80C90 102.091 72.0914 120 50 120C27.9086 120 10 102.091 10 80C10 60 50 10 50 10Z" fill="#9ada55" />
+                </svg>
+            </div>
+            
+            <div class="flex flex-col mb-4">
+                <span class="text-3xl font-extrabold tracking-tight text-[#9ada55] leading-none" style="font-family: 'Arial Rounded MT Bold', 'Nunito', system-ui, sans-serif;">PASTEUR</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] text-[#85bc4b] uppercase mt-2 leading-none">Controlo de Ativos</span>
+            </div>
+
+            <!-- Divisor sutil -->
+            <div class="h-[2px] bg-[#9ada55]/20 w-1/3 mx-auto my-4 rounded-full"></div>
+
+            <!-- Caixa de Entrada de Credenciais Dinâmica -->
+            <div id="containerConfigSenha" class="hidden">
+                <h3 class="text-base font-bold text-slate-800 mb-1">Configuração de Segurança Inicial</h3>
+                <p class="text-xs text-slate-500 mb-5">Defina uma senha mestre para restringir e proteger o inventário deste dispositivo.</p>
+                
+                <div class="space-y-3 text-left">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nova Senha de Acesso</label>
+                        <input type="password" id="inputNovaSenha" placeholder="Mínimo 4 caracteres" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#9ada55]">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Confirmar Senha</label>
+                        <input type="password" id="inputNovaSenhaConfirmar" placeholder="Repita a senha mestre" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#9ada55]">
+                    </div>
+                    <button onclick="definirSenhaInicial()" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 rounded-lg text-xs transition duration-200 mt-2 cursor-pointer shadow-md">
+                        Salvar e Acessar Sistema
+                    </button>
+                </div>
+            </div>
+
+            <div id="containerDesbloqueio" class="hidden">
+                <h3 class="text-base font-bold text-slate-800 mb-1">Acesso Restrito</h3>
+                <p class="text-xs text-slate-500 mb-5">Insira a senha de administrador do Lab Pasteur para prosseguir.</p>
+                
+                <form id="formAcessoSeguro" onsubmit="validarAcesso(event)" class="space-y-3 text-left">
+                    <div class="relative">
+                        <input type="password" id="inputSenhaAcesso" required placeholder="Digite a senha mestre" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#9ada55] pr-10 text-center font-mono tracking-widest">
+                        <span class="absolute inset-y-0 right-3 flex items-center text-slate-400">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </span>
+                    </div>
+                    <div id="mensagemErroAcesso" class="text-[11px] text-rose-500 font-bold text-center hidden">Senha incorreta. Tente novamente!</div>
+                    <button type="submit" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-xs transition duration-200 cursor-pointer shadow-md">
+                        Desbloquear Sistema
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL DO INVENTÁRIO -->
+    <div class="max-w-6xl mx-auto px-4 py-6 md:py-8">
+        <!-- Cabeçalho com o Logótipo do Lab Pasteur em SVG HD -->
+        <header class="mb-6 md:mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <!-- Logótipo Pasteur Recriado em SVG -->
+                <div class="flex items-center gap-3">
+                    <svg class="w-10 h-12 md:w-12 md:h-14" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Gota Verde Pasteur -->
+                        <path d="M50 10C50 10 90 60 90 80C90 102.091 72.0914 120 50 120C27.9086 120 10 102.091 10 80C10 60 50 10 50 10Z" fill="#9ada55" />
+                    </svg>
+                    <div class="flex flex-col">
+                        <span class="text-2xl md:text-3xl font-extrabold tracking-tight text-[#9ada55] leading-none" style="font-family: 'Arial Rounded MT Bold', 'Nunito', system-ui, sans-serif;">PASTEUR</span>
+                        <span class="text-[9px] md:text-[10px] font-bold tracking-[0.25em] text-[#85bc4b] uppercase mt-1 leading-none">Análises Clínicas</span>
+                    </div>
+                </div>
+                <div class="border-l border-slate-300 pl-4 h-8 flex items-center">
+                    <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Inventory</span>
+                </div>
+            </div>
+            
+            <!-- Abas de Navegação Personalizadas e Botão de Bloqueio -->
+            <div class="flex items-center bg-slate-200 p-1 rounded-lg self-start md:self-center overflow-x-auto max-w-full gap-1">
+                <button onclick="mudarAba('inventario')" id="btnAbaInventario" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap">
+                    Inventário
+                </button>
+                <button onclick="mudarAba('relatorios')" id="btnAbaRelatorios" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap">
+                    Relatórios
+                </button>
+                <button onclick="mudarAba('config')" id="btnAbaConfig" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap">
+                    Configurações
+                </button>
+                
+                <!-- Botão de Bloqueio Rápido de Segurança -->
+                <button onclick="bloquearTelaManualmente()" title="Bloquear Tela (Segurança)" class="p-1.5 rounded-md text-slate-500 hover:text-rose-600 hover:bg-slate-300/50 transition cursor-pointer flex items-center">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Mensagens de Feedback Personalizadas -->
+        <div id="alertaFeedback" class="hidden mb-6 p-4 rounded-lg text-sm flex items-center justify-between transition-all duration-300">
+            <span id="textoAlerta">Operação realizada com sucesso!</span>
+            <button onclick="fecharAlerta()" class="font-bold text-lg leading-none hover:opacity-75">&times;</button>
+        </div>
+
+        <!-- ABA DO INVENTÁRIO -->
+        <div id="abaInventario" class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            <!-- Formulário de Registro -->
+            <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1 h-fit">
+                <h2 class="text-lg font-bold mb-4 text-slate-950 border-l-4 border-[#9ada55] pl-3">Novo Equipamento</h2>
+                
+                <form id="formInventario" class="space-y-4">
+                    <!-- Código de Referência e Numeração Autocompletável -->
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Cód. Referência *</label>
+                            <select id="refCodigo" required onchange="calcularProximoNumeroRef()" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs bg-white font-mono font-bold text-slate-700">
+                                <option value="" disabled selected>Sigla...</option>
+                                <option value="ESTERI">ESTERI</option>
+                                <option value="MMICRO">MMICRO</option>
+                                <option value="BAL">BAL</option>
+                                <option value="BAN">BAN</option>
+                                <option value="CAM">CAM</option>
+                                <option value="CENTRI">CENTRI</option>
+                                <option value="GAS">GAS</option>
+                                <option value="MBIO">MBIO</option>
+                                <option value="CPU">CPU</option>
+                                <option value="EST">EST</option>
+                                <option value="ETIQ">ETIQ</option>
+                                <option value="GEL">GEL</option>
+                                <option value="BIOMOL">BIOMOL</option>
+                                <option value="IMP">IMP</option>
+                                <option value="LEICARD">LEICARD</option>
+                                <option value="LEITOR">LEITOR</option>
+                                <option value="TEL">TEL</option>
+                                <option value="MON">MON</option>
+                                <option value="ATEN">ATEN</option>
+                                <option value="NOB">NOB</option>
+                                <option value="NOTE">NOTE</option>
+                                <option value="MIM">MIM</option>
+                                <option value="WIFI">WIFI</option>
+                                <option value="MHEM">MHEM</option>
+                                <option value="SWITCH">SWITCH</option>
+                                <option value="TABLET">TABLET</option>
+                                <option value="URI">URI</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Numeração *</label>
+                            <input type="text" id="refNumero" required placeholder="Ex: 001" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs font-mono font-bold text-slate-700">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Nome do Equipamento *</label>
+                            <button type="button" onclick="abrirModalOpcao('equipamento')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                </svg>
+                                Criar Novo
+                            </button>
+                        </div>
+                        <select id="nome" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
+                            <!-- Preenchido via JS -->
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Marca / Modelo</label>
+                            <input type="text" id="marca" placeholder="Ex: Eppendorf 5424" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Nº de Série *</label>
+                            <input type="text" id="serie" required placeholder="Ex: SN-5424-09" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Categoria</label>
+                        <select id="categoria" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
+                            <option value="Equipamento Laboratorial">Equipamento Laboratorial</option>
+                            <option value="TI / Informática">TI / Informática</option>
+                            <option value="Refrigeração / Conservação">Refrigeração / Conservação</option>
+                            <option value="Mobiliário Clínico">Mobiliário Clínico</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Setor / Sala *</label>
+                                <button type="button" onclick="abrirModalOpcao('setor')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                                        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                    </svg>
+                                    Novo
+                                </button>
+                            </div>
+                            <select id="setor" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
+                                <!-- Preenchido via JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Responsável</label>
+                            <input type="text" id="responsavel" placeholder="Ex: Dr. Antunes" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Data Aquisição</label>
+                            <input type="date" id="dataAquisicao" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Estado</label>
+                            <select id="status" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
+                                <option value="Ativo">Ativo</option>
+                                <option value="Manutenção">Em Manutenção</option>
+                                <option value="Abatido">Abatido / Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação do Formulário -->
+                    <div class="grid grid-cols-2 gap-3 mt-2">
+                        <button type="submit" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition duration-200 text-sm cursor-pointer">
+                            Registrar Item
+                        </button>
+                        <button type="button" onclick="limparFormulario()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 px-4 rounded-lg border border-slate-200 transition duration-200 text-sm cursor-pointer text-center">
+                            Limpar Campos
+                        </button>
+                    </div>
+
+                    <button type="button" onclick="abrirModalLote()" class="w-full mt-2 bg-slate-50 hover:bg-slate-100 text-[#85bc4b] border border-dashed border-[#9ada55] font-bold py-2 px-4 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Importação em Massa / Lote (Excel)
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tabela de Itens Cadastrados -->
+            <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-slate-900 border-l-4 border-[#9ada55] pl-3">Equipamentos Registrados</h2>
+                        <span id="contadorItens" class="bg-[#9ada55]/10 text-[#85bc4b] text-xs font-bold px-2.5 py-1 rounded-full">0 Itens</span>
+                    </div>
+                    <!-- Barra de pesquisa rápida com botão de limpar -->
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" id="buscaEquipamento" oninput="filtrarTabela()" placeholder="Pesquisar por nome, sigla ou série..." class="w-full pr-8 pl-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs">
+                        <button type="button" onclick="limparBusca()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold font-mono">×</button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto rounded-lg border border-slate-100">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                            <tr>
+                                <th class="px-4 py-3">Referência / Equipamento</th>
+                                <th class="px-4 py-3">Nº Série</th>
+                                <th class="px-4 py-3">Sala / Setor</th>
+                                <th class="px-4 py-3">Estado</th>
+                                <th class="px-4 py-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaItens" class="divide-y divide-slate-200">
+                            <!-- Preenchido via Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA DE RELATÓRIOS E ANÁLISES -->
+        <div id="abaRelatorios" class="hidden space-y-6">
+            <!-- Painel de KPIs de Resumo -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Equipamentos</p>
+                    <h3 id="kpiTotal" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-[#85bc4b]">Equipamentos Ativos</p>
+                    <h3 id="kpiAtivos" class="text-2xl font-bold text-[#85bc4b] mt-1">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-amber-600">Em Manutenção</p>
+                    <h3 id="kpiManutencao" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-rose-600">Equipamentos Abatidos</p>
+                    <h3 id="kpiAbatidos" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+                </div>
+            </div>
+
+            <!-- Distribuições e Ações Rápidas -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Gráficos de barras simplificados por Categoria -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 lg:col-span-2 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-l-4 border-[#9ada55] pl-2">Distribuição por Categoria</h3>
+                    <div id="distribuicaoCategorias" class="space-y-3">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+
+                <!-- Painel de Exportação e Ações -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-l-4 border-[#9ada55] pl-2">Extração de Relatórios</h3>
+                    <p class="text-xs text-slate-500">Exporte ou faça a impressão consolidada do estado atual da folha de inventário físico do laboratório.</p>
+                    
+                    <div class="space-y-2 pt-2">
+                        <button onclick="exportarCSV()" class="w-full flex items-center justify-center gap-2 bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            Exportar para Excel (CSV)
+                        </button>
+                        
+                        <button onclick="prepararImpressaoRelatorio()" class="w-full flex items-center justify-center gap-2 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.615 0-1.101-.491-1.106-1.106L6.34 18m11.32 0a48.52 48.52 0 00-.74-10.384M6.34 18a48.52 48.52 0 01.74-10.384m0 0l.23-2.522A1.125 1.125 0 018.43 4.1h7.14a1.125 1.125 0 011.114 1.007l.23 2.522M6.34 18h11.32" />
+                            </svg>
+                            Imprimir Relatório Completo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relatório Geral Dinâmico na Tela -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-l-4 border-[#9ada55] pl-2">Relatório de Itens em Tela</h3>
+                        <p class="text-xs text-slate-400 mt-1">Visualize, filtre e audite todos os registros sem precisar imprimir.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <select id="filtroStatusRelatorio" onchange="filtrarRelatorioTela()" class="flex-1 md:flex-none px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
+                            <option value="Todos">Todos os Estados</option>
+                            <option value="Ativo">Ativo</option>
+                            <option value="Manutenção">Em Manutenção</option>
+                            <option value="Abatido">Abatido / Inativo</option>
+                        </select>
+                        <select id="filtroSetorRelatorio" onchange="filtrarRelatorioTela()" class="flex-1 md:flex-none px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
+                            <option value="Todos">Todos os Setores</option>
+                            <!-- Preenchido via JS -->
+                        </select>
+                        <button onclick="imprimirSelecaoRelatorio()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm1 9H6v3h8v-3z" clip-rule="evenodd" />
+                            </svg>
+                            Imprimir Seleção
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-slate-200 max-h-96">
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 sticky top-0 z-10">
+                            <tr>
+                                <th class="px-3 py-3">Patrimônio / Sigla</th>
+                                <th class="px-3 py-3">Equipamento</th>
+                                <th class="px-3 py-3">Marca/Modelo</th>
+                                <th class="px-3 py-3">Série</th>
+                                <th class="px-3 py-3">Setor/Localização</th>
+                                <th class="px-3 py-3">Responsável</th>
+                                <th class="px-3 py-3">Aquisição</th>
+                                <th class="px-3 py-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaRelatorioTelaCorpo" class="divide-y divide-slate-200">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA DE CONFIGURAÇÃO E CONFIGURAÇÃO DA PLANILHA -->
+        <div id="abaConfig" class="hidden max-w-2xl mx-auto space-y-6">
+            <!-- Painel Google Sheets -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-xl font-bold mb-2 text-slate-900 border-l-4 border-[#9ada55] pl-3">Ligação ao Google Sheets</h2>
+                <p class="text-slate-600 text-sm mb-6">Guarde backups automáticos de cada registro diretamente numa folha de cálculo online no seu Google Drive.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">URL de Implementação Web do Apps Script</label>
+                        <input type="text" id="inputUrlSheets" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm">
+                    </div>
+                    
+                    <button onclick="salvarConfigSheets()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 px-5 rounded-lg text-xs transition cursor-pointer">
+                        Guardar Configuração
+                    </button>
+                </div>
+            </div>
+
+            <!-- NOVO: Configurações de Segurança e Login -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-900 mb-2 border-l-4 border-[#85bc4b] pl-3">Controle de Acesso & Segurança</h3>
+                <p class="text-xs text-slate-500 mb-4">Gerencie as opções de login por senha para proteger as informações confidenciais de auditoria do Lab Pasteur.</p>
+                
+                <div class="space-y-4 pt-2">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">Exigir Senha para Acessar</span>
+                            <span class="text-[10px] text-slate-400">Ativa a barreira de bloqueio ao abrir ou recarregar a tela do app.</span>
+                        </div>
+                        <div>
+                            <button id="btnToggleSeguranca" onclick="alternarStatusSeguranca()" class="px-3 py-1.5 bg-[#9ada55] hover:bg-[#85bc4b] text-white text-xs font-bold rounded-lg transition">
+                                Ativo
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="secaoAlterarSenha" class="space-y-3 p-4 border border-slate-200 rounded-lg">
+                        <span class="text-xs font-bold text-slate-800 block">Alterar Senha do Administrador</span>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Senha Atual</label>
+                                <input type="password" id="inputSenhaConfigAtual" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#9ada55]">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nova Senha</label>
+                                <input type="password" id="inputSenhaConfigNova" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#9ada55]">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Confirmar Nova</label>
+                                <input type="password" id="inputSenhaConfigConfirmar" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#9ada55]">
+                            </div>
+                        </div>
+                        <button onclick="processarAlteracaoSenha()" class="bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-1.5 px-4 rounded-lg text-[10px] tracking-wide uppercase transition cursor-pointer">
+                            Confirmar Mudança de Senha
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Painel de Backup Manual (Ficheiro JSON) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-900 mb-1 border-l-4 border-[#9ada55] pl-3">Backup e Transferência entre Dispositivos</h3>
+                <p class="text-xs text-slate-500 mb-4">Exporte todo o seu inventário e configurações para um ficheiro. Pode enviar esse ficheiro por Email ou WhatsApp para outro computador ou telemóvel e importá-lo lá para sincronizar os dados.</p>
+                
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="exportarBackupJSON()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Exportar Ficheiro Backup (.json)
+                    </button>
+                    
+                    <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Importar Ficheiro Backup (.json)
+                        <input type="file" id="inputImportarBackup" accept=".json" onchange="importarBackupJSON(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Bloco para Limpeza de Cache / Dados Locais -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-rose-200">
+                <h3 class="text-sm font-bold text-rose-600 mb-1 border-l-4 border-rose-500 pl-3">Limpeza de Armazenamento (Cache local)</h3>
+                <p class="text-xs text-slate-500 mb-4">Caso possua dados antigos de teste ou queira remover todos os itens gravados localmente neste navegador para recomeçar do zero, utilize a opção abaixo.</p>
+                <button onclick="abrirModalReset()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                    Apagar Todo o Inventário Local
+                </button>
+            </div>
+
+            <!-- Tutorial Apps Script -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-950 mb-3">Como ativar no Google Sheets:</h3>
+                <ol class="list-decimal list-inside text-xs text-slate-600 space-y-3">
+                    <li>Crie uma nova folha de cálculo no Google Sheets e adicione os seguintes títulos na primeira linha:
+                        <div class="bg-slate-50 p-2 rounded-md font-mono text-[11px] text-[#85bc4b] border border-slate-100 my-1 overflow-x-auto">
+                            Referência | Nome | Marca | Série | Categoria | Setor | Responsável | Data | Estado
+                        </div>
+                    </li>
+                    <li>No menu superior do Google Sheets, clique em <strong>Extensões > Apps Script</strong>.</li>
+                    <li>Clique no botão abaixo para copiar o script de integração, apague qualquer código existente no editor do Google e cole-o lá.</li>
+                    <li>No canto superior direito, clique em <strong>Implementar > Nova implementação</strong>.</li>
+                    <li>Escolha o tipo <strong>Aplicação Web</strong>, mude o acesso para <strong>"Qualquer pessoa"</strong> e clique em <strong>Implementar</strong>.</li>
+                    <li>Copie o link gerado pelo Google e cole-o no campo de configuração acima.</li>
+                </ol>
+
+                <button onclick="copiarCodigoAppsScript()" class="mt-4 inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v4.125c0 .621.504 1.125 1.125 1.125H6.75m1.5 6h4.5a2.25 2.25 0 002.25-2.25V15" />
+                    </svg>
+                    Copiar Código do Apps Script
+                </button>
+            </div>
+        </div>
+
+        <!-- Rodapé de Atribuição e Créditos -->
+        <footer class="mt-16 pt-8 border-t border-slate-200 text-center no-print">
+            <p class="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                SISTEMA DESENVOLVIDO POR GILNEI MEIER - ANALISTA DE SISTEMAS
+            </p>
+            <p class="text-[10px] text-slate-400 mt-1.5">
+                &copy; 2026 Lab Pasteur • Gestão de Ativos & Controle de Inventário Físico
+            </p>
+        </footer>
+    </div>
+
+    <!-- MODAIS E POPUPS DO SISTEMA -->
+
+    <!-- MODAL DE CADASTRO RÁPIDO DE OPÇÕES -->
+    <div id="modalCadastroOpcao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-xl border border-slate-100">
+            <h3 id="modalOpcaoTitulo" class="text-lg font-bold text-slate-900 mb-1">Cadastrar Nova Opção</h3>
+            <p id="modalOpcaoDescricao" class="text-xs text-slate-500 mb-4">Insira o nome para adicionar à lista.</p>
+            
+            <div class="space-y-3 mb-5">
+                <input type="text" id="novoItemValor" placeholder="Digite o novo nome..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm uppercase">
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="salvarNovaOpcao()" class="flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Adicionar
+                </button>
+                <button onclick="fecharModalOpcao()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DO QR CODE (ETIQUETA) -->
+    <div id="modalQR" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div id="recipienteImpressaoEtiqueta" class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900 mb-1 no-print">Etiqueta Patrimonial</h3>
+            <p class="text-xs text-slate-400 mb-4 no-print">Lab Pasteur - Controlo Físico</p>
+            
+            <div id="areaImpressao" class="bg-white p-5 inline-block border-2 border-dashed border-slate-300 rounded-xl my-2 mx-auto">
+                <div class="text-center font-mono font-black text-xl text-[#85bc4b] border-b border-slate-100 pb-2 mb-3 tracking-wide" id="printReferencia"></div>
+                
+                <div id="canvasQR" class="flex justify-center mb-4"></div>
+                <div class="text-left text-[11px] font-mono text-slate-700 border-t border-slate-100 pt-3 space-y-1">
+                    <p class="truncate"><strong>LAB:</strong> PASTEUR</p>
+                    <p class="truncate"><strong>EQUI:</strong> <span id="printNome"></span></p>
+                    <p class="truncate"><strong>MOD:</strong> <span id="printMarca"></span></p>
+                    <p class="truncate"><strong>S/N:</strong> <span id="printSerie"></span></p>
+                    <p class="truncate"><strong>LOC:</strong> <span id="printSetor"></span></p>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-4 no-print">
+                <button onclick="dispararImpressaoEtiqueta()" class="flex-1 bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Imprimir
+                </button>
+                <button onclick="fecharModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+    <div id="modalExclusao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl">
+            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Pretende remover o item?</h3>
+            <p class="text-xs text-slate-500 mb-5">Esta ação irá apagar definitivamente o equipamento do armazenamento interno.</p>
+            
+            <div class="flex gap-3">
+                <button id="btnConfirmarExclusao" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Confirmar Exclusão
+                </button>
+                <button onclick="fecharModalExclusao()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE RESET COMPLETO -->
+    <div id="modalResetTotal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl">
+            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Apagar todo o inventário?</h3>
+            <p class="text-xs text-slate-500 mb-5">Atenção! Esta ação removerá definitivamente todos os equipamentos salvos neste navegador de forma irreversível.</p>
+            
+            <div class="flex gap-3">
+                <button onclick="executarResetTotal()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Apagar Tudo
+                </button>
+                <button onclick="fecharModalReset()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE IMPORTAÇÃO EM MASSA (EXCEL/CSV) -->
+    <div id="modalImportacaoLote" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-2xl w-full shadow-xl border border-slate-100 flex flex-col max-h-[90vh]">
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Importação em Lote</h3>
+            <p class="text-xs text-slate-500 mb-4">Cole dados copiados diretamente do Excel/Sheets ou envie um arquivo CSV para cadastrar múltiplos itens.</p>
+            
+            <div class="space-y-4 flex-1 overflow-y-auto pr-1">
+                <!-- Instruções do Modelo de Colunas -->
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-[11px] text-slate-600">
+                    <p class="font-bold text-slate-700 mb-1">Layout esperado das Colunas na Planilha (Selecione, copie do Excel e cole abaixo):</p>
+                    <div class="bg-white p-2 rounded-md font-mono text-[10.5px] text-[#85bc4b] border border-slate-200 overflow-x-auto select-all">
+                        Sigla_Referência	Número_Patrimônio	Nome_Equipamento	Marca_Modelo	Número_Série	Categoria	Setor_Sala	Responsável	Data_Aquisição(AAAA-MM-DD)	Estado(Ativo/Manutenção/Abatido)
+                    </div>
+                    <p class="mt-1.5 text-[10px] text-slate-400">Exemplo prático: <code class="font-mono bg-slate-100 px-1 rounded">ESTERI	001	AUTOCLAVE ALT	Eppendorf	SN-1234	Equipamento Laboratorial	SETOR TÉCNICO	Dr. Antunes	2026-07-03	Ativo</code></p>
+                </div>
+
+                <!-- Métodos de Entrada -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Opção A: Colar Linhas da Planilha</label>
+                        <textarea id="textareaLote" placeholder="Cole as células copiadas da sua planilha aqui..." class="w-full h-32 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs font-mono resize-none" oninput="analisarEntradaLote()"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Opção B: Carregar Arquivo de Texto ou CSV</label>
+                        <div class="border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center p-4 text-center hover:bg-slate-50 transition relative cursor-pointer">
+                            <svg class="w-8 h-8 text-slate-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span class="text-xs text-slate-500 font-medium">Arraste ou clique para selecionar arquivo</span>
+                            <input type="file" id="inputFileCSV" accept=".csv, .txt" onchange="importarCSVLote(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualização Dinâmica dos Dados Interpretados -->
+                <div id="previewLoteContainer" class="hidden space-y-2">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex justify-between">
+                        <span>Dados Mapeados (<span id="countPreviewItens">0</span> itens identificados)</span>
+                    </h4>
+                    <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-40">
+                        <table class="w-full text-[11px] text-left text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 uppercase sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-2 py-1.5 border-b">Referência</th>
+                                    <th class="px-2 py-1.5 border-b">Equipamento</th>
+                                    <th class="px-2 py-1.5 border-b">Marca/Modelo</th>
+                                    <th class="px-2 py-1.5 border-b">Série</th>
+                                    <th class="px-2 py-1.5 border-b">Setor</th>
+                                    <th class="px-2 py-1.5 border-b">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaPreviewLote">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-4 border-t border-slate-100 pt-4">
+                <button onclick="salvarImportacaoLote()" id="btnConfirmarImportacaoLote" disabled class="flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed">
+                    Confirmar Importação de Itens
+                </button>
+                <button onclick="fecharModalLote()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-lg text-sm transition cursor-pointer">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÁREA OCULTA PARA IMPRESSÃO DE RELATÓRIO DINÂMICO (Formato A4) -->
+    <div id="containerImpressaoRelatorio" class="hidden bg-white p-8 font-sans">
+        <div class="flex justify-between items-start border-b-2 border-slate-300 pb-4 mb-6">
+            <div class="flex items-center gap-3">
+                <svg class="w-10 h-12" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 10C50 10 90 60 90 80C90 102.091 72.0914 120 50 120C27.9086 120 10 102.091 10 80C10 60 50 10 50 10Z" fill="#9ada55" />
+                </svg>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-950">PASTEUR | Relatório de Inventário</h1>
+                    <p class="text-xs text-slate-500">Controlo de Equipamentos e Ativos Laboratoriais</p>
+                </div>
+            </div>
+            <div class="text-right text-xs text-slate-500">
+                <p><strong>Emissão:</strong> <span id="relatorioDataEmissao"></span></p>
+                <p><strong>Total de Itens:</strong> <span id="relatorioTotalItens"></span></p>
+            </div>
+        </div>
+
+        <!-- Indicadores Rápidos de Estado no Relatório -->
+        <div class="grid grid-cols-3 gap-4 mb-6 border-b border-slate-200 pb-4 text-xs">
+            <div><strong>Ativos:</strong> <span id="relatorioContagemAtivos"></span></div>
+            <div><strong>Em Manutenção:</strong> <span id="relatorioContagemManutencao"></span></div>
+            <div><strong>Abatidos/Inativos:</strong> <span id="relatorioContagemAbatidos"></span></div>
+        </div>
+
+        <table class="w-full text-xs text-left border-collapse border border-slate-300">
+            <thead>
+                <tr class="bg-slate-100 border-b border-slate-300">
+                    <th class="px-3 py-2 border border-slate-300">Referência</th>
+                    <th class="px-3 py-2 border border-slate-300">Equipamento</th>
+                    <th class="px-3 py-2 border border-slate-200">Marca / Modelo</th>
+                    <th class="px-3 py-2 border border-slate-300">Nº de Série</th>
+                    <th class="px-3 py-2 border border-slate-300">Categoria</th>
+                    <th class="px-3 py-2 border border-slate-300">Setor / Sala</th>
+                    <th class="px-3 py-2 border border-slate-300">Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaRelatorioCorpo">
+                <!-- Preenchido dinamicamente ao disparar a impressão -->
+            </tbody>
+        </table>
+
+        <div class="mt-12 text-center text-[10px] text-slate-400 border-t border-slate-200 pt-4">
+            <p>Documento oficial Lab Pasteur. Para uso e controlo de auditoria interna.</p>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO DOS DADOS BÁSICOS DO PASTEUR
+        const defaultEquipamentos = [
+            "CENTRIFUGA DE BANCADA", "AUTOCLAVE HORIZONTAL", "MICROSCÓPIO BINOCULAR",
+            "BALANÇA SEMI-ANALÍTICA", "BANHO MARIA DIGITAL", "GELADEIRA DE CONSERVAÇÃO",
+            "ESTUFA DE BACTERIOLOGIA", "LEITOR DE MICROPLACAS", "PIPETADOR AUTOMÁTICO",
+            "ANALISADOR DE BIOQUÍMICA", "ANALISADOR DE HEMATOLOGIA", "COMPUTADOR / CPU",
+            "IMPRESSORA TÉRMICA DE ETIQUETAS", "ESTABILIZADOR DE TENSÃO", "NOTEBOOK"
+        ];
+
+        const defaultSetores = [
+            "SETOR TÉCNICO", "MICROBIOLOGIA", "BIOQUÍMICA", "HEMATOLOGIA",
+            "IMUNOLOGIA", "TRIAGEM", "COLETA 1", "COLETA 2", "ADMINISTRAÇÃO",
+            "T.I. / INFORMAÇÃO", "EXPEDIÇÃO", "SALA DE ESTERILIZAÇÃO"
+        ];
+
+        // Variáveis de Estado
+        let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
+        let listaEquipamentos = JSON.parse(localStorage.getItem('listaEquipamentos')) || defaultEquipamentos;
+        let listaSetores = JSON.parse(localStorage.getItem('listaSetores')) || defaultSetores;
+        let URL_DO_GOOGLE_SCRIPT = localStorage.getItem('urlGoogleSheets') || "";
+        let idItemSelecionadoParaExclusao = null;
+        let tipoCadastroRapido = "";
+        let itensPrevisualizados = [];
+
+        // Inicialização do sistema
+        window.onload = function() {
+            renderizarDropdowns();
+            renderizarTabela();
+            filtrarRelatorioTela();
+            configurarEstruturaSeguranca();
+            
+            // Ouvintes de evento do formulário principal
+            document.getElementById('formInventario').addEventListener('submit', registrarEquipamento);
+            document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
+        };
+
+        // --- SISTEMA DE CRIPTOGRAFIA E CONTROLE DE ACESSO ---
+        
+        // Conversão de senha simples para Hash SHA-256 (Nativo do Navegador)
+        async function gerarHashSHA256(senha) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(senha);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Verifica o estado de segurança na inicialização do dispositivo
+        async function configurarEstruturaSeguranca() {
+            const segurancaAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false'; // Padrão: Ativo
+            const hashSalvo = localStorage.getItem('pasteur_senha_hash');
+
+            // Atualiza o botão de status nas configurações
+            const btnToggle = document.getElementById('btnToggleSeguranca');
+            if (segurancaAtiva) {
+                btnToggle.innerText = "Proteção Ativa";
+                btnToggle.className = "px-3 py-1.5 bg-[#9ada55] hover:bg-[#85bc4b] text-white text-xs font-bold rounded-lg transition cursor-pointer";
+                document.getElementById('secaoAlterarSenha').classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                btnToggle.innerText = "Proteção Inativa";
+                btnToggle.className = "px-3 py-1.5 bg-slate-300 hover:bg-slate-400 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer";
+                document.getElementById('secaoAlterarSenha').classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            if (!segurancaAtiva) {
+                // Se a segurança estiver explicitamente inativa, libera o acesso direto
+                document.getElementById('telaLogin').classList.add('hidden');
+                return;
+            }
+
+            if (!hashSalvo) {
+                // Se segurança ativa, mas sem senha cadastrada (Primeiro Acesso)
+                document.getElementById('containerConfigSenha').classList.remove('hidden');
+                document.getElementById('containerDesbloqueio').classList.add('hidden');
+                document.getElementById('telaLogin').classList.remove('hidden');
+            } else {
+                // Com senha já cadastrada, exige o desbloqueio
+                document.getElementById('containerConfigSenha').classList.add('hidden');
+                document.getElementById('containerDesbloqueio').classList.remove('hidden');
+                document.getElementById('telaLogin').classList.remove('hidden');
+                document.getElementById('inputSenhaAcesso').focus();
+            }
+        }
+
+        // Define a senha de administrador no primeiro acesso
+        async function definirSenhaInicial() {
+            const novaSenha = document.getElementById('inputNovaSenha').value;
+            const confirmar = document.getElementById('inputNovaSenhaConfirmar').value;
+
+            if (novaSenha.length < 4) {
+                mostrarAlerta("A senha deve possuir pelo menos 4 caracteres!", "error");
+                return;
+            }
+
+            if (novaSenha !== confirmar) {
+                mostrarAlerta("As senhas inseridas não coincidem!", "error");
+                return;
+            }
+
+            const hash = await gerarHashSHA256(novaSenha);
+            localStorage.setItem('pasteur_senha_hash', hash);
+            localStorage.setItem('pasteur_seguranca_ativa', 'true');
+            
+            mostrarAlerta("Senha mestre configurada com sucesso!", "success");
+            
+            // Libera entrada
+            document.getElementById('telaLogin').classList.add('hidden');
+            document.getElementById('inputNovaSenha').value = "";
+            document.getElementById('inputNovaSenhaConfirmar').value = "";
+            configurarEstruturaSeguranca();
+        }
+
+        // Processa e valida a tentativa de desbloqueio seguro
+        async function validarAcesso(event) {
+            if (event) event.preventDefault();
+            
+            const input = document.getElementById('inputSenhaAcesso');
+            const erroMsg = document.getElementById('mensagemErroAcesso');
+            const painel = input.closest('.bg-white');
+            
+            const hashSalvo = localStorage.getItem('pasteur_senha_hash');
+            const hashDigitado = await gerarHashSHA256(input.value);
+
+            if (hashDigitado === hashSalvo) {
+                // Sucesso
+                erroMsg.classList.add('hidden');
+                document.getElementById('telaLogin').classList.add('hidden');
+                input.value = "";
+                mostrarAlerta("Acesso autorizado. Seja bem-vindo ao sistema do Lab Pasteur!", "success");
+            } else {
+                // Senha inválida
+                erroMsg.classList.remove('hidden');
+                painel.classList.add('error-shake');
+                input.value = "";
+                input.focus();
+                
+                setTimeout(() => {
+                    painel.classList.remove('error-shake');
+                }, 400);
+            }
+        }
+
+        // Bloqueia a tela instantaneamente
+        function bloquearTelaManualmente() {
+            document.getElementById('telaLogin').classList.remove('hidden');
+            configurarEstruturaSeguranca();
+        }
+
+        // Liga/Desliga a barreira de segurança global do navegador
+        function alternarStatusSeguranca() {
+            const atualmenteAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false';
+            
+            if (atualmenteAtiva) {
+                // Para desativar exige a confirmação da senha mestre atual
+                const senhaConfirmar = prompt("Para DESATIVAR a proteção por senha de forma permanente neste navegador, confirme sua Senha Mestre:");
+                if (!senhaConfirmar) return;
+                
+                gerarHashSHA256(senhaConfirmar).then(hashConfirmado => {
+                    const hashSalvo = localStorage.getItem('pasteur_senha_hash');
+                    if (hashConfirmado === hashSalvo) {
+                        localStorage.setItem('pasteur_seguranca_ativa', 'false');
+                        mostrarAlerta("Proteção por senha desativada com sucesso!", "success");
+                        configurarEstruturaSeguranca();
+                    } else {
+                        mostrarAlerta("Confirmação negada: Senha incorreta!", "error");
+                    }
+                });
+            } else {
+                // Ativa novamente
+                localStorage.setItem('pasteur_seguranca_ativa', 'true');
+                mostrarAlerta("Proteção de segurança reativada!", "success");
+                configurarEstruturaSeguranca();
+            }
+        }
+
+        // Processa alteração de senha a partir da aba de configurações
+        async function processarAlteracaoSenha() {
+            const senhaAtual = document.getElementById('inputSenhaConfigAtual').value;
+            const novaSenha = document.getElementById('inputSenhaConfigNova').value;
+            const confirmar = document.getElementById('inputSenhaConfigConfirmar').value;
+
+            if (!senhaAtual || !novaSenha || !confirmar) {
+                mostrarAlerta("Todos os campos de alteração de senha são obrigatórios!", "error");
+                return;
+            }
+
+            const hashSalvo = localStorage.getItem('pasteur_senha_hash');
+            const hashAtualDigitado = await gerarHashSHA256(senhaAtual);
+
+            if (hashAtualDigitado !== hashSalvo) {
+                mostrarAlerta("A senha atual digitada está incorreta!", "error");
+                return;
+            }
+
+            if (novaSenha.length < 4) {
+                mostrarAlerta("A nova senha deve possuir pelo menos 4 caracteres!", "error");
+                return;
+            }
+
+            if (novaSenha !== confirmar) {
+                mostrarAlerta("A nova senha e a confirmação não coincidem!", "error");
+                return;
+            }
+
+            const novoHash = await gerarHashSHA256(novaSenha);
+            localStorage.setItem('pasteur_senha_hash', novoHash);
+            
+            // Limpa campos
+            document.getElementById('inputSenhaConfigAtual').value = "";
+            document.getElementById('inputSenhaConfigNova').value = "";
+            document.getElementById('inputSenhaConfigConfirmar').value = "";
+            
+            mostrarAlerta("Sua senha administrativa foi alterada com sucesso!", "success");
+        }
+
+
+        // --- SISTEMA E LOGICA DE INVENTÁRIO (OPERAÇÕES ANTERIORES) ---
+
+        // Alterna abas do sistema
+        function mudarAba(abaId) {
+            document.getElementById('abaInventario').classList.add('hidden');
+            document.getElementById('abaRelatorios').classList.add('hidden');
+            document.getElementById('abaConfig').classList.add('hidden');
+            
+            document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
+            document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
+            document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
+
+            if (abaId === 'inventario') {
+                document.getElementById('abaInventario').classList.remove('hidden');
+                document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
+            } else if (abaId === 'relatorios') {
+                document.getElementById('abaRelatorios').classList.remove('hidden');
+                document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
+                calcularKPIs();
+                gerarGraficoCategorias();
+                filtrarRelatorioTela();
+            } else if (abaId === 'config') {
+                document.getElementById('abaConfig').classList.remove('hidden');
+                document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
+            }
+        }
+
+        // Calcula a próxima numeração automática ao escolher uma sigla
+        function calcularProximoNumeroRef() {
+            const sigla = document.getElementById('refCodigo').value;
+            if (!sigla) return;
+
+            // Filtra os itens que possuem essa mesma sigla de referência
+            const itensMesmaSigla = inventario.filter(item => item.refCodigo === sigla);
+            
+            if (itensMesmaSigla.length === 0) {
+                document.getElementById('refNumero').value = "001";
+            } else {
+                // Pega o maior número sequencial cadastrado
+                const numeros = itensMesmaSigla.map(item => parseInt(item.refNumero, 10)).filter(num => !isNaN(num));
+                const maiorNumero = numeros.length > 0 ? Math.max(...numeros) : 0;
+                const proximo = String(maiorNumero + 1).padStart(3, '0');
+                document.getElementById('refNumero').value = proximo;
+            }
+        }
+
+        // Renderiza listas personalizadas em dropdowns
+        function renderizarDropdowns() {
+            const selectNome = document.getElementById('nome');
+            const selectSetor = document.getElementById('setor');
+            const selectFiltroSetor = document.getElementById('filtroSetorRelatorio');
+
+            // Ordena as listas de forma alfabética
+            listaEquipamentos.sort();
+            listaSetores.sort();
+
+            // Renderiza Dropdown de Nomes
+            selectNome.innerHTML = '<option value="" disabled selected>Selecione um equipamento...</option>';
+            listaEquipamentos.forEach(eq => {
+                const opt = document.createElement('option');
+                opt.value = eq;
+                opt.innerText = eq;
+                selectNome.appendChild(opt);
+            });
+
+            // Renderiza Dropdown de Setores do Formulário
+            selectSetor.innerHTML = '<option value="" disabled selected>Selecione um setor/sala...</option>';
+            listaSetores.forEach(set => {
+                const opt = document.createElement('option');
+                opt.value = set;
+                opt.innerText = set;
+                selectSetor.appendChild(opt);
+            });
+
+            // Renderiza Dropdown de Setores do Relatório em Tela
+            selectFiltroSetor.innerHTML = '<option value="Todos">Todos os Setores</option>';
+            listaSetores.forEach(set => {
+                const opt = document.createElement('option');
+                opt.value = set;
+                opt.innerText = set;
+                selectFiltroSetor.appendChild(opt);
+            });
+        }
+
+        // Processa o envio do formulário e insere no banco
+        function registrarEquipamento(event) {
+            event.preventDefault();
+
+            const sigla = document.getElementById('refCodigo').value;
+            const numero = document.getElementById('refNumero').value.padStart(3, '0');
+            const refFinal = `${sigla}-${numero}`;
+
+            // Valida duplicidade de número de série ou referência
+            const duplicado = inventario.find(item => item.referencia === refFinal);
+            if (duplicado) {
+                mostrarAlerta(`Aviso! O código patrimonial ${refFinal} já está registrado no sistema!`, "error");
+                return;
+            }
+
+            const novoEquipamento = {
+                id: Date.now(),
+                refCodigo: sigla,
+                refNumero: numero,
+                referencia: refFinal,
+                nome: document.getElementById('nome').value,
+                marca: document.getElementById('marca').value || 'N/D',
+                serie: document.getElementById('serie').value,
+                categoria: document.getElementById('categoria').value,
+                setor: document.getElementById('setor').value,
+                responsavel: document.getElementById('responsavel').value || 'N/D',
+                dataAquisicao: document.getElementById('dataAquisicao').value || new Date().toISOString().split('T')[0],
+                status: document.getElementById('status').value
+            };
+
+            // Remove itens de teste que possam ter sido inseridos antes de cadastrar o novo real
+            removerItensTeste();
+
+            inventario.push(novoEquipamento);
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+
+            // Sincroniza em nuvem (Google Sheets) se configurado
+            if (URL_DO_GOOGLE_SCRIPT) {
+                enviarParaGoogleSheets(novoEquipamento);
+            }
+
+            mostrarAlerta(`Equipamento ${refFinal} registrado com sucesso!`, "success");
+            limparFormulario();
+            renderizarTabela();
+        }
+
+        // Limpa campos do formulário para digitação limpa
+        function limparFormulario() {
+            document.getElementById('formInventario').reset();
+            document.getElementById('refNumero').value = "";
+        }
+
+        // Sincroniza um equipamento individual com o Google Sheets
+        function enviarParaGoogleSheets(item) {
+            fetch(URL_DO_GOOGLE_SCRIPT, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(item)
+            })
+            .then(() => console.log("Dado espelhado com sucesso na nuvem Google Sheets!"))
+            .catch(err => console.error("Erro de conexão de rede ao sincronizar com nuvem:", err));
+        }
+
+        // Remove itens de teste
+        function removerItensTeste() {
+            const tamanhoOriginal = inventario.length;
+            inventario = inventario.filter(item => {
+                const nomeLower = (item.nome || '').toLowerCase();
+                const marcaLower = (item.marca || '').toLowerCase();
+                const serieLower = (item.serie || '').toLowerCase();
+                const refLower = (item.referencia || '').toLowerCase();
+                const setorLower = (item.setor || '').toLowerCase();
+
+                const ehTeste = nomeLower.includes('teste') || nomeLower.includes('test') || nomeLower.includes('mock') || nomeLower.includes('dummy') ||
+                                marcaLower.includes('teste') || marcaLower.includes('test') || marcaLower.includes('mock') ||
+                                serieLower.includes('teste') || serieLower.includes('test') || serieLower.includes('12345') ||
+                                refLower.includes('teste') || refLower.includes('test') ||
+                                setorLower.includes('teste') || setorLower.includes('test');
+                return !ehTeste;
+            });
+
+            if (inventario.length !== tamanhoOriginal) {
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+            }
+        }
+
+        // Renderiza a lista de equipamentos principais
+        function renderizarTabela() {
+            removerItensTeste();
+
+            const tbody = document.getElementById('tabelaItens');
+            tbody.innerHTML = '';
+            
+            document.getElementById('contadorItens').innerText = `${inventario.length} Itens`;
+
+            if (inventario.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">
+                            Nenhum equipamento registrado localmente. Use o formulário à esquerda ou faça importação em massa para iniciar.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Ordena os equipamentos por código de referência de forma decrescente para os mais novos aparecerem em cima
+            const itensOrdenados = [...inventario].sort((a, b) => b.id - a.id);
+
+            itensOrdenados.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+
+                let badgeEstado = '';
+                if (item.status === 'Ativo') {
+                    badgeEstado = '<span class="bg-[#9ada55]/15 text-[#85bc4b] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Ativo</span>';
+                } else if (item.status === 'Manutenção') {
+                    badgeEstado = '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Manutenção</span>';
+                } else {
+                    badgeEstado = '<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Inativo</span>';
+                }
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3.5">
+                        <div class="flex flex-col">
+                            <span class="font-mono font-black text-[#85bc4b] tracking-wider text-xs">${item.referencia}</span>
+                            <span class="font-bold text-slate-900 mt-0.5 text-xs">${item.nome}</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">${item.marca}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3.5 font-mono text-xs font-semibold text-slate-500">${item.serie}</td>
+                    <td class="px-4 py-3.5 text-xs font-bold text-slate-500">${item.setor}</td>
+                    <td class="px-4 py-3.5">${badgeEstado}</td>
+                    <td class="px-4 py-3.5 text-center">
+                        <div class="flex justify-center items-center gap-1.5 no-print">
+                            <button onclick="gerarEtiquetaQR('${item.referencia}')" title="Gerar Etiqueta Patrimonial" class="bg-slate-100 hover:bg-[#9ada55]/20 hover:text-[#85bc4b] text-slate-500 p-1.5 rounded-lg transition cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14v2m-3-3h2m3-3h2m-3-3h2m-3 3v2" />
+                                </svg>
+                            </button>
+                            <button onclick="confirmarExclusaoItem(${item.id})" title="Remover Equipamento" class="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-400 p-1.5 rounded-lg transition cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filtra os itens da tabela dinamicamente na busca por texto
+        function filtrarTabela() {
+            const busca = document.getElementById('buscaEquipamento').value.toUpperCase();
+            const linhas = document.getElementById('tabelaItens').getElementsByTagName('tr');
+
+            for (let i = 0; i < linhas.length; i++) {
+                const td = linhas[i].getElementsByTagName('td')[0];
+                const tdSerie = linhas[i].getElementsByTagName('td')[1];
+                
+                if (td && tdSerie) {
+                    const texto = td.textContent || td.innerText;
+                    const serieTexto = tdSerie.textContent || tdSerie.innerText;
+                    
+                    if (texto.toUpperCase().indexOf(busca) > -1 || serieTexto.toUpperCase().indexOf(busca) > -1) {
+                        linhas[i].style.display = "";
+                    } else {
+                        linhas[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Limpa a barra de pesquisa
+        function limparBusca() {
+            document.getElementById('buscaEquipamento').value = '';
+            filtrarTabela();
+        }
+
+        // Calcula KPIs para a aba de relatórios
+        function calcularKPIs() {
+            const total = inventario.length;
+            const ativos = inventario.filter(i => i.status === 'Ativo').length;
+            const manutencao = inventario.filter(i => i.status === 'Manutenção').length;
+            const abatidos = inventario.filter(i => i.status === 'Abatido').length;
+
+            document.getElementById('kpiTotal').innerText = total;
+            document.getElementById('kpiAtivos').innerText = ativos;
+            document.getElementById('kpiManutencao').innerText = manutencao;
+            document.getElementById('kpiAbatidos').innerText = abatidos;
+        }
+
+        // Renderiza gráfico de barras simplificado de categorias
+        function gerarGraficoCategorias() {
+            const categorias = {
+                "Equipamento Laboratorial": 0,
+                "TI / Informática": 0,
+                "Refrigeração / Conservação": 0,
+                "Mobiliário Clínico": 0,
+                "Outros": 0
+            };
+
+            inventario.forEach(i => {
+                if (categorias[i.categoria] !== undefined) {
+                    categorias[i.categoria]++;
+                } else {
+                    categorias["Outros"]++;
+                }
+            });
+
+            const container = document.getElementById('distribuicaoCategorias');
+            container.innerHTML = '';
+
+            const maxItens = Math.max(...Object.values(categorias), 1);
+
+            for (const [cat, qtd] of Object.entries(categorias)) {
+                const percentual = (qtd / maxItens) * 100;
+                const div = document.createElement('div');
+                div.className = "space-y-1";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-semibold text-slate-700">${cat}</span>
+                        <span class="font-bold text-slate-900">${qtd} itens</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-[#9ada55] h-full rounded-full transition-all duration-500" style="width: ${percentual}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // Filtra a tabela de relatório em tela dinamicamente
+        function filtrarRelatorioTela() {
+            const statusFiltro = document.getElementById('filtroStatusRelatorio').value;
+            const setorFiltro = document.getElementById('filtroSetorRelatorio').value;
+            const tbody = document.getElementById('tabelaRelatorioTelaCorpo');
+            tbody.innerHTML = '';
+
+            let itensFiltrados = [...inventario];
+
+            if (statusFiltro !== 'Todos') {
+                itensFiltrados = itensFiltrados.filter(i => i.status === statusFiltro);
+            }
+
+            if (setorFiltro !== 'Todos') {
+                itensFiltrados = itensFiltrados.filter(i => i.setor === setorFiltro);
+            }
+
+            if (itensFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-3 py-6 text-center text-slate-400 italic">
+                            Nenhum ativo corresponde aos filtros selecionados.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            itensFiltrados.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="px-3 py-2.5 font-mono font-bold text-[#85bc4b]">${item.referencia}</td>
+                    <td class="px-3 py-2.5 font-bold text-slate-900">${item.nome}</td>
+                    <td class="px-3 py-2.5">${item.marca}</td>
+                    <td class="px-3 py-2.5 font-mono">${item.serie}</td>
+                    <td class="px-3 py-2.5 font-semibold text-slate-500">${item.setor}</td>
+                    <td class="px-3 py-2.5">${item.responsavel}</td>
+                    <td class="px-3 py-2.5">${item.dataAquisicao}</td>
+                    <td class="px-3 py-2.5 font-bold text-xs ${item.status === 'Ativo' ? 'text-green-600' : item.status === 'Manutenção' ? 'text-amber-600' : 'text-red-600'}">${item.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Imprime a seleção atual mostrada no relatório em tela
+        function imprimirSelecaoRelatorio() {
+            const statusFiltro = document.getElementById('filtroStatusRelatorio').value;
+            const setorFiltro = document.getElementById('filtroSetorRelatorio').value;
+            
+            let itensFiltrados = [...inventario];
+
+            if (statusFiltro !== 'Todos') {
+                itensFiltrados = itensFiltrados.filter(i => i.status === statusFiltro);
+            }
+
+            if (setorFiltro !== 'Todos') {
+                itensFiltrados = itensFiltrados.filter(i => i.setor === setorFiltro);
+            }
+
+            prepararDocumentoImpressaoRelatorio(itensFiltrados);
+        }
+
+        // Abre modal para cadastro rápido de novos nomes de equipamentos e setores
+        function abrirModalOpcao(tipo) {
+            tipoCadastroRapido = tipo;
+            const modal = document.getElementById('modalCadastroOpcao');
+            const titulo = document.getElementById('modalOpcaoTitulo');
+            const desc = document.getElementById('modalOpcaoDescricao');
+            const input = document.getElementById('novoItemValor');
+
+            input.value = '';
+            modal.classList.remove('hidden');
+
+            if (tipo === 'equipamento') {
+                titulo.innerText = "Novo Equipamento";
+                desc.innerText = "Cadastre um novo nome genérico de equipamento para o dropdown (Ex: AUTOCLAVE VERTICAL).";
+                input.placeholder = "Ex: CENTRIFUGA REFRIGERADA";
+            } else {
+                titulo.innerText = "Novo Setor / Sala";
+                desc.innerText = "Adicione um novo laboratório, sala ou setor físico.";
+                input.placeholder = "Ex: COOPERAÇÃO INTERNA / SALA 4";
+            }
+            input.focus();
+        }
+
+        function fecharModalOpcao() {
+            document.getElementById('modalCadastroOpcao').classList.add('hidden');
+        }
+
+        // Salva a nova opção personalizada cadastrada no dropdown
+        function salvarNovaOpcao() {
+            const valor = document.getElementById('novoItemValor').value.toUpperCase().trim();
+            if (!valor) return;
+
+            if (tipoCadastroRapido === 'equipamento') {
+                if (!listaEquipamentos.includes(valor)) {
+                    listaEquipamentos.push(valor);
+                    localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+                    mostrarAlerta(`Equipamento "${valor}" adicionado com sucesso!`, "success");
+                }
+            } else {
+                if (!listaSetores.includes(valor)) {
+                    listaSetores.push(valor);
+                    localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
+                    mostrarAlerta(`Setor "${valor}" adicionado com sucesso!`, "success");
+                }
+            }
+
+            renderizarDropdowns();
+            fecharModalOpcao();
+        }
+
+        // Prepara e abre o modal gerando o QRCode correspondente
+        function gerarEtiquetaQR(referencia) {
+            const item = inventario.find(i => i.referencia === referencia);
+            if (!item) return;
+
+            document.getElementById('printReferencia').innerText = item.referencia;
+            document.getElementById('printNome').innerText = item.nome;
+            document.getElementById('printMarca').innerText = item.marca;
+            document.getElementById('printSerie').innerText = item.serie;
+            document.getElementById('printSetor').innerText = item.setor;
+
+            // Limpa canvas do QR anterior
+            const canvas = document.getElementById('canvasQR');
+            canvas.innerHTML = '';
+
+            // Monta o texto compacto para leitura rápida no laboratório
+            const textoQR = `PATRIMONIO: ${item.referencia}\nEQUI: ${item.nome}\nSERIE: ${item.serie}\nLOC: ${item.setor}\nLAB: PASTEUR`;
+
+            // Geração estrita do QR Code usando biblioteca de alta precisão
+            new QRCode(canvas, {
+                text: textoQR,
+                width: 140,
+                height: 140,
+                colorDark: "#111827",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('modalQR').classList.remove('hidden');
+        }
+
+        function fecharModal() {
+            document.getElementById('modalQR').classList.add('hidden');
+        }
+
+        // Abre o disparo nativo de impressão da etiqueta patrimonial isolada
+        function dispararImpressaoEtiqueta() {
+            const recipiente = document.getElementById('recipienteImpressaoEtiqueta');
+            recipiente.classList.add('print-active');
+            window.print();
+            
+            // Limpeza pós-print
+            setTimeout(() => {
+                recipiente.classList.remove('print-active');
+            }, 500);
+        }
+
+        // Confirmação com modal customizado de exclusão (Elimina alerts de navegador)
+        function confirmarExclusaoItem(id) {
+            idItemSelecionadoParaExclusao = id;
+            const modal = document.getElementById('modalExclusao');
+            modal.classList.remove('hidden');
+
+            const btn = document.getElementById('btnConfirmarExclusao');
+            btn.onclick = executarExclusao;
+        }
+
+        function fecharModalExclusao() {
+            document.getElementById('modalExclusao').classList.add('hidden');
+            idItemSelecionadoParaExclusao = null;
+        }
+
+        function executarExclusao() {
+            if (idItemSelecionadoParaExclusao === null) return;
+
+            inventario = inventario.filter(i => i.id !== idItemSelecionadoParaExclusao);
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            
+            mostrarAlerta("Equipamento removido permanentemente do inventário!", "success");
+            fecharModalExclusao();
+            renderizarTabela();
+        }
+
+        // Configuração Sheets
+        function salvarConfigSheets() {
+            const url = document.getElementById('inputUrlSheets').value.trim();
+            URL_DO_GOOGLE_SCRIPT = url;
+            localStorage.setItem('urlGoogleSheets', url);
+            mostrarAlerta("Conexão com Google Sheets salva com sucesso!", "success");
+        }
+
+        // Dispara modal de reset geral do armazenamento
+        function abrirModalReset() {
+            document.getElementById('modalResetTotal').classList.remove('hidden');
+        }
+
+        function fecharModalReset() {
+            document.getElementById('modalResetTotal').classList.add('hidden');
+        }
+
+        function executarResetTotal() {
+            localStorage.removeItem('inventario');
+            localStorage.removeItem('listaEquipamentos');
+            localStorage.removeItem('listaSetores');
+            inventario = [];
+            listaEquipamentos = defaultEquipamentos;
+            listaSetores = defaultSetores;
+            
+            renderizarDropdowns();
+            renderizarTabela();
+            fecharModalReset();
+            mostrarAlerta("Todos os dados locais do inventário foram removidos!", "success");
+        }
+
+        // Exportação consolidada de dados para formato CSV
+        function exportarCSV() {
+            if (inventario.length === 0) {
+                mostrarAlerta("Não há equipamentos salvos para exportar!", "error");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // Byte Order Mark para UTF-8 (corrige acentuação no Excel)
+            csvContent += "Referência;Nome do Equipamento;Marca / Modelo;Número de Série;Categoria;Setor;Responsável;Data de Aquisição;Estado\n";
+
+            inventario.forEach(item => {
+                const linha = [
+                    item.referencia,
+                    item.nome,
+                    item.marca,
+                    item.serie,
+                    item.categoria,
+                    item.setor,
+                    item.responsavel,
+                    item.dataAquisicao,
+                    item.status
+                ].map(txt => `"${String(txt).replace(/"/g, '""')}"`).join(";");
+                
+                csvContent += linha + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `inventario_pasteur_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Geração do relatório consolidado estruturado padrão A4 para impressão
+        function prepararImpressaoRelatorio() {
+            prepararDocumentoImpressaoRelatorio(inventario);
+        }
+
+        function prepararDocumentoImpressaoRelatorio(listaItens) {
+            const corpoTabela = document.getElementById('tabelaRelatorioCorpo');
+            corpoTabela.innerHTML = '';
+
+            document.getElementById('relatorioDataEmissao').innerText = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('relatorioTotalItens').innerText = `${listaItens.length} ativos`;
+
+            const ativos = listaItens.filter(i => i.status === 'Ativo').length;
+            const manutencao = listaItens.filter(i => i.status === 'Manutenção').length;
+            const abatidos = listaItens.filter(i => i.status === 'Abatido').length;
+
+            document.getElementById('relatorioContagemAtivos').innerText = `${ativos} Equipamentos`;
+            document.getElementById('relatorioContagemManutencao').innerText = `${manutencao} Equipamentos`;
+            document.getElementById('relatorioContagemAbatidos').innerText = `${abatidos} Equipamentos`;
+
+            if (listaItens.length === 0) {
+                corpoTabela.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center">Nenhum item cadastrado ou filtrado para impressão.</td></tr>';
+            } else {
+                listaItens.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-slate-300";
+                    tr.innerHTML = `
+                        <td class="px-3 py-2 border border-slate-300 font-mono font-bold">${item.referencia}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-bold">${item.nome}</td>
+                        <td class="px-3 py-2 border border-slate-300">${item.marca}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-mono">${item.serie}</td>
+                        <td class="px-3 py-2 border border-slate-300">${item.categoria}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-semibold">${item.setor}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-bold">${item.status}</td>
+                    `;
+                    corpoTabela.appendChild(tr);
+                });
+            }
+
+            const container = document.getElementById('containerImpressaoRelatorio');
+            container.classList.add('print-active');
+            window.print();
+
+            setTimeout(() => {
+                container.classList.remove('print-active');
+            }, 500);
+        }
+
+        // Exportação de Backup completo em arquivo JSON
+        function exportarBackupJSON() {
+            const dadosBackup = {
+                versao: "1.0",
+                dataGeracao: new Date().toISOString(),
+                inventario: inventario,
+                listaEquipamentos: listaEquipamentos,
+                listaSetores: listaSetores,
+                urlGoogleSheets: URL_DO_GOOGLE_SCRIPT,
+                // Mantém as configurações de login no backup de transferência se o usuário desejar
+                pasteur_senha_hash: localStorage.getItem('pasteur_senha_hash'),
+                pasteur_seguranca_ativa: localStorage.getItem('pasteur_seguranca_ativa')
+            };
+
+            const stringDados = JSON.stringify(dadosBackup, null, 2);
+            const blob = new Blob([stringDados], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `backup_inventario_pasteur_${new Date().toISOString().split('T')[0]}.json`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            mostrarAlerta("Backup gerado e baixado com sucesso!", "success");
+        }
+
+        // Importação de Backup de arquivo JSON
+        function importarBackupJSON(event) {
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const leitor = new FileReader();
+            leitor.onload = function(e) {
+                try {
+                    const dados = JSON.parse(e.target.result);
+                    
+                    if (dados.inventario && Array.isArray(dados.inventario)) {
+                        inventario = dados.inventario;
+                        localStorage.setItem('inventario', JSON.stringify(inventario));
+                    }
+                    
+                    if (dados.listaEquipamentos && Array.isArray(dados.listaEquipamentos)) {
+                        listaEquipamentos = dados.listaEquipamentos;
+                        localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+                    }
+
+                    if (dados.listaSetores && Array.isArray(dados.listaSetores)) {
+                        listaSetores = dados.listaSetores;
+                        localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
+                    }
+
+                    if (dados.urlGoogleSheets !== undefined) {
+                        URL_DO_GOOGLE_SCRIPT = dados.urlGoogleSheets;
+                        localStorage.setItem('urlGoogleSheets', URL_DO_GOOGLE_SCRIPT);
+                        document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
+                    }
+
+                    if (dados.pasteur_senha_hash) {
+                        localStorage.setItem('pasteur_senha_hash', dados.pasteur_senha_hash);
+                    }
+                    if (dados.pasteur_seguranca_ativa) {
+                        localStorage.setItem('pasteur_seguranca_ativa', dados.pasteur_seguranca_ativa);
+                    }
+
+                    renderizarDropdowns();
+                    renderizarTabela();
+                    filtrarRelatorioTela();
+                    configurarEstruturaSeguranca();
+                    
+                    mostrarAlerta("Backup importado com sucesso! Seus dados foram sincronizados.", "success");
+                } catch(err) {
+                    mostrarAlerta("Erro ao processar arquivo de backup. Verifique se o formato está correto.", "error");
+                }
+                event.target.value = ''; // Limpa input
+            };
+            leitor.readAsText(arquivo);
+        }
+
+        // Copia o código do Apps Script para o clipboard
+        function copiarCodigoAppsScript() {
+            const codigo = `function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    var row = [
+      data.referencia,     // Coluna A
+      data.nome,           // Coluna B
+      data.marca,          // Coluna C
+      data.serie,          // Coluna D
+      data.categoria,      // Coluna E
+      data.setor,          // Coluna F
+      data.responsavel,    // Coluna G
+      data.dataAquisicao,  // Coluna H
+      data.status          // Coluna I
+    ];
+    sheet.appendRow(row);
+    return ContentService.createTextOutput(JSON.stringify({ "status": "success" }))
+                         .setMimeType(ContentService.MimeType.JSON);
+  } catch(error) {
+    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() }))
+                         .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+            const tempInput = document.createElement("textarea");
+            tempInput.value = codigo;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            mostrarAlerta("Código do Apps Script copiado para o clipboard!", "success");
+        }
+
+        // Mostra alertas na tela sem dar travamentos
+        function mostrarAlerta(mensagem, tipo) {
+            const alerta = document.getElementById('alertaFeedback');
+            const texto = document.getElementById('textoAlerta');
+
+            texto.innerText = mensagem;
+            alerta.classList.remove('hidden');
+
+            if (tipo === 'success') {
+                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-[#9ada55]/20 text-[#85bc4b] border border-[#9ada55]/30";
+            } else {
+                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-rose-50 text-rose-700 border border-rose-100";
+            }
+
+            // Auto-oculta o alerta após 5 segundos
+            setTimeout(() => {
+                fecharAlerta();
+            }, 5000);
+        }
+
+        function fecharAlerta() {
+            document.getElementById('alertaFeedback').classList.add('hidden');
+        }
+
+        // --- SISTEMA DE IMPORTAÇÃO EM MASSA (EXCEL/PLANILHAS) ---
+        function abrirModalLote() {
+            document.getElementById('modalImportacaoLote').classList.remove('hidden');
+            document.getElementById('textareaLote').value = '';
+            document.getElementById('previewLoteContainer').classList.add('hidden');
+            document.getElementById('btnConfirmarImportacaoLote').disabled = true;
+            document.getElementById('btnConfirmarImportacaoLote').className = "flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed";
+            itensPrevisualizados = [];
+        }
+
+        function fecharModalLote() {
+            document.getElementById('modalImportacaoLote').classList.add('hidden');
+        }
+
+        function analisarEntradaLote() {
+            const texto = document.getElementById('textareaLote').value;
+            processarDadosTexto(texto);
+        }
+
+        function importarCSVLote(event) {
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const leitor = new FileReader();
+            leitor.onload = function(e) {
+                processarDadosTexto(e.target.result);
+                event.target.value = '';
+            };
+            leitor.readAsText(arquivo);
+        }
+
+        function processarDadosTexto(texto) {
+            if (!texto.trim()) {
+                document.getElementById('previewLoteContainer').classList.add('hidden');
+                document.getElementById('btnConfirmarImportacaoLote').disabled = true;
+                document.getElementById('btnConfirmarImportacaoLote').className = "flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed";
+                return;
+            }
+
+            const linhas = texto.split(/\r?\n/);
+            itensPrevisualizados = [];
+
+            linhas.forEach((linha, index) => {
+                if (!linha.trim()) return;
+                
+                // Ignora linha de cabeçalho
+                if (index === 0 && (linha.toLowerCase().includes('sigla') || linha.toLowerCase().includes('nome_') || linha.toLowerCase().includes('responsável'))) {
+                    return; 
+                }
+
+                // Autodetecta delimitador: Tabulação (Excel), Ponto e vírgula ou vírgula
+                let delimitador = '\t';
+                if (linha.includes(';')) delimitador = ';';
+                else if (linha.includes(',') && !linha.includes('\t')) delimitador = ',';
+
+                const colunas = linha.split(delimitador).map(c => c.trim().replace(/^"|"$/g, ''));
+
+                if (colunas.length >= 3) {
+                    const sigla = colunas[0] ? colunas[0].toUpperCase() : 'GERAL';
+                    const numero = colunas[1] ? String(colunas[1]).padStart(3, '0') : '001';
+                    const nome = colunas[2] || 'Sem Nome';
+                    const marca = colunas[3] || 'N/D';
+                    const serie = colunas[4] || 'N/D';
+                    
+                    let categoria = colunas[5] || 'Equipamento Laboratorial';
+                    if (!["Equipamento Laboratorial", "TI / Informática", "Refrigeração / Conservação", "Mobiliário Clínico", "Outros"].includes(categoria)) {
+                        categoria = 'Equipamento Laboratorial';
+                    }
+
+                    const setor = colunas[6] || 'CENTRAL DE ATENDIMENTO';
+                    const responsavel = colunas[7] || 'N/D';
+                    const dataAquisicao = colunas[8] || new Date().toISOString().split('T')[0];
+                    
+                    let status = colunas[9] || 'Ativo';
+                    if (status.toLowerCase().includes('manutenc') || status.toLowerCase().includes('manutenção')) status = 'Manutenção';
+                    else if (status.toLowerCase().includes('abatido') || status.toLowerCase().includes('inativo')) status = 'Abatido';
+                    else status = 'Ativo';
+
+                    itensPrevisualizados.push({
+                        id: Date.now() + index + Math.random(),
+                        refCodigo: sigla,
+                        refNumero: numero,
+                        referencia: `${sigla}-${numero}`,
+                        nome: nome.toUpperCase(),
+                        marca: marca,
+                        serie: serie,
+                        categoria: categoria,
+                        setor: setor.toUpperCase(),
+                        responsavel: responsavel,
+                        dataAquisicao: dataAquisicao,
+                        status: status
+                    });
+                }
+            });
+
+            // Gerencia UI da Previsualização
+            const container = document.getElementById('previewLoteContainer');
+            const tbody = document.getElementById('tabelaPreviewLote');
+            const countSpan = document.getElementById('countPreviewItens');
+            tbody.innerHTML = '';
+
+            if (itensPrevisualizados.length > 0) {
+                container.classList.remove('hidden');
+                countSpan.innerText = itensPrevisualizados.length;
+                
+                // Ativa botão de salvar
+                const btn = document.getElementById('btnConfirmarImportacaoLote');
+                btn.disabled = false;
+                btn.className = "flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer";
+
+                // Mostra prévia limitada dos primeiros 10 itens
+                itensPrevisualizados.slice(0, 10).forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-slate-100 hover:bg-slate-50';
+                    tr.innerHTML = `
+                        <td class="px-2 py-1.5 font-mono font-bold text-[#85bc4b]">${item.referencia}</td>
+                        <td class="px-2 py-1.5 font-semibold truncate max-w-[150px]">${item.nome}</td>
+                        <td class="px-2 py-1.5 truncate max-w-[100px]">${item.marca}</td>
+                        <td class="px-2 py-1.5 font-mono">${item.serie}</td>
+                        <td class="px-2 py-1.5 truncate max-w-[120px]">${item.setor}</td>
+                        <td class="px-2 py-1.5">${item.status}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                if (itensPrevisualizados.length > 10) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td colspan="6" class="px-2 py-2 text-center text-slate-400 italic">E mais ${itensPrevisualizados.length - 10} equipamentos identificados...</td>`;
+                    tbody.appendChild(tr);
+                }
+            } else {
+                container.classList.add('hidden');
+                document.getElementById('btnConfirmarImportacaoLote').disabled = true;
+                document.getElementById('btnConfirmarImportacaoLote').className = "flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed";
+            }
+        }
+
+        function salvarImportacaoLote() {
+            if (itensPrevisualizados.length === 0) return;
+
+            itensPrevisualizados.forEach(item => {
+                inventario.push(item);
+                
+                // Adiciona o nome do equipamento se for novo
+                const nomeUpper = item.nome.toUpperCase();
+                if (!listaEquipamentos.includes(nomeUpper) && nomeUpper !== 'SEM NOME') {
+                    listaEquipamentos.push(nomeUpper);
+                }
+                
+                // Adiciona o setor se for novo
+                const setorUpper = item.setor.toUpperCase();
+                if (!listaSetores.includes(setorUpper)) {
+                    listaSetores.push(setorUpper);
+                }
+
+                // Sincroniza em nuvem caso ativo
+                if (URL_DO_GOOGLE_SCRIPT) {
+                    enviarParaGoogleSheets(item);
+                }
+            });
+
+            // Salva listas consolidadas
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+            localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
+
+            // Atualiza UI
+            renderizarDropdowns();
+            renderizarTabela();
+            fecharModalLote();
+
+            mostrarAlerta(`${itensPrevisualizados.length} equipamentos importados e cadastrados!`, "success");
+        }
+    </script>
+</body>
+</html>
