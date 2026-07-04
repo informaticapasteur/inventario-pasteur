@@ -3,27 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Pasteur Inventory</title>
+    <title>Lab Pasteur - Controle de Ativos</title>
     <!-- Tailwind CSS para design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Biblioteca QRCode.js para geração de QR Codes de forma rápida e offline -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
     <style>
         /* Estilos de impressão personalizados para isolar a etiqueta ou o relatório */
         @media print {
-            body * { visibility: hidden !important; }
-            .print-active, .print-active * { visibility: visible !important; }
-            .print-active { 
-                position: absolute !important; 
-                left: 50% !important; 
-                top: 50% !important; 
-                transform: translate(-50%, -50%) !important; 
-                width: 100% !important; 
-                max-width: 320px !important;
+            /* Configuração do tamanho exato da etiqueta física (5cm x 3cm) */
+            @page {
+                size: 50mm 30mm !important;
+                margin: 0 !important;
+            }
+
+            /* Caso de impressão de relatório A4 completo */
+            .print-report-mode @page {
+                size: A4 portrait !important;
+                margin: 15mm !important;
+            }
+
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 50mm !important;
+                height: 30mm !important;
+                overflow: hidden !important;
+                background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+            }
+            
+            /* Oculta absolutamente todos os elementos principais da tela por padrão */
+            body > *:not(.print-active-container) {
+                display: none !important;
+            }
+            
+            /* Força a exibição e formatação ideal do elemento ativo para impressão */
+            .print-active-container {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 50mm !important;
+                height: 30mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                color: black !important;
+                z-index: 99999 !important;
+            }
+
+            /* Oculta botões e elementos interativos desnecessários na folha impressa */
+            .no-print {
+                display: none !important;
+            }
+
+            /* Ajustes estruturais específicos para o Modal de Etiquetas Físicas 50x30mm */
+            #modalQR.print-active-container {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 50mm !important;
+                height: 30mm !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            #recipienteImpressaoEtiqueta {
                 border: none !important;
                 box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+                width: 50mm !important;
+                height: 30mm !important;
+                display: block !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
             }
-            .no-print { display: none !important; }
+
+            #areaImpressao {
+                border: none !important;
+                padding: 1.5mm 2.5mm !important; /* Margem interna uniforme para evitar corte físico nas bordas */
+                margin: 0 !important;
+                width: 50mm !important;
+                height: 30mm !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: row !important; /* QR na Esquerda, Texto na Direita */
+                align-items: center !important;
+                justify-content: flex-start !important; /* Alinhamento do conteúdo inicial */
+                gap: 2.5mm !important;
+                background: white !important;
+                page-break-inside: avoid !important;
+                overflow: hidden !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+            }
+
+            /* Ajuste de tamanho dinâmico do QR Code na impressão */
+            #canvasQR {
+                width: 22mm !important;
+                height: 22mm !important;
+                flex-shrink: 0 !important;
+                margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
+            #canvasQR img, #canvasQR canvas {
+                width: 22mm !important;
+                height: 22mm !important;
+                display: block !important;
+                margin: 0 !important;
+            }
+
+            /* Painel de informações compacto para caber nos 3cm de altura */
+            #printInfoPanel {
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                width: 21mm !important; /* Ajustado para preencher a direita sem transbordamento */
+                height: 26mm !important; /* Centralizado verticalmente */
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                color: black !important;
+                font-family: monospace !important;
+            }
+
+            #printReferencia {
+                font-size: 7.5pt !important;
+                line-height: 1.1 !important;
+                margin-bottom: 1mm !important;
+                border-bottom: 1px solid #000 !important;
+                padding-bottom: 0.5mm !important;
+                text-align: left !important;
+                font-weight: 900 !important;
+                color: black !important;
+            }
+
+            .print-text {
+                font-size: 5.5pt !important;
+                line-height: 1.2 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                color: black !important;
+                margin: 0 !important;
+            }
+
+            /* Ajustes finos específicos para o Relatório A4 (Caso seja ele o impresso) */
+            #containerImpressaoRelatorio.print-active-container {
+                display: block !important;
+                background: white !important;
+                color: black !important;
+                padding: 30px !important;
+                width: 100% !important;
+                height: auto !important;
+                position: static !important;
+            }
+            
+            /* Garante total contraste em tabelas e linhas do relatório impresso */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #94a3b8 !important;
+                padding: 6px 8px !important;
+                color: black !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
         
         /* Animação de erro na digitação de senha */
@@ -51,7 +218,7 @@
             
             <div class="flex flex-col mb-4">
                 <span class="text-3xl font-extrabold tracking-tight text-[#9ada55] leading-none" style="font-family: 'Arial Rounded MT Bold', 'Nunito', system-ui, sans-serif;">PASTEUR</span>
-                <span class="text-[10px] font-bold tracking-[0.25em] text-[#85bc4b] uppercase mt-2 leading-none">Controlo de Ativos</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] text-[#85bc4b] uppercase mt-2 leading-none">Controle de Ativos</span>
             </div>
 
             <!-- Divisor sutil -->
@@ -81,7 +248,7 @@
                 <h3 class="text-base font-bold text-slate-800 mb-1">Acesso Restrito</h3>
                 <p class="text-xs text-slate-500 mb-5">Insira a senha de administrador do Lab Pasteur para prosseguir.</p>
                 
-                <form id="formAcessoSeguro" onsubmit="validarAcesso(event)" class="space-y-3 text-left">
+                <form id="formAcessoSecure" onsubmit="validarAcesso(event)" class="space-y-3 text-left">
                     <div class="relative">
                         <input type="password" id="inputSenhaAcesso" required placeholder="Digite a senha mestre" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#9ada55] pr-10 text-center font-mono tracking-widest">
                         <span class="absolute inset-y-0 right-3 flex items-center text-slate-400">
@@ -116,7 +283,7 @@
                     </div>
                 </div>
                 <div class="border-l border-slate-300 pl-4 h-8 flex items-center">
-                    <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Inventory</span>
+                    <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Inventário</span>
                 </div>
             </div>
             
@@ -157,40 +324,24 @@
                     <!-- Código de Referência e Numeração Autocompletável -->
                     <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Cód. Referência *</label>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">Cód. Referência *</label>
+                                <button type="button" onclick="abrirModalOpcao('referencia')" class="text-[9px] text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5">
+                                        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                    </svg>
+                                    Novo
+                                </button>
+                            </div>
                             <select id="refCodigo" required onchange="calcularProximoNumeroRef()" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs bg-white font-mono font-bold text-slate-700">
-                                <option value="" disabled selected>Sigla...</option>
-                                <option value="ESTERI">ESTERI</option>
-                                <option value="MMICRO">MMICRO</option>
-                                <option value="BAL">BAL</option>
-                                <option value="BAN">BAN</option>
-                                <option value="CAM">CAM</option>
-                                <option value="CENTRI">CENTRI</option>
-                                <option value="GAS">GAS</option>
-                                <option value="MBIO">MBIO</option>
-                                <option value="CPU">CPU</option>
-                                <option value="EST">EST</option>
-                                <option value="ETIQ">ETIQ</option>
-                                <option value="GEL">GEL</option>
-                                <option value="BIOMOL">BIOMOL</option>
-                                <option value="IMP">IMP</option>
-                                <option value="LEICARD">LEICARD</option>
-                                <option value="LEITOR">LEITOR</option>
-                                <option value="TEL">TEL</option>
-                                <option value="MON">MON</option>
-                                <option value="ATEN">ATEN</option>
-                                <option value="NOB">NOB</option>
-                                <option value="NOTE">NOTE</option>
-                                <option value="MIM">MIM</option>
-                                <option value="WIFI">WIFI</option>
-                                <option value="MHEM">MHEM</option>
-                                <option value="SWITCH">SWITCH</option>
-                                <option value="TABLET">TABLET</option>
-                                <option value="URI">URI</option>
+                                <!-- Preenchido dinamicamente via JS -->
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Numeração *</label>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">Numeração *</label>
+                                <div class="h-3.5"></div>
+                            </div>
                             <input type="text" id="refNumero" required placeholder="Ex: 001" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs font-mono font-bold text-slate-700">
                         </div>
                     </div>
@@ -222,13 +373,17 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Categoria</label>
-                        <select id="categoria" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
-                            <option value="Equipamento Laboratorial">Equipamento Laboratorial</option>
-                            <option value="TI / Informática">TI / Informática</option>
-                            <option value="Refrigeração / Conservação">Refrigeração / Conservação</option>
-                            <option value="Mobiliário Clínico">Mobiliário Clínico</option>
-                            <option value="Outros">Outros</option>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Categoria *</label>
+                            <button type="button" onclick="abrirModalOpcao('categoria')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                </svg>
+                                Novo
+                            </button>
+                        </div>
+                        <select id="categoria" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
+                            <!-- Preenchido via JS -->
                         </select>
                     </div>
 
@@ -262,8 +417,8 @@
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Estado</label>
                             <select id="status" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
                                 <option value="Ativo">Ativo</option>
-                                <option value="Manutenção">Em Manutenção</option>
-                                <option value="Abatido">Abatido / Inativo</option>
+                                <option value="Manutenção">Equipamentos em Manutenção</option>
+                                <option value="Descartado">Equipamento Descartado</option>
                             </select>
                         </div>
                     </div>
@@ -301,7 +456,7 @@
                     </div>
                 </div>
                 
-                <div class="overflow-x-auto rounded-lg border border-slate-100">
+                <div class="overflow-x-auto rounded-lg border border-slate-100 font-sans">
                     <table class="w-full text-sm text-left text-slate-600">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                             <tr>
@@ -333,11 +488,11 @@
                     <h3 id="kpiAtivos" class="text-2xl font-bold text-[#85bc4b] mt-1">0</h3>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-amber-600">Em Manutenção</p>
+                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-amber-600">Equipamentos em Manutenção</p>
                     <h3 id="kpiManutencao" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-rose-600">Equipamentos Abatidos</p>
+                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-rose-600">Equipamentos Descartados</p>
                     <h3 id="kpiAbatidos" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
                 </div>
             </div>
@@ -386,8 +541,8 @@
                         <select id="filtroStatusRelatorio" onchange="filtrarRelatorioTela()" class="flex-1 md:flex-none px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
                             <option value="Todos">Todos os Estados</option>
                             <option value="Ativo">Ativo</option>
-                            <option value="Manutenção">Em Manutenção</option>
-                            <option value="Abatido">Abatido / Inativo</option>
+                            <option value="Manutenção">Equipamentos em Manutenção</option>
+                            <option value="Descartado">Equipamento Descartado</option>
                         </select>
                         <select id="filtroSetorRelatorio" onchange="filtrarRelatorioTela()" class="flex-1 md:flex-none px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
                             <option value="Todos">Todos os Setores</option>
@@ -443,7 +598,7 @@
                 </div>
             </div>
 
-            <!-- NOVO: Configurações de Segurança e Login -->
+            <!-- Configurações de Segurança e Login -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-900 mb-2 border-l-4 border-[#85bc4b] pl-3">Controle de Acesso & Segurança</h3>
                 <p class="text-xs text-slate-500 mb-4">Gerencie as opções de login por senha para proteger as informações confidenciais de auditoria do Lab Pasteur.</p>
@@ -484,24 +639,24 @@
                 </div>
             </div>
 
-            <!-- Painel de Backup Manual (Ficheiro JSON) -->
+            <!-- Painel de Backup Manual -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-sm font-bold text-slate-900 mb-1 border-l-4 border-[#9ada55] pl-3">Backup e Transferência entre Dispositivos</h3>
-                <p class="text-xs text-slate-500 mb-4">Exporte todo o seu inventário e configurações para um ficheiro. Pode enviar esse ficheiro por Email ou WhatsApp para outro computador ou telemóvel e importá-lo lá para sincronizar os dados.</p>
+                <h3 class="text-sm font-bold text-slate-900 mb-1 border-l-4 border-[#9ada55] pl-3">Backup e Sincronização entre Dispositivos</h3>
+                <p class="text-xs text-slate-500 mb-4">Exporte todo o seu inventário e configurações para um arquivo. Você pode carregar esse arquivo para sincronizar os dados em qualquer computador do laboratório.</p>
                 
                 <div class="flex flex-wrap gap-3">
                     <button onclick="exportarBackupJSON()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
-                        Exportar Ficheiro Backup (.json)
+                        Exportar Backup (.json)
                     </button>
                     
                     <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        Importar Ficheiro Backup (.json)
+                        Importar Backup (.json)
                         <input type="file" id="inputImportarBackup" accept=".json" onchange="importarBackupJSON(event)" class="hidden">
                     </label>
                 </div>
@@ -525,7 +680,7 @@
                 <ol class="list-decimal list-inside text-xs text-slate-600 space-y-3">
                     <li>Crie uma nova folha de cálculo no Google Sheets e adicione os seguintes títulos na primeira linha:
                         <div class="bg-slate-50 p-2 rounded-md font-mono text-[11px] text-[#85bc4b] border border-slate-100 my-1 overflow-x-auto">
-                            Referência | Nome | Marca | Série | Categoria | Setor | Responsável | Data | Estado
+                            Referência | Nome | Marca / Modelo | Número de Série | Categoria | Setor / Localização | Responsável | Data Aquisição | Estado
                         </div>
                     </li>
                     <li>No menu superior do Google Sheets, clique em <strong>Extensões > Apps Script</strong>.</li>
@@ -555,8 +710,6 @@
         </footer>
     </div>
 
-    <!-- MODAIS E POPUPS DO SISTEMA -->
-
     <!-- MODAL DE CADASTRO RÁPIDO DE OPÇÕES -->
     <div id="modalCadastroOpcao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-xl border border-slate-100">
@@ -578,22 +731,26 @@
         </div>
     </div>
 
-    <!-- MODAL DO QR CODE (ETIQUETA) -->
+    <!-- MODAL DO QR CODE (ETIQUETA FISICA 5x3cm) -->
     <div id="modalQR" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div id="recipienteImpressaoEtiqueta" class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl border border-slate-100">
             <h3 class="text-lg font-bold text-slate-900 mb-1 no-print">Etiqueta Patrimonial</h3>
-            <p class="text-xs text-slate-400 mb-4 no-print">Lab Pasteur - Controlo Físico</p>
+            <p class="text-xs text-slate-400 mb-4 no-print">Modelo Físico Térmico: 5cm x 3cm</p>
             
-            <div id="areaImpressao" class="bg-white p-5 inline-block border-2 border-dashed border-slate-300 rounded-xl my-2 mx-auto">
-                <div class="text-center font-mono font-black text-xl text-[#85bc4b] border-b border-slate-100 pb-2 mb-3 tracking-wide" id="printReferencia"></div>
+            <!-- Pré-visualização da etiqueta escalonada em tela para reproduzir o aspecto 5:3 exato de impressão -->
+            <div id="areaImpressao" class="bg-white p-[10px] border-2 border-dashed border-slate-300 rounded-xl my-2 mx-auto" style="width: 350px; height: 210px; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px; box-sizing: border-box;">
                 
-                <div id="canvasQR" class="flex justify-center mb-4"></div>
-                <div class="text-left text-[11px] font-mono text-slate-700 border-t border-slate-100 pt-3 space-y-1">
-                    <p class="truncate"><strong>LAB:</strong> PASTEUR</p>
-                    <p class="truncate"><strong>EQUI:</strong> <span id="printNome"></span></p>
-                    <p class="truncate"><strong>MOD:</strong> <span id="printMarca"></span></p>
-                    <p class="truncate"><strong>S/N:</strong> <span id="printSerie"></span></p>
-                    <p class="truncate"><strong>LOC:</strong> <span id="printSetor"></span></p>
+                <!-- Lado Esquerdo: QR Code de Alta Resolução -->
+                <div id="canvasQR" class="flex justify-center items-center shrink-0" style="width: 140px; height: 140px; background-color: white;"></div>
+                
+                <!-- Lado Direito: Informações do Ativo com Hierarquia Monospace limpa -->
+                <div id="printInfoPanel" class="text-left font-mono text-slate-800" style="width: calc(100% - 140px - 12px); display: flex; flex-direction: column; justify-content: center; height: 100%; overflow: hidden;">
+                    <div class="font-mono font-black text-slate-950 border-b border-slate-200 pb-1 mb-1 tracking-wide text-ellipsis overflow-hidden whitespace-nowrap" id="printReferencia" style="font-size: 14px; line-height: 1.2;"></div>
+                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>LAB:</strong> PASTEUR</p>
+                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>EQP:</strong> <span id="printNome"></span></p>
+                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>MOD:</strong> <span id="printMarca"></span></p>
+                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>S/N:</strong> <span id="printSerie"></span></p>
+                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>LOC:</strong> <span id="printSetor"></span></p>
                 </div>
             </div>
 
@@ -616,7 +773,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                 </svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Pretende remover o item?</h3>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Deseja remover o item?</h3>
             <p class="text-xs text-slate-500 mb-5">Esta ação irá apagar definitivamente o equipamento do armazenamento interno.</p>
             
             <div class="flex gap-3">
@@ -659,23 +816,20 @@
             <p class="text-xs text-slate-500 mb-4">Cole dados copiados diretamente do Excel/Sheets ou envie um arquivo CSV para cadastrar múltiplos itens.</p>
             
             <div class="space-y-4 flex-1 overflow-y-auto pr-1">
-                <!-- Instruções do Modelo de Colunas -->
                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-[11px] text-slate-600">
-                    <p class="font-bold text-slate-700 mb-1">Layout esperado das Colunas na Planilha (Selecione, copie do Excel e cole abaixo):</p>
+                    <p class="font-bold text-slate-700 mb-1">Layout esperado das Colunas na Planilha:</p>
                     <div class="bg-white p-2 rounded-md font-mono text-[10.5px] text-[#85bc4b] border border-slate-200 overflow-x-auto select-all">
-                        Sigla_Referência	Número_Patrimônio	Nome_Equipamento	Marca_Modelo	Número_Série	Categoria	Setor_Sala	Responsável	Data_Aquisição(AAAA-MM-DD)	Estado(Ativo/Manutenção/Abatido)
+                        Sigla_Referência	Número_Patrimônio	Nome_Equipamento	Marca_Modelo	Número_Série	Categoria	Setor_Sala	Responsável	Data_Aquisição(AAAA-MM-DD)	Estado(Ativo/Manutenção/Descartado)
                     </div>
-                    <p class="mt-1.5 text-[10px] text-slate-400">Exemplo prático: <code class="font-mono bg-slate-100 px-1 rounded">ESTERI	001	AUTOCLAVE ALT	Eppendorf	SN-1234	Equipamento Laboratorial	SETOR TÉCNICO	Dr. Antunes	2026-07-03	Ativo</code></p>
                 </div>
 
-                <!-- Métodos de Entrada -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Opção A: Colar Linhas da Planilha</label>
                         <textarea id="textareaLote" placeholder="Cole as células copiadas da sua planilha aqui..." class="w-full h-32 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs font-mono resize-none" oninput="analisarEntradaLote()"></textarea>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Opção B: Carregar Arquivo de Texto ou CSV</label>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Opção B: Carregar Arquivo CSV / TXT</label>
                         <div class="border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center p-4 text-center hover:bg-slate-50 transition relative cursor-pointer">
                             <svg class="w-8 h-8 text-slate-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -688,8 +842,8 @@
 
                 <!-- Visualização Dinâmica dos Dados Interpretados -->
                 <div id="previewLoteContainer" class="hidden space-y-2">
-                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex justify-between">
-                        <span>Dados Mapeados (<span id="countPreviewItens">0</span> itens identificados)</span>
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Dados Mapeados (<span id="countPreviewItens">0</span> itens identificados)
                     </h4>
                     <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-40">
                         <table class="w-full text-[11px] text-left text-slate-600">
@@ -731,7 +885,7 @@
                 </svg>
                 <div>
                     <h1 class="text-xl font-bold text-slate-950">PASTEUR | Relatório de Inventário</h1>
-                    <p class="text-xs text-slate-500">Controlo de Equipamentos e Ativos Laboratoriais</p>
+                    <p class="text-xs text-slate-500">Controle de Equipamentos e Ativos Laboratoriais</p>
                 </div>
             </div>
             <div class="text-right text-xs text-slate-500">
@@ -740,16 +894,15 @@
             </div>
         </div>
 
-        <!-- Indicadores Rápidos de Estado no Relatório -->
         <div class="grid grid-cols-3 gap-4 mb-6 border-b border-slate-200 pb-4 text-xs">
             <div><strong>Ativos:</strong> <span id="relatorioContagemAtivos"></span></div>
             <div><strong>Em Manutenção:</strong> <span id="relatorioContagemManutencao"></span></div>
-            <div><strong>Abatidos/Inativos:</strong> <span id="relatorioContagemAbatidos"></span></div>
+            <div><strong>Descartados/Inativos:</strong> <span id="relatorioContagemAbatidos"></span></div>
         </div>
 
         <table class="w-full text-xs text-left border-collapse border border-slate-300">
             <thead>
-                <tr class="bg-slate-100 border-b border-slate-300">
+                <tr class="bg-slate-100 border-b border-slate-300 font-bold text-slate-900">
                     <th class="px-3 py-2 border border-slate-300">Referência</th>
                     <th class="px-3 py-2 border border-slate-300">Equipamento</th>
                     <th class="px-3 py-2 border border-slate-200">Marca / Modelo</th>
@@ -765,7 +918,7 @@
         </table>
 
         <div class="mt-12 text-center text-[10px] text-slate-400 border-t border-slate-200 pt-4">
-            <p>Documento oficial Lab Pasteur. Para uso e controlo de auditoria interna.</p>
+            <p>Documento oficial Lab Pasteur. Para uso e controle de auditoria interna.</p>
         </div>
     </div>
 
@@ -785,16 +938,29 @@
             "T.I. / INFORMAÇÃO", "EXPEDIÇÃO", "SALA DE ESTERILIZAÇÃO"
         ];
 
-        // Variáveis de Estado
+        const defaultReferencias = [
+            "ESTERI", "MMICRO", "BAL", "BAN", "CAM", "CENTRI", "GAS", "MBIO", "CPU", "EST",
+            "ETIQ", "GEL", "BIOMOL", "IMP", "LEICARD", "LEITOR", "TEL", "MON", "ATEN", "NOB",
+            "NOTE", "MIM", "WIFI", "MHEM", "SWITCH", "TABLET", "URI"
+        ];
+
+        const defaultCategorias = [
+            "Equipamento Laboratorial", "TI / Informática", "Refrigeração / Conservação",
+            "Mobiliário Clínico", "Outros"
+        ];
+
+        // Variáveis de Estado Sincronizadas
         let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
         let listaEquipamentos = JSON.parse(localStorage.getItem('listaEquipamentos')) || defaultEquipamentos;
         let listaSetores = JSON.parse(localStorage.getItem('listaSetores')) || defaultSetores;
+        let listaReferencias = JSON.parse(localStorage.getItem('listaReferencias')) || defaultReferencias;
+        let listaCategorias = JSON.parse(localStorage.getItem('listaCategorias')) || defaultCategorias;
         let URL_DO_GOOGLE_SCRIPT = localStorage.getItem('urlGoogleSheets') || "";
         let idItemSelecionadoParaExclusao = null;
         let tipoCadastroRapido = "";
         let itensPrevisualizados = [];
 
-        // Inicialização do sistema
+        // Inicialização do sistema no carregamento da janela
         window.onload = function() {
             renderizarDropdowns();
             renderizarTabela();
@@ -808,7 +974,7 @@
 
         // --- SISTEMA DE CRIPTOGRAFIA E CONTROLE DE ACESSO ---
         
-        // Conversão de senha simples para Hash SHA-256 (Nativo do Navegador)
+        // Conversão de senha simples para Hash SHA-256 (Nativo do Navegador usando Web Crypto API)
         async function gerarHashSHA256(senha) {
             const encoder = new TextEncoder();
             const data = encoder.encode(senha);
@@ -823,32 +989,34 @@
 
             // Atualiza o botão de status nas configurações
             const btnToggle = document.getElementById('btnToggleSeguranca');
-            if (segurancaAtiva) {
-                btnToggle.innerText = "Proteção Ativa";
-                btnToggle.className = "px-3 py-1.5 bg-[#9ada55] hover:bg-[#85bc4b] text-white text-xs font-bold rounded-lg transition cursor-pointer";
-                document.getElementById('secaoAlterarSenha').classList.remove('opacity-50', 'pointer-events-none');
-            } else {
-                btnToggle.innerText = "Proteção Inativa";
-                btnToggle.className = "px-3 py-1.5 bg-slate-300 hover:bg-slate-400 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer";
-                document.getElementById('secaoAlterarSenha').classList.add('opacity-50', 'pointer-events-none');
+            if (btnToggle) {
+                if (segurancaAtiva) {
+                    btnToggle.innerText = "Proteção Ativa";
+                    btnToggle.className = "px-3 py-1.5 bg-[#9ada55] hover:bg-[#85bc4b] text-white text-xs font-bold rounded-lg transition cursor-pointer";
+                    document.getElementById('secaoAlterarSenha').classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    btnToggle.innerText = "Proteção Inativa";
+                    btnToggle.className = "px-3 py-1.5 bg-slate-300 hover:bg-slate-400 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer";
+                    document.getElementById('secaoAlterarSenha').classList.add('opacity-50', 'pointer-events-none');
+                }
             }
 
             if (!segurancaAtiva) {
-                // Se a segurança estiver explicitamente inativa, libera o acesso direto
+                // Se a segurança estiver inativa, libera o acesso direto ocultando a tela de login
                 document.getElementById('telaLogin').classList.add('hidden');
                 return;
             }
+
+            document.getElementById('telaLogin').classList.remove('hidden');
 
             if (!hashSalvo) {
                 // Se segurança ativa, mas sem senha cadastrada (Primeiro Acesso)
                 document.getElementById('containerConfigSenha').classList.remove('hidden');
                 document.getElementById('containerDesbloqueio').classList.add('hidden');
-                document.getElementById('telaLogin').classList.remove('hidden');
             } else {
                 // Com senha já cadastrada, exige o desbloqueio
                 document.getElementById('containerConfigSenha').classList.add('hidden');
                 document.getElementById('containerDesbloqueio').classList.remove('hidden');
-                document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('inputSenhaAcesso').focus();
             }
         }
@@ -874,7 +1042,7 @@
             
             mostrarAlerta("Senha mestre configurada com sucesso!", "success");
             
-            // Libera entrada
+            // Oculta tela e limpa campos
             document.getElementById('telaLogin').classList.add('hidden');
             document.getElementById('inputNovaSenha').value = "";
             document.getElementById('inputNovaSenhaConfirmar').value = "";
@@ -893,13 +1061,11 @@
             const hashDigitado = await gerarHashSHA256(input.value);
 
             if (hashDigitado === hashSalvo) {
-                // Sucesso
                 erroMsg.classList.add('hidden');
                 document.getElementById('telaLogin').classList.add('hidden');
                 input.value = "";
                 mostrarAlerta("Acesso autorizado. Seja bem-vindo ao sistema do Lab Pasteur!", "success");
             } else {
-                // Senha inválida
                 erroMsg.classList.remove('hidden');
                 painel.classList.add('error-shake');
                 input.value = "";
@@ -922,7 +1088,6 @@
             const atualmenteAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false';
             
             if (atualmenteAtiva) {
-                // Para desativar exige a confirmação da senha mestre atual
                 const senhaConfirmar = prompt("Para DESATIVAR a proteção por senha de forma permanente neste navegador, confirme sua Senha Mestre:");
                 if (!senhaConfirmar) return;
                 
@@ -937,7 +1102,6 @@
                     }
                 });
             } else {
-                // Ativa novamente
                 localStorage.setItem('pasteur_seguranca_ativa', 'true');
                 mostrarAlerta("Proteção de segurança reativada!", "success");
                 configurarEstruturaSeguranca();
@@ -976,16 +1140,12 @@
             const novoHash = await gerarHashSHA256(novaSenha);
             localStorage.setItem('pasteur_senha_hash', novoHash);
             
-            // Limpa campos
             document.getElementById('inputSenhaConfigAtual').value = "";
             document.getElementById('inputSenhaConfigNova').value = "";
             document.getElementById('inputSenhaConfigConfirmar').value = "";
             
             mostrarAlerta("Sua senha administrativa foi alterada com sucesso!", "success");
         }
-
-
-        // --- SISTEMA E LOGICA DE INVENTÁRIO (OPERAÇÕES ANTERIORES) ---
 
         // Alterna abas do sistema
         function mudarAba(abaId) {
@@ -1017,13 +1177,11 @@
             const sigla = document.getElementById('refCodigo').value;
             if (!sigla) return;
 
-            // Filtra os itens que possuem essa mesma sigla de referência
             const itensMesmaSigla = inventario.filter(item => item.refCodigo === sigla);
             
             if (itensMesmaSigla.length === 0) {
                 document.getElementById('refNumero').value = "001";
             } else {
-                // Pega o maior número sequencial cadastrado
                 const numeros = itensMesmaSigla.map(item => parseInt(item.refNumero, 10)).filter(num => !isNaN(num));
                 const maiorNumero = numeros.length > 0 ? Math.max(...numeros) : 0;
                 const proximo = String(maiorNumero + 1).padStart(3, '0');
@@ -1036,12 +1194,14 @@
             const selectNome = document.getElementById('nome');
             const selectSetor = document.getElementById('setor');
             const selectFiltroSetor = document.getElementById('filtroSetorRelatorio');
+            const selectRefCodigo = document.getElementById('refCodigo');
+            const selectCategoria = document.getElementById('categoria');
 
-            // Ordena as listas de forma alfabética
             listaEquipamentos.sort();
             listaSetores.sort();
+            listaReferencias.sort();
+            listaCategorias.sort();
 
-            // Renderiza Dropdown de Nomes
             selectNome.innerHTML = '<option value="" disabled selected>Selecione um equipamento...</option>';
             listaEquipamentos.forEach(eq => {
                 const opt = document.createElement('option');
@@ -1050,7 +1210,6 @@
                 selectNome.appendChild(opt);
             });
 
-            // Renderiza Dropdown de Setores do Formulário
             selectSetor.innerHTML = '<option value="" disabled selected>Selecione um setor/sala...</option>';
             listaSetores.forEach(set => {
                 const opt = document.createElement('option');
@@ -1059,13 +1218,28 @@
                 selectSetor.appendChild(opt);
             });
 
-            // Renderiza Dropdown de Setores do Relatório em Tela
             selectFiltroSetor.innerHTML = '<option value="Todos">Todos os Setores</option>';
             listaSetores.forEach(set => {
                 const opt = document.createElement('option');
                 opt.value = set;
                 opt.innerText = set;
                 selectFiltroSetor.appendChild(opt);
+            });
+
+            selectRefCodigo.innerHTML = '<option value="" disabled selected>Sigla...</option>';
+            listaReferencias.forEach(ref => {
+                const opt = document.createElement('option');
+                opt.value = ref;
+                opt.innerText = ref;
+                selectRefCodigo.appendChild(opt);
+            });
+
+            selectCategoria.innerHTML = '<option value="" disabled selected>Selecione uma categoria...</option>';
+            listaCategorias.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                selectCategoria.appendChild(opt);
             });
         }
 
@@ -1077,7 +1251,6 @@
             const numero = document.getElementById('refNumero').value.padStart(3, '0');
             const refFinal = `${sigla}-${numero}`;
 
-            // Valida duplicidade de número de série ou referência
             const duplicado = inventario.find(item => item.referencia === refFinal);
             if (duplicado) {
                 mostrarAlerta(`Aviso! O código patrimonial ${refFinal} já está registrado no sistema!`, "error");
@@ -1099,13 +1272,11 @@
                 status: document.getElementById('status').value
             };
 
-            // Remove itens de teste que possam ter sido inseridos antes de cadastrar o novo real
             removerItensTeste();
 
             inventario.push(novoEquipamento);
             localStorage.setItem('inventario', JSON.stringify(inventario));
 
-            // Sincroniza em nuvem (Google Sheets) se configurado
             if (URL_DO_GOOGLE_SCRIPT) {
                 enviarParaGoogleSheets(novoEquipamento);
             }
@@ -1121,7 +1292,7 @@
             document.getElementById('refNumero').value = "";
         }
 
-        // Sincroniza um equipamento individual com o Google Sheets
+        // Sincroniza um equipamento com o Google Sheets
         function enviarParaGoogleSheets(item) {
             fetch(URL_DO_GOOGLE_SCRIPT, {
                 method: "POST",
@@ -1130,10 +1301,10 @@
                 body: JSON.stringify(item)
             })
             .then(() => console.log("Dado espelhado com sucesso na nuvem Google Sheets!"))
-            .catch(err => console.error("Erro de conexão de rede ao sincronizar com nuvem:", err));
+            .catch(err => console.error("Erro de conexão ao sincronizar com nuvem:", err));
         }
 
-        // Remove itens de teste
+        // Remove itens de teste antigos de forma limpa
         function removerItensTeste() {
             const tamanhoOriginal = inventario.length;
             inventario = inventario.filter(item => {
@@ -1176,7 +1347,6 @@
                 return;
             }
 
-            // Ordena os equipamentos por código de referência de forma decrescente para os mais novos aparecerem em cima
             const itensOrdenados = [...inventario].sort((a, b) => b.id - a.id);
 
             itensOrdenados.forEach(item => {
@@ -1187,9 +1357,9 @@
                 if (item.status === 'Ativo') {
                     badgeEstado = '<span class="bg-[#9ada55]/15 text-[#85bc4b] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Ativo</span>';
                 } else if (item.status === 'Manutenção') {
-                    badgeEstado = '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Manutenção</span>';
+                    badgeEstado = '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Equipamentos em Manutenção</span>';
                 } else {
-                    badgeEstado = '<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Inativo</span>';
+                    badgeEstado = '<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Equipamento Descartado</span>';
                 }
 
                 tr.innerHTML = `
@@ -1213,7 +1383,7 @@
                             </button>
                             <button onclick="confirmarExclusaoItem(${item.id})" title="Remover Equipamento" class="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-400 p-1.5 rounded-lg transition cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16" />
                                 </svg>
                             </button>
                         </div>
@@ -1251,57 +1421,52 @@
             filtrarTabela();
         }
 
-        // Calcula KPIs para a aba de relatórios
+        // --- ABA DE ANÁLISES & CALCULADORA KPIs ---
+        
         function calcularKPIs() {
             const total = inventario.length;
             const ativos = inventario.filter(i => i.status === 'Ativo').length;
             const manutencao = inventario.filter(i => i.status === 'Manutenção').length;
-            const abatidos = inventario.filter(i => i.status === 'Abatido').length;
+            const descartados = inventario.filter(i => i.status === 'Descartado' || i.status === 'Abatido').length;
 
             document.getElementById('kpiTotal').innerText = total;
             document.getElementById('kpiAtivos').innerText = ativos;
             document.getElementById('kpiManutencao').innerText = manutencao;
-            document.getElementById('kpiAbatidos').innerText = abatidos;
+            document.getElementById('kpiAbatidos').innerText = descartados;
         }
 
-        // Renderiza gráfico de barras simplificado de categorias
         function gerarGraficoCategorias() {
-            const categorias = {
-                "Equipamento Laboratorial": 0,
-                "TI / Informática": 0,
-                "Refrigeração / Conservação": 0,
-                "Mobiliário Clínico": 0,
-                "Outros": 0
-            };
-
-            inventario.forEach(i => {
-                if (categorias[i.categoria] !== undefined) {
-                    categorias[i.categoria]++;
-                } else {
-                    categorias["Outros"]++;
-                }
-            });
-
             const container = document.getElementById('distribuicaoCategorias');
+            if (!container) return;
             container.innerHTML = '';
 
-            const maxItens = Math.max(...Object.values(categorias), 1);
+            const categorias = [...listaCategorias];
+            
+            let maxCount = 0;
+            const contagem = {};
+            categorias.forEach(cat => {
+                const count = inventario.filter(i => i.categoria === cat).length;
+                contagem[cat] = count;
+                if (count > maxCount) maxCount = count;
+            });
 
-            for (const [cat, qtd] of Object.entries(categorias)) {
-                const percentual = (qtd / maxItens) * 100;
+            categorias.forEach(cat => {
+                const count = contagem[cat] || 0;
+                const porcentagem = maxCount > 0 ? (count / maxCount) * 100 : 0;
+
                 const div = document.createElement('div');
                 div.className = "space-y-1";
                 div.innerHTML = `
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="font-semibold text-slate-700">${cat}</span>
-                        <span class="font-bold text-slate-900">${qtd} itens</span>
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span class="text-slate-600">${cat}</span>
+                        <span class="text-slate-900 font-bold">${count} item(ns)</span>
                     </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div class="bg-[#9ada55] h-full rounded-full transition-all duration-500" style="width: ${percentual}%"></div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-[#9ada55] h-full rounded-full transition-all duration-500" style="width: ${porcentagem}%"></div>
                     </div>
                 `;
                 container.appendChild(div);
-            }
+            });
         }
 
         // Filtra a tabela de relatório em tela dinamicamente
@@ -1314,7 +1479,12 @@
             let itensFiltrados = [...inventario];
 
             if (statusFiltro !== 'Todos') {
-                itensFiltrados = itensFiltrados.filter(i => i.status === statusFiltro);
+                itensFiltrados = itensFiltrados.filter(i => {
+                    if (statusFiltro === 'Descartado') {
+                        return i.status === 'Descartado' || i.status === 'Abatido';
+                    }
+                    return i.status === statusFiltro;
+                });
             }
 
             if (setorFiltro !== 'Todos') {
@@ -1335,6 +1505,10 @@
             itensFiltrados.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 border-b border-slate-100";
+                
+                let showStatus = item.status === 'Abatido' ? 'Descartado' : item.status;
+                let showStatusLabel = showStatus === 'Manutenção' ? 'Equipamentos em Manutenção' : (showStatus === 'Descartado' ? 'Equipamento Descartado' : showStatus);
+                
                 tr.innerHTML = `
                     <td class="px-3 py-2.5 font-mono font-bold text-[#85bc4b]">${item.referencia}</td>
                     <td class="px-3 py-2.5 font-bold text-slate-900">${item.nome}</td>
@@ -1343,7 +1517,7 @@
                     <td class="px-3 py-2.5 font-semibold text-slate-500">${item.setor}</td>
                     <td class="px-3 py-2.5">${item.responsavel}</td>
                     <td class="px-3 py-2.5">${item.dataAquisicao}</td>
-                    <td class="px-3 py-2.5 font-bold text-xs ${item.status === 'Ativo' ? 'text-green-600' : item.status === 'Manutenção' ? 'text-amber-600' : 'text-red-600'}">${item.status}</td>
+                    <td class="px-3 py-2.5 font-bold text-xs ${showStatus === 'Ativo' ? 'text-green-600' : showStatus === 'Manutenção' ? 'text-amber-600' : 'text-red-600'}">${showStatusLabel}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1357,7 +1531,12 @@
             let itensFiltrados = [...inventario];
 
             if (statusFiltro !== 'Todos') {
-                itensFiltrados = itensFiltrados.filter(i => i.status === statusFiltro);
+                itensFiltrados = itensFiltrados.filter(i => {
+                    if (statusFiltro === 'Descartado') {
+                        return i.status === 'Descartado' || i.status === 'Abatido';
+                    }
+                    return i.status === statusFiltro;
+                });
             }
 
             if (setorFiltro !== 'Todos') {
@@ -1382,6 +1561,14 @@
                 titulo.innerText = "Novo Equipamento";
                 desc.innerText = "Cadastre um novo nome genérico de equipamento para o dropdown (Ex: AUTOCLAVE VERTICAL).";
                 input.placeholder = "Ex: CENTRIFUGA REFRIGERADA";
+            } else if (tipo === 'referencia') {
+                titulo.innerText = "Nova Sigla (Código de Referência)";
+                desc.innerText = "Adicione uma sigla/referência patrimonial para o sequenciador automático.";
+                input.placeholder = "Ex: ESTERI";
+            } else if (tipo === 'categoria') {
+                titulo.innerText = "Nova Categoria";
+                desc.innerText = "Cadastre uma nova categoria de ativos para classificar seus equipamentos.";
+                input.placeholder = "Ex: Vidrarias / Reagentes";
             } else {
                 titulo.innerText = "Novo Setor / Sala";
                 desc.innerText = "Adicione um novo laboratório, sala ou setor físico.";
@@ -1403,13 +1590,27 @@
                 if (!listaEquipamentos.includes(valor)) {
                     listaEquipamentos.push(valor);
                     localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-                    mostrarAlerta(`Equipamento "${valor}" adicionado com sucesso!`, "success");
+                    mostrarAlerta("Equipamento adicionado com sucesso!", "success");
+                }
+            } else if (tipoCadastroRapido === 'referencia') {
+                if (!listaReferencias.includes(valor)) {
+                    listaReferencias.push(valor);
+                    localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
+                    mostrarAlerta("Código de Referência adicionado com sucesso!", "success");
+                }
+            } else if (tipoCadastroRapido === 'categoria') {
+                // Manter case adequado para categoria (CamelCase/Iniciais em Maiúsculas)
+                const valorFormatado = valor.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
+                if (!listaCategorias.includes(valorFormatado)) {
+                    listaCategorias.push(valorFormatado);
+                    localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
+                    mostrarAlerta("Categoria adicionada com sucesso!", "success");
                 }
             } else {
                 if (!listaSetores.includes(valor)) {
                     listaSetores.push(valor);
                     localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-                    mostrarAlerta(`Setor "${valor}" adicionado com sucesso!`, "success");
+                    mostrarAlerta("Setor adicionado com sucesso!", "success");
                 }
             }
 
@@ -1417,35 +1618,51 @@
             fecharModalOpcao();
         }
 
-        // Prepara e abre o modal gerando o QRCode correspondente
+        // --- SISTEMA DE EMISSÃO DE QR CODE (50x30mm) ---
+
+        // Prepara e abre o modal gerando o QRCode correspondente de forma garantida
         function gerarEtiquetaQR(referencia) {
             const item = inventario.find(i => i.referencia === referencia);
             if (!item) return;
 
+            let showStatus = item.status === 'Abatido' ? 'Descartado' : item.status;
+
+            // Injeta metadados
             document.getElementById('printReferencia').innerText = item.referencia;
             document.getElementById('printNome').innerText = item.nome;
             document.getElementById('printMarca').innerText = item.marca;
             document.getElementById('printSerie').innerText = item.serie;
             document.getElementById('printSetor').innerText = item.setor;
 
-            // Limpa canvas do QR anterior
+            // Revela modal primeiro (Necessário para ganhar dimensões e renderizar QR Code)
+            document.getElementById('modalQR').classList.remove('hidden');
+
+            // Limpa canvas anterior
             const canvas = document.getElementById('canvasQR');
             canvas.innerHTML = '';
 
-            // Monta o texto compacto para leitura rápida no laboratório
-            const textoQR = `PATRIMONIO: ${item.referencia}\nEQUI: ${item.nome}\nSERIE: ${item.serie}\nLOC: ${item.setor}\nLAB: PASTEUR`;
+            // Dados compactados legíveis para inventariadores móveis
+            const textoQR = `PAT: ${item.referencia}\nEQP: ${item.nome}\nSN: ${item.serie}\nLOC: ${item.setor}\nLAB: PASTEUR`;
 
-            // Geração estrita do QR Code usando biblioteca de alta precisão
-            new QRCode(canvas, {
-                text: textoQR,
-                width: 140,
-                height: 140,
-                colorDark: "#111827",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-
-            document.getElementById('modalQR').classList.remove('hidden');
+            // Desenha o QR Code em alta definição
+            try {
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(canvas, {
+                        text: textoQR,
+                        width: 140,
+                        height: 140,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } else {
+                    console.warn("QRCode.js offline indisponível. Ativando API de contingência.");
+                    canvas.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(textoQR)}" alt="QR Code" width="140" height="140" class="mx-auto block" />`;
+                }
+            } catch (err) {
+                console.error("Falha de renderização local. Acionando API remota.", err);
+                canvas.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(textoQR)}" alt="QR Code" width="140" height="140" class="mx-auto block" />`;
+            }
         }
 
         function fecharModal() {
@@ -1454,13 +1671,15 @@
 
         // Abre o disparo nativo de impressão da etiqueta patrimonial isolada
         function dispararImpressaoEtiqueta() {
-            const recipiente = document.getElementById('recipienteImpressaoEtiqueta');
-            recipiente.classList.add('print-active');
+            const modal = document.getElementById('modalQR');
+            
+            // Adiciona classe de isolamento para impressora
+            document.body.classList.remove('print-report-mode');
+            modal.classList.add('print-active-container');
             window.print();
             
-            // Limpeza pós-print
             setTimeout(() => {
-                recipiente.classList.remove('print-active');
+                modal.classList.remove('print-active-container');
             }, 500);
         }
 
@@ -1511,9 +1730,13 @@
             localStorage.removeItem('inventario');
             localStorage.removeItem('listaEquipamentos');
             localStorage.removeItem('listaSetores');
+            localStorage.removeItem('listaReferencias');
+            localStorage.removeItem('listaCategorias');
             inventario = [];
             listaEquipamentos = defaultEquipamentos;
             listaSetores = defaultSetores;
+            listaReferencias = defaultReferencias;
+            listaCategorias = defaultCategorias;
             
             renderizarDropdowns();
             renderizarTabela();
@@ -1528,10 +1751,11 @@
                 return;
             }
 
-            let csvContent = "\uFEFF"; // Byte Order Mark para UTF-8 (corrige acentuação no Excel)
+            let csvContent = "\uFEFF"; 
             csvContent += "Referência;Nome do Equipamento;Marca / Modelo;Número de Série;Categoria;Setor;Responsável;Data de Aquisição;Estado\n";
 
             inventario.forEach(item => {
+                let showStatus = item.status === 'Abatido' ? 'Descartado' : item.status;
                 const linha = [
                     item.referencia,
                     item.nome,
@@ -1541,7 +1765,7 @@
                     item.setor,
                     item.responsavel,
                     item.dataAquisicao,
-                    item.status
+                    showStatus
                 ].map(txt => `"${String(txt).replace(/"/g, '""')}"`).join(";");
                 
                 csvContent += linha + "\n";
@@ -1572,16 +1796,18 @@
 
             const ativos = listaItens.filter(i => i.status === 'Ativo').length;
             const manutencao = listaItens.filter(i => i.status === 'Manutenção').length;
-            const abatidos = listaItens.filter(i => i.status === 'Abatido').length;
+            const descartados = listaItens.filter(i => i.status === 'Descartado' || i.status === 'Abatido').length;
 
             document.getElementById('relatorioContagemAtivos').innerText = `${ativos} Equipamentos`;
             document.getElementById('relatorioContagemManutencao').innerText = `${manutencao} Equipamentos`;
-            document.getElementById('relatorioContagemAbatidos').innerText = `${abatidos} Equipamentos`;
+            document.getElementById('relatorioContagemAbatidos').innerText = `${descartados} Equipamentos`;
 
             if (listaItens.length === 0) {
                 corpoTabela.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center">Nenhum item cadastrado ou filtrado para impressão.</td></tr>';
             } else {
                 listaItens.forEach(item => {
+                    let showStatus = item.status === 'Abatido' ? 'Descartado' : item.status;
+                    let showStatusLabel = showStatus === 'Manutenção' ? 'Equipamentos em Manutenção' : (showStatus === 'Descartado' ? 'Equipamento Descartado' : showStatus);
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-slate-300";
                     tr.innerHTML = `
@@ -1591,31 +1817,38 @@
                         <td class="px-3 py-2 border border-slate-300 font-mono">${item.serie}</td>
                         <td class="px-3 py-2 border border-slate-300">${item.categoria}</td>
                         <td class="px-3 py-2 border border-slate-300 font-semibold">${item.setor}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-bold">${item.status}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-bold">${showStatusLabel}</td>
                     `;
                     corpoTabela.appendChild(tr);
                 });
             }
 
             const container = document.getElementById('containerImpressaoRelatorio');
-            container.classList.add('print-active');
+            
+            // Adiciona classe de relatório para margem A4
+            document.body.classList.add('print-report-mode');
+            container.classList.remove('hidden');
+            container.classList.add('print-active-container');
+            
             window.print();
 
             setTimeout(() => {
-                container.classList.remove('print-active');
+                container.classList.remove('print-active-container');
+                container.classList.add('hidden');
             }, 500);
         }
 
         // Exportação de Backup completo em arquivo JSON
         function exportarBackupJSON() {
             const dadosBackup = {
-                versao: "1.0",
+                versao: "1.1",
                 dataGeracao: new Date().toISOString(),
                 inventario: inventario,
                 listaEquipamentos: listaEquipamentos,
                 listaSetores: listaSetores,
+                listaReferencias: listaReferencias,
+                listaCategorias: listaCategorias,
                 urlGoogleSheets: URL_DO_GOOGLE_SCRIPT,
-                // Mantém as configurações de login no backup de transferência se o usuário desejar
                 pasteur_senha_hash: localStorage.getItem('pasteur_senha_hash'),
                 pasteur_seguranca_ativa: localStorage.getItem('pasteur_seguranca_ativa')
             };
@@ -1660,6 +1893,16 @@
                         localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
                     }
 
+                    if (dados.listaReferencias && Array.isArray(dados.listaReferencias)) {
+                        listaReferencias = dados.listaReferencias;
+                        localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
+                    }
+
+                    if (dados.listaCategorias && Array.isArray(dados.listaCategorias)) {
+                        listaCategorias = dados.listaCategorias;
+                        localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
+                    }
+
                     if (dados.urlGoogleSheets !== undefined) {
                         URL_DO_GOOGLE_SCRIPT = dados.urlGoogleSheets;
                         localStorage.setItem('urlGoogleSheets', URL_DO_GOOGLE_SCRIPT);
@@ -1676,13 +1919,13 @@
                     renderizarDropdowns();
                     renderizarTabela();
                     filtrarRelatorioTela();
-                    configurarEstruturaSeguranca();
+                    configurarStructureSeguranca();
                     
                     mostrarAlerta("Backup importado com sucesso! Seus dados foram sincronizados.", "success");
                 } catch(err) {
                     mostrarAlerta("Erro ao processar arquivo de backup. Verifique se o formato está correto.", "error");
                 }
-                event.target.value = ''; // Limpa input
+                event.target.value = ''; 
             };
             leitor.readAsText(arquivo);
         }
@@ -1727,7 +1970,7 @@
             const alerta = document.getElementById('alertaFeedback');
             const texto = document.getElementById('textoAlerta');
 
-            texto.innerText = mensagem;
+            texto.innerText = message = mensagem;
             alerta.classList.remove('hidden');
 
             if (tipo === 'success') {
@@ -1736,7 +1979,6 @@
                 alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-rose-50 text-rose-700 border border-rose-100";
             }
 
-            // Auto-oculta o alerta após 5 segundos
             setTimeout(() => {
                 fecharAlerta();
             }, 5000);
@@ -1746,7 +1988,8 @@
             document.getElementById('alertaFeedback').classList.add('hidden');
         }
 
-        // --- SISTEMA DE IMPORTAÇÃO EM MASSA (EXCEL/PLANILHAS) ---
+        // --- GESTÃO DE IMPORTAÇÃO EM LOTE ---
+        
         function abrirModalLote() {
             document.getElementById('modalImportacaoLote').classList.remove('hidden');
             document.getElementById('textareaLote').value = '';
@@ -1791,12 +2034,10 @@
             linhas.forEach((linha, index) => {
                 if (!linha.trim()) return;
                 
-                // Ignora linha de cabeçalho
                 if (index === 0 && (linha.toLowerCase().includes('sigla') || linha.toLowerCase().includes('nome_') || linha.toLowerCase().includes('responsável'))) {
                     return; 
                 }
 
-                // Autodetecta delimitador: Tabulação (Excel), Ponto e vírgula ou vírgula
                 let delimitador = '\t';
                 if (linha.includes(';')) delimitador = ';';
                 else if (linha.includes(',') && !linha.includes('\t')) delimitador = ',';
@@ -1820,9 +2061,13 @@
                     const dataAquisicao = colunas[8] || new Date().toISOString().split('T')[0];
                     
                     let status = colunas[9] || 'Ativo';
-                    if (status.toLowerCase().includes('manutenc') || status.toLowerCase().includes('manutenção')) status = 'Manutenção';
-                    else if (status.toLowerCase().includes('abatido') || status.toLowerCase().includes('inativo')) status = 'Abatido';
-                    else status = 'Ativo';
+                    if (status.toLowerCase().includes('manutenc') || status.toLowerCase().includes('manutenção')) {
+                        status = 'Manutenção';
+                    } else if (status.toLowerCase().includes('abatido') || status.toLowerCase().includes('descartado') || status.toLowerCase().includes('inativo')) {
+                        status = 'Descartado';
+                    } else {
+                        status = 'Ativo';
+                    }
 
                     itensPrevisualizados.push({
                         id: Date.now() + index + Math.random(),
@@ -1841,7 +2086,6 @@
                 }
             });
 
-            // Gerencia UI da Previsualização
             const container = document.getElementById('previewLoteContainer');
             const tbody = document.getElementById('tabelaPreviewLote');
             const countSpan = document.getElementById('countPreviewItens');
@@ -1851,12 +2095,10 @@
                 container.classList.remove('hidden');
                 countSpan.innerText = itensPrevisualizados.length;
                 
-                // Ativa botão de salvar
                 const btn = document.getElementById('btnConfirmarImportacaoLote');
                 btn.disabled = false;
                 btn.className = "flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer";
 
-                // Mostra prévia limitada dos primeiros 10 itens
                 itensPrevisualizados.slice(0, 10).forEach(item => {
                     const tr = document.createElement('tr');
                     tr.className = 'border-b border-slate-100 hover:bg-slate-50';
@@ -1889,30 +2131,31 @@
             itensPrevisualizados.forEach(item => {
                 inventario.push(item);
                 
-                // Adiciona o nome do equipamento se for novo
                 const nomeUpper = item.nome.toUpperCase();
                 if (!listaEquipamentos.includes(nomeUpper) && nomeUpper !== 'SEM NOME') {
                     listaEquipamentos.push(nomeUpper);
                 }
                 
-                // Adiciona o setor se for novo
                 const setorUpper = item.setor.toUpperCase();
                 if (!listaSetores.includes(setorUpper)) {
                     listaSetores.push(setorUpper);
                 }
 
-                // Sincroniza em nuvem caso ativo
+                const catFormatada = item.categoria.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
+                if (!listaCategorias.includes(catFormatada)) {
+                    listaCategorias.push(catFormatada);
+                }
+
                 if (URL_DO_GOOGLE_SCRIPT) {
                     enviarParaGoogleSheets(item);
                 }
             });
 
-            // Salva listas consolidadas
             localStorage.setItem('inventario', JSON.stringify(inventario));
             localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
             localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
+            localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
 
-            // Atualiza UI
             renderizarDropdowns();
             renderizarTabela();
             fecharModalLote();
