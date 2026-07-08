@@ -520,7 +520,7 @@
                     <h3 id="kpiManutencao" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-rose-600">EDescartados</p>
+                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-rose-600">Descartados</p>
                     <h3 id="kpiAbatidos" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
                 </div>
             </div>
@@ -770,16 +770,16 @@
             <div id="areaImpressao" class="bg-white p-[10px] border-2 border-dashed border-slate-300 rounded-xl my-2 mx-auto" style="width: 350px; height: 210px; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px; box-sizing: border-box;">
                 
                 <!-- Lado Esquerdo: QR Code de Alta Resolução -->
-                <div id="canvasQR" class="flex justify-center items-center shrink-0" style="width: 140px; height: 140px; background-color: white;"></div>
+                <div id="canvasQR" class="flex justify-center items-center shrink-0" style="width: 120px; height: 120px; background-color: white;"></div>
                 
                 <!-- Lado Direito: Informações do Ativo com Hierarquia Monospace limpa -->
                 <div id="printInfoPanel" class="text-left font-mono text-slate-800" style="width: calc(100% - 140px - 12px); display: flex; flex-direction: column; justify-content: center; height: 100%; overflow: hidden;">
                     <div class="font-mono font-black text-slate-950 border-b border-slate-200 pb-1 mb-1 tracking-wide text-ellipsis overflow-hidden whitespace-nowrap" id="printReferencia" style="font-size: 14px; line-height: 1.2;"></div>
-                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>LAB:</strong> PASTEUR</p>
-                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>EQP:</strong> <span id="printNome"></span></p>
-                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>MOD:</strong> <span id="printMarca"></span></p>
-                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>S/N:</strong> <span id="printSerie"></span></p>
-                    <p class="print-text truncate" style="font-size: 10px; line-height: 1.3; margin: 0;"><strong>LOC:</strong> <span id="printSetor"></span></p>
+                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>LAB:</strong> PASTEUR</p>
+                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>EQP:</strong> <span id="printNome"></span></p>
+                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>MOD:</strong> <span id="printMarca"></span></p>
+                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>S/N:</strong> <span id="printSerie"></span></p>
+                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>LOC:</strong> <span id="printSetor"></span></p>
                 </div>
             </div>
 
@@ -915,7 +915,7 @@
 
         <div class="grid grid-cols-3 gap-4 mb-6 border-b border-slate-200 pb-4 text-xs">
             <div><strong>Ativos:</strong> <span id="relatorioContagemAtivos"></span></div>
-            <div><strong>Em Manutenção:</strong> <span id="relatorioContagemManutencao"></span></div>
+            <div><strong>Manutenção:</strong> <span id="relatorioContagemManutencao"></span></div>
             <div><strong>Descartados/Inativos:</strong> <span id="relatorioContagemAbatidos"></span></div>
         </div>
 
