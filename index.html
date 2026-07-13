@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lab Pasteur - Controle de Ativos</title>
-    <!-- Tailwind CSS para design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca QRCode.js para geração de QR Codes de forma rápida e offline -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Biblioteca Html5-Qrcode para leitura de QR Code via câmera -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     
     <style id="estilosImpressaoDinamica">
@@ -134,7 +131,6 @@
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
 
-    <!-- TELA DE LOGIN E SEGURANÇA BLOQUEADA -->
     <div id="telaLogin" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-[9999] transition-all duration-300">
         <div class="bg-white p-8 rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 text-center mx-4">
             <div class="flex justify-center mb-6">
@@ -185,7 +181,6 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL DO INVENTÁRIO -->
     <div id="conteudoPrincipal" class="max-w-6xl mx-auto px-4 py-6 md:py-8 hidden">
         <header class="mb-6 md:mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="flex items-center justify-between md:justify-start w-full md:w-auto gap-4">
@@ -225,7 +220,6 @@
             <button onclick="fecharAlerta()" class="font-bold text-lg leading-none hover:opacity-75">&times;</button>
         </div>
 
-        <!-- ABA DO INVENTÁRIO -->
         <div id="abaInventario" class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1 h-fit">
                 <h2 class="text-lg font-bold mb-4 text-slate-950 border-l-4 border-[#9ada55] pl-3">Novo Equipamento</h2>
@@ -282,7 +276,7 @@
                             <div class="flex justify-between items-center mb-1">
                                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Setor / Sala *</label>
                                 <button type="button" onclick="abrirModalOpcao('setor')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg> Novo
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg Novo
                                 </button>
                             </div>
                             <select id="setor" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
@@ -318,7 +312,6 @@
                 </form>
             </div>
 
-            <!-- Tabela de Itens Cadastrados -->
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                     <div class="flex items-center gap-2">
@@ -352,7 +345,6 @@
             </div>
         </div>
 
-        <!-- ABA DE RELATÓRIOS E ANÁLISES -->
         <div id="abaRelatorios" class="hidden space-y-6">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Equipamentos</p><h3 id="kpiTotal" class="text-2xl font-bold text-slate-900 mt-1">0</h3></div>
@@ -405,9 +397,7 @@
             </div>
         </div>
 
-        <!-- ABA DE CONFIGURAÇÃO -->
         <div id="abaConfig" class="hidden max-w-2xl mx-auto space-y-6">
-            <!-- PAINEL DE CONFIGURAÇÃO DE IMPRESSÃO CUSTOMIZADA -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-xl font-bold mb-2 text-slate-900 border-l-4 border-[#9ada55] pl-3">Hardware e Formato de Impressão</h2>
                 <p class="text-slate-600 text-sm mb-6">Configure o tamanho de saída de acordo com o rolo de etiquetas da sua impressora térmica ou folhas físicas padrão.</p>
@@ -463,7 +453,7 @@
                 <div class="space-y-4 pt-2">
                     <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                         <div><span class="text-xs font-bold text-slate-800 block">Exigir Senha para Acessar</span></div>
-                        <div><button id="btnToggleSeguranca" onclick="alternarStatusSeguranca()" class="px-3 py-1.5 bg-[#9ada55] text-white text-xs font-bold rounded-lg transition">Ativo</button></div>
+                        <div><button id="btnToggleSeguranca" onclick="alternarStatusSeguranca()" class="px-3 py-1.5 bg-[#9ada55] hover:bg-[#85bc4b] text-white text-xs font-bold rounded-lg transition">Ativo</button></div>
                     </div>
                     <div id="secaoAlterarSenha" class="space-y-3 p-4 border border-slate-200 rounded-lg">
                         <span class="text-xs font-bold text-slate-800 block">Alterar Senha do Administrador</span>
@@ -491,7 +481,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO RÁPIDO DE OPÇÕES -->
     <div id="modalCadastroOpcao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-xl border border-slate-100">
             <h3 id="modalOpcaoTitulo" class="text-lg font-bold text-slate-900 mb-1">Cadastrar Nova Opção</h3>
@@ -504,7 +493,6 @@
         </div>
     </div>
 
-    <!-- MODAL DO QR CODE (PRE-VIEW DINAMICA DA ETIQUETA) -->
     <div id="modalQR" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div id="recipienteImpressaoEtiqueta" class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl border border-slate-100">
             <h3 class="text-lg font-bold text-slate-900 mb-1 no-print">Etiqueta Patrimonial</h3>
@@ -529,12 +517,9 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
     <div id="modalExclusao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl"><h3 class="text-lg font-bold text-slate-900 mb-1">Remover item?</h3><p class="text-xs text-slate-500 mb-5">Esta ação apagará o item permanentemente.</p><div class="flex gap-3"><button id="btnConfirmarExclusao" class="flex-1 bg-rose-600 text-white py-2 rounded-lg text-sm font-semibold">Excluir</button><button onclick="fecharModalExclusao()" class="flex-1 bg-slate-200 py-2 rounded-lg text-sm font-semibold">Cancelar</button></div></div></div>
-    <!-- MODAL DE CONFIRMAÇÃO DE RESET TOTAL -->
     <div id="modalResetTotal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl"><h3 class="text-lg font-bold text-slate-900 mb-1">Zerar tudo?</h3><div class="flex gap-3 mt-4"><button onclick="executarResetTotal()" class="flex-1 bg-rose-600 text-white py-2 rounded-lg text-sm font-semibold">Apagar</button><button onclick="fecharModalReset()" class="flex-1 bg-slate-200 py-2 rounded-lg text-sm font-semibold">Cancelar</button></div></div></div>
     
-    <!-- MODAL DE IMPORTAÇÃO EM MASSA (EXCEL/CSV) -->
     <div id="modalImportacaoLote" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-2xl w-full shadow-xl border border-slate-100 flex flex-col max-h-[90vh]">
             <h3 class="text-lg font-bold text-slate-900 mb-1">Importação em Lote</h3>
@@ -549,7 +534,6 @@
         </div>
     </div>
 
-    <!-- MODAL DO SCANNER DE QR CODE -->
     <div id="modalScanner" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl"><div id="reader" class="w-full bg-slate-100 rounded-xl overflow-hidden mb-4"></div><button onclick="fecharScannerQRCode()" class="w-full bg-slate-200 py-2 rounded-lg text-sm font-semibold">Fechar</button></div></div>
 
     <script>
@@ -571,8 +555,7 @@
         let autenticado = false;
         let html5QrcodeScanner = null;
 
-        window.onload = function() {
-            // 1. Configurar elementos básicos da tela nativos
+        window.onload = async function() {
             renderizarDropdowns();
             renderizarTabela();
             filtrarRelatorioTela();
@@ -580,19 +563,16 @@
             document.getElementById('cfgPrintLargura').value = localStorage.getItem('print_largura') || "50";
             document.getElementById('cfgPrintAltura').value = localStorage.getItem('print_altura') || "30";
             document.getElementById('cfgPrintRelatorioTipo').value = localStorage.getItem('print_relatorio_tipo') || "A4 portrait";
+            
             aplicarLayoutCSSImpressao();
 
-            document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
-
-            // 2. CORREÇÃO CRÍTICA: Primeiro executa e valida a segurança para abrir a tela
+            if (URL_DO_GOOGLE_SCRIPT) { await puxarDadosNuvem(false); }
+            
+            // ATENÇÃO: fluxo de login verificado com prioridade absoluta
             configurarEstruturaSeguranca();
             
-            // 3. Busca os dados na nuvem de forma assíncrona depois, sem bloquear o login
-            if (URL_DO_GOOGLE_SCRIPT) {
-                puxarDadosNuvem(false);
-            }
-
             document.getElementById('formInventario').addEventListener('submit', registrarEquipamento);
+            document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
             atualizarBadgeNuvem();
         };
 
@@ -750,11 +730,6 @@
             }
         }
 
-        function gerenciarVisibilidadeDoPainel(exibir) {
-            const painel = document.getElementById('conteudoPrincipal');
-            if (exibir) { painel.classList.remove('hidden'); } else { painel.classList.add('hidden'); }
-        }
-
         async function puxarDadosNuvem(exibirFeedback = false) {
             if (!URL_DO_GOOGLE_SCRIPT) return;
             syncStatus = "syncing"; atualizarBadgeNuvem();
@@ -786,10 +761,13 @@
             const sigla = document.getElementById('refCodigo').value;
             const numero = document.getElementById('refNumero').value.padStart(3, '0');
             const refFinal = `${sigla}-${numero}`;
-            if (inventario.find(item => item.referencia === refFinal)) { mostrarAlerta(`Patrimônio ${refFinal} já existe!`, "error"); return; }
             const novoEquipamento = { id: Date.now(), refCodigo: sigla, refNumero: numero, referencia: refFinal, nome: document.getElementById('nome').value, marca: document.getElementById('marca').value || 'N/D', serie: document.getElementById('serie').value, categoria: document.getElementById('categoria').value, setor: document.getElementById('setor').value, responsavel: document.getElementById('responsavel').value || 'N/D', dataAquisicao: document.getElementById('dataAquisicao').value || new Date().toISOString().split('T')[0], status: document.getElementById('status').value };
             inventario.push(novoEquipamento); localStorage.setItem('inventario', JSON.stringify(inventario));
-            enviarDadosParaNuvem(); mostrarAlerta(`Item registrado!`, "success"); limparFormulario(); renderizarTabela();
+            enviarDadosParaNuvem(); mostrarAlerta("Registrado!", "success"); limparFormulario(); renderizarTabela();
+        }
+
+        function removerItensTeste() {
+            inventario = inventario.filter(i => !((i.nome || '').toLowerCase().includes('teste')));
         }
 
         function renderizarTabela() {
@@ -798,12 +776,11 @@
             if (inventario.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">Nenhum registro.</td></tr>'; return; }
             [...inventario].sort((a,b)=>b.id-a.id).forEach(item => {
                 const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 border-b text-xs";
-                const b = item.status === 'Ativo' ? 'bg-[#9ada55]/15 text-[#85bc4b]' : item.status === 'Manutenção' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700';
                 tr.innerHTML = `
-                    <td class="px-4 py-3"><span class="font-mono font-black text-[#85bc4b] text-xs">${sanitizarString(item.referencia)}</span><br><span class="font-bold">${sanitizarString(item.nome)}</span></td>
+                    <td class="px-4 py-3"><span class="font-mono font-black text-[#85bc4b]">${sanitizarString(item.referencia)}</span><br><span class="font-bold">${sanitizarString(item.nome)}</span></td>
                     <td class="px-4 py-3 font-mono">${sanitizarString(item.serie)}</td><td class="px-4 py-3">${sanitizarString(item.setor)}</td>
-                    <td class="px-4 py-3"><span class="${b} px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">${item.status}</span></td>
-                    <td class="px-4 py-3 text-center no-print"><div class="flex justify-center gap-1"><button onclick="gerarEtiquetaQR('${item.referencia}')" class="bg-slate-100 p-1.5 rounded-lg text-slate-500 hover:text-[#85bc4b]">QR</button><button onclick="confirmarExclusaoItem(${item.id})" class="bg-slate-100 p-1.5 rounded-lg text-slate-400 hover:text-rose-600">×</button></div></td>
+                    <td class="px-4 py-3"><span class="bg-slate-100 px-2 py-0.5 rounded font-bold">${item.status}</span></td>
+                    <td class="px-4 py-3 text-center no-print"><div class="flex justify-center gap-2"><button onclick="gerarEtiquetaQR('${item.referencia}')" class="text-[#85bc4b] font-bold">QR</button><button onclick="confirmarExclusaoItem(${item.id})" class="text-rose-600 font-bold">×</button></div></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -887,11 +864,6 @@
         function fecharModalLote() { document.getElementById('modalImportacaoLote').classList.add('hidden'); }
         function analisarEntradaLote() { document.getElementById('btnConfirmarImportacaoLote').disabled = false; }
         function importarCSVLote(e) { const f=e.target.files[0]; const r=new FileReader(); r.onload=(ev)=>{ document.getElementById('textareaLote').value=ev.target.result; analisarEntradaLote(); }; r.readAsText(f); }
-        
-        function removerItensTeste() {
-            inventario = inventario.filter(i => !((i.nome || '').toLowerCase().includes('teste')));
-        }
-        
         function salvarImportacaoLote() {
             document.getElementById('textareaLote').value.split('\n').forEach(l => {
                 const c = l.split('\t'); if(c.length >= 3) inventario.push({id:Date.now()+Math.random(), referencia:c[0]+"-"+c[1], nome:c[2], marca:c[3]||'N/D', serie:c[4]||'N/D', categoria:c[5]||'Outros', setor:c[6]||'Geral', responsavel:c[7]||'N/D', dataAquisicao:c[8]||'2026-01-01', status:c[9]||'Ativo', refCodigo:c[0], refNumero:c[1]});
