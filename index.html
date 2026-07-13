@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lab Pasteur - Controle de Ativos</title>
-    <!-- Tailwind CSS para design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca QRCode.js para geração de QR Codes de forma rápida e offline -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
@@ -102,7 +100,7 @@
                 display: flex !important;
                 flex-direction: row !important; /* QR na Esquerda, Texto na Direita */
                 align-items: center !important;
-                justify-content: flex-start !important; /* Alinhamento do conteúdo inicial */
+                justify-content: flex-start !important;
                 gap: 2.5mm !important;
                 background: white !important;
                 page-break-inside: avoid !important;
@@ -135,8 +133,8 @@
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
-                width: 21mm !important; /* Ajustado para preencher a direita sem transbordamento */
-                height: 26mm !important; /* Centralizado verticalmente */
+                width: 21mm !important;
+                height: 26mm !important;
                 overflow: hidden !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -165,7 +163,7 @@
                 margin: 0 !important;
             }
 
-            /* Ajustes finos específicos para o Relatório A4 (Caso seja ele o impresso) */
+            /* Ajustes finos específicos para o Relatório A4 */
             #containerImpressaoRelatorio.print-active-container {
                 display: block !important;
                 background: white !important;
@@ -176,7 +174,6 @@
                 position: static !important;
             }
             
-            /* Garante total contraste em tabelas e linhas do relatório impresso */
             table {
                 width: 100% !important;
                 border-collapse: collapse !important;
@@ -215,10 +212,8 @@
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
 
-    <!-- TELA DE LOGIN E SEGURANÇA BLOQUEADA -->
     <div id="telaLogin" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-[9999] transition-all duration-300">
         <div class="bg-white p-8 rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 text-center mx-4">
-            <!-- Logótipo Pasteur em Destaque na Tela de Segurança -->
             <div class="flex justify-center mb-6">
                 <svg class="w-16 h-18" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M50 10C50 10 90 60 90 80C90 102.091 72.0914 120 50 120C27.9086 120 10 102.091 10 80C10 60 50 10 50 10Z" fill="#9ada55" />
@@ -230,10 +225,8 @@
                 <span class="text-[10px] font-bold tracking-[0.25em] text-[#85bc4b] uppercase mt-2 leading-none">Controle de Ativos</span>
             </div>
 
-            <!-- Divisor sutil -->
             <div class="h-[2px] bg-[#9ada55]/20 w-1/3 mx-auto my-4 rounded-full"></div>
 
-            <!-- Caixa de Entrada de Credenciais Dinâmica -->
             <div id="containerConfigSenha" class="hidden">
                 <h3 class="text-base font-bold text-slate-800 mb-1">Configuração de Segurança Inicial</h3>
                 <p class="text-xs text-slate-500 mb-5">Defina uma senha mestre para restringir e proteger o inventário deste dispositivo.</p>
@@ -272,7 +265,6 @@
                     </button>
                 </form>
                 
-                <!-- Botão de Sincronização Pré-login caso venha de outro PC -->
                 <button onclick="puxarDadosNuvem(true)" class="mt-4 text-xs text-slate-400 hover:text-[#85bc4b] font-semibold transition flex items-center justify-center gap-1.5 w-full">
                     <svg id="loginSyncIcon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
@@ -283,15 +275,11 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL DO INVENTÁRIO -->
-    <div class="max-w-6xl mx-auto px-4 py-6 md:py-8">
-        <!-- Cabeçalho com o Logótipo do Lab Pasteur em SVG HD -->
+    <div id="conteudoPrincipal" class="max-w-6xl mx-auto px-4 py-6 md:py-8 hidden">
         <header class="mb-6 md:mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="flex items-center justify-between md:justify-start w-full md:w-auto gap-4">
-                <!-- Logótipo Pasteur Recriado em SVG -->
                 <div class="flex items-center gap-3">
                     <svg class="w-10 h-12 md:w-12 md:h-14" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Gota Verde Pasteur -->
                         <path d="M50 10C50 10 90 60 90 80C90 102.091 72.0914 120 50 120C27.9086 120 10 102.091 10 80C10 60 50 10 50 10Z" fill="#9ada55" />
                     </svg>
                     <div class="flex flex-col">
@@ -304,10 +292,7 @@
                 </div>
             </div>
             
-            <!-- Indicador do Status da Nuvem e Abas de Navegação -->
             <div class="flex flex-wrap items-center justify-between md:justify-end gap-3 w-full md:w-auto">
-                
-                <!-- Badge de Sincronização em Tempo Real -->
                 <div id="badgeNuvem" onclick="forcarSincronizacaoGeral()" title="Clique para sincronizar com a nuvem" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-semibold border border-slate-200 transition cursor-pointer select-none">
                     <svg id="iconeNuvem" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
@@ -325,8 +310,6 @@
                     <button onclick="mudarAba('config')" id="btnAbaConfig" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap">
                         Configurações
                     </button>
-                    
-                    <!-- Botão de Bloqueio Rápido de Segurança -->
                     <button onclick="bloquearTelaManualmente()" title="Bloquear Tela (Segurança)" class="p-1.5 rounded-md text-slate-500 hover:text-rose-600 hover:bg-slate-300/50 transition cursor-pointer flex items-center">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -336,20 +319,16 @@
             </div>
         </header>
 
-        <!-- Mensagens de Feedback Personalizadas -->
         <div id="alertaFeedback" class="hidden mb-6 p-4 rounded-lg text-sm flex items-center justify-between transition-all duration-300">
             <span id="textoAlerta">Operação realizada com sucesso!</span>
             <button onclick="fecharAlerta()" class="font-bold text-lg leading-none hover:opacity-75">&times;</button>
         </div>
 
-        <!-- ABA DO INVENTÁRIO -->
         <div id="abaInventario" class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-            <!-- Formulário de Registro -->
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1 h-fit">
                 <h2 class="text-lg font-bold mb-4 text-slate-950 border-l-4 border-[#9ada55] pl-3">Novo Equipamento</h2>
                 
                 <form id="formInventario" class="space-y-4">
-                    <!-- Código de Referência e Numeração Autocompletável -->
                     <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                         <div>
                             <div class="flex justify-between items-center mb-1">
@@ -361,9 +340,7 @@
                                     Novo
                                 </button>
                             </div>
-                            <select id="refCodigo" required onchange="calcularProximoNumeroRef()" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs bg-white font-mono font-bold text-slate-700">
-                                <!-- Preenchido dinamicamente via JS -->
-                            </select>
+                            <select id="refCodigo" required onchange="calcularProximoNumeroRef()" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs bg-white font-mono font-bold text-slate-700"></select>
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-1">
@@ -384,9 +361,7 @@
                                 Criar Novo
                             </button>
                         </div>
-                        <select id="nome" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
-                            <!-- Preenchido via JS -->
-                        </select>
+                        <select id="nome" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -410,9 +385,7 @@
                                 Criar Nova
                             </button>
                         </div>
-                        <select id="categoria" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
-                            <!-- Preenchido via JS -->
-                        </select>
+                        <select id="categoria" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -426,9 +399,7 @@
                                     Novo
                                 </button>
                             </div>
-                            <select id="setor" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white">
-                                <!-- Preenchido via JS -->
-                            </select>
+                            <select id="setor" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Responsável</label>
@@ -451,7 +422,6 @@
                         </div>
                     </div>
 
-                    <!-- Botões de Ação do Formulário -->
                     <div class="grid grid-cols-2 gap-3 mt-2">
                         <button type="submit" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition duration-200 text-sm cursor-pointer">
                             Registrar Item
@@ -470,14 +440,12 @@
                 </form>
             </div>
 
-            <!-- Tabela de Itens Cadastrados -->
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                     <div class="flex items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900 border-l-4 border-[#9ada55] pl-3">Equipamentos Registrados</h2>
                         <span id="contadorItens" class="bg-[#9ada55]/10 text-[#85bc4b] text-xs font-bold px-2.5 py-1 rounded-full">0 Itens</span>
                     </div>
-                    <!-- Barra de pesquisa rápida com botão de limpar -->
                     <div class="relative w-full sm:w-64">
                         <input type="text" id="buscaEquipamento" oninput="filtrarTabela()" placeholder="Pesquisar por nome, sigla ou série..." class="w-full pr-8 pl-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs">
                         <button type="button" onclick="limparBusca()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold font-mono">×</button>
@@ -495,17 +463,13 @@
                                 <th class="px-4 py-3 text-center">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaItens" class="divide-y divide-slate-200">
-                            <!-- Preenchido via Javascript -->
-                        </tbody>
+                        <tbody id="tabelaItens" class="divide-y divide-slate-200"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ABA DE RELATÓRIOS E ANÁLISES -->
         <div id="abaRelatorios" class="hidden space-y-6">
-            <!-- Painel de KPIs de Resumo -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Equipamentos</p>
@@ -525,17 +489,12 @@
                 </div>
             </div>
 
-            <!-- Distribuições e Ações Rápidas -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Gráficos de barras simplificados por Categoria -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 lg:col-span-2 space-y-4">
                     <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-l-4 border-[#9ada55] pl-2">Distribuição por Categoria</h3>
-                    <div id="distribuicaoCategorias" class="space-y-3">
-                        <!-- Gerado via JS -->
-                    </div>
+                    <div id="distribuicaoCategorias" class="space-y-3"></div>
                 </div>
 
-                <!-- Painel de Exportação e Ações -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-l-4 border-[#9ada55] pl-2">Extração de Relatórios</h3>
                     <p class="text-xs text-slate-500">Exporte ou faça a impressão consolidada do estado atual da folha de inventário físico do laboratório.</p>
@@ -558,7 +517,6 @@
                 </div>
             </div>
 
-            <!-- Relatório Geral Dinâmico na Tela -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-3">
                     <div>
@@ -574,7 +532,6 @@
                         </select>
                         <select id="filtroSetorRelatorio" onchange="filtrarRelatorioTela()" class="flex-1 md:flex-none px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
                             <option value="Todos">Todos os Setores</option>
-                            <!-- Preenchido via JS -->
                         </select>
                         <button onclick="imprimirSelecaoRelatorio()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
@@ -599,17 +556,13 @@
                                 <th class="px-3 py-3">Estado</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaRelatorioTelaCorpo" class="divide-y divide-slate-200">
-                            <!-- Preenchido via JS -->
-                        </tbody>
+                        <tbody id="tabelaRelatorioTelaCorpo" class="divide-y divide-slate-200"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ABA DE CONFIGURAÇÃO E CONFIGURAÇÃO DA PLANILHA -->
         <div id="abaConfig" class="hidden max-w-2xl mx-auto space-y-6">
-            <!-- Painel Google Sheets -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-xl font-bold mb-2 text-slate-900 border-l-4 border-[#9ada55] pl-3">Sincronização em Nuvem (Google Sheets)</h2>
                 <p class="text-slate-600 text-sm mb-6">Conecte o aplicativo a uma planilha online para habilitar o compartilhamento em tempo real de ativos, categorias e senhas entre qualquer computador ou celular.</p>
@@ -631,7 +584,6 @@
                 </div>
             </div>
 
-            <!-- Configurações de Segurança e Login -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-900 mb-2 border-l-4 border-[#85bc4b] pl-3">Controle de Acesso & Segurança</h3>
                 <p class="text-xs text-slate-500 mb-4">Gerencie as opções de login por senha para proteger as informações confidenciais de auditoria do Lab Pasteur.</p>
@@ -672,7 +624,6 @@
                 </div>
             </div>
 
-            <!-- Painel de Backup Manual -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-900 mb-1 border-l-4 border-[#9ada55] pl-3">Backup e Sincronização entre Dispositivos</h3>
                 <p class="text-xs text-slate-500 mb-4">Exporte todo o seu inventário e configurações para um arquivo. Você pode carregar esse arquivo para sincronizar os dados em qualquer computador do laboratório.</p>
@@ -695,7 +646,6 @@
                 </div>
             </div>
 
-            <!-- Bloco para Limpeza de Cache / Dados Locais -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-rose-200">
                 <h3 class="text-sm font-bold text-rose-600 mb-1 border-l-4 border-rose-500 pl-3">Limpeza de Armazenamento (Cache local)</h3>
                 <p class="text-xs text-slate-500 mb-4">Caso possua dados antigos de teste ou queira remover todos os itens gravados localmente neste navegador para recomeçar do zero, utilize a opção abaixo.</p>
@@ -707,16 +657,15 @@
                 </button>
             </div>
 
-            <!-- Tutorial Apps Script -->
             <div class="bg-white p-6 rounded-xl border border-slate-200">
                 <h3 class="text-sm font-bold text-[#85bc4b] mb-3">Como Configurar a Sincronização em Múltiplos Dispositivos:</h3>
                 <ol class="list-decimal list-inside text-xs text-slate-600 space-y-3">
-                    <li>Crie uma nova planilha no Google Sheets. Você não precisa digitar os títulos ou abas, o próprio Script fará isso automaticamente para você no primeiro carregamento.</li>
+                    <li>Crie uma nova planilha no Google Sheets. O próprio Script fará a estrutura automaticamente.</li>
                     <li>No menu superior do Google Sheets, clique em <strong>Extensões > Apps Script</strong>.</li>
-                    <li>Clique no botão abaixo para copiar o script de integração, apague qualquer código existente no editor do Google e cole-o lá.</li>
+                    <li>Clique no botão abaixo para copiar o script de integração, apague o código existente e cole o novo lá.</li>
                     <li>No canto superior direito, clique em <strong>Implantar > Nova implementação</strong>.</li>
                     <li>Escolha o tipo <strong>Aplicação Web</strong>, mude o acesso para <strong>"Qualquer pessoa"</strong> e clique em <strong>Implantar</strong>.</li>
-                    <li>Copie o link gerado pelo Google (ele termina com <code class="font-bold text-[#85bc4b]">/exec</code>) e cole-o no campo de configuração acima ou na tela de login.</li>
+                    <li>Copie o link gerado pelo Google e cole no campo de configuração acima.</li>
                 </ol>
 
                 <button onclick="copiarCodigoAppsScript()" class="mt-4 inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition cursor-pointer">
@@ -728,7 +677,6 @@
             </div>
         </div>
 
-        <!-- Rodapé de Atribuição e Créditos -->
         <footer class="mt-16 pt-8 border-t border-slate-200 text-center no-print">
             <p class="text-xs font-bold tracking-wider text-slate-500 uppercase">
                 SISTEMA DESENVOLVIDO POR GILNEI MEIER - ANALISTA DE SISTEMAS
@@ -739,7 +687,6 @@
         </footer>
     </div>
 
-    <!-- MODAL DE CADASTRO RÁPIDO DE OPÇÕES -->
     <div id="modalCadastroOpcao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-xl border border-slate-100">
             <h3 id="modalOpcaoTitulo" class="text-lg font-bold text-slate-900 mb-1">Cadastrar Nova Opção</h3>
@@ -760,19 +707,14 @@
         </div>
     </div>
 
-    <!-- MODAL DO QR CODE (ETIQUETA FISICA 5x3cm) -->
     <div id="modalQR" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div id="recipienteImpressaoEtiqueta" class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl border border-slate-100">
             <h3 class="text-lg font-bold text-slate-900 mb-1 no-print">Etiqueta Patrimonial</h3>
             <p class="text-xs text-slate-400 mb-4 no-print">Modelo Físico Térmico: 5cm x 3cm</p>
             
-            <!-- Pré-visualização da etiqueta escalonada em tela para reproduzir o aspecto 5:3 exato de impressão -->
             <div id="areaImpressao" class="bg-white p-[10px] border-2 border-dashed border-slate-300 rounded-xl my-2 mx-auto" style="width: 350px; height: 210px; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px; box-sizing: border-box;">
-                
-                <!-- Lado Esquerdo: QR Code de Alta Resolução -->
                 <div id="canvasQR" class="flex justify-center items-center shrink-0" style="width: 120px; height: 120px; background-color: white;"></div>
                 
-                <!-- Lado Direito: Informações do Ativo com Hierarquia Monospace limpa -->
                 <div id="printInfoPanel" class="text-left font-mono text-slate-800" style="width: calc(100% - 140px - 12px); display: flex; flex-direction: column; justify-content: center; height: 100%; overflow: hidden;">
                     <div class="font-mono font-black text-slate-950 border-b border-slate-200 pb-1 mb-1 tracking-wide text-ellipsis overflow-hidden whitespace-nowrap" id="printReferencia" style="font-size: 14px; line-height: 1.2;"></div>
                     <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>LAB:</strong> PASTEUR</p>
@@ -794,7 +736,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
     <div id="modalExclusao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl">
             <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
@@ -816,7 +757,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMAÇÃO DE RESET COMPLETO -->
     <div id="modalResetTotal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl">
             <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
@@ -838,7 +778,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE IMPORTAÇÃO EM MASSA (EXCEL/CSV) -->
     <div id="modalImportacaoLote" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-2xl w-full shadow-xl border border-slate-100 flex flex-col max-h-[90vh]">
             <h3 class="text-lg font-bold text-slate-900 mb-1">Importação em Lote</h3>
@@ -869,23 +808,20 @@
                     </div>
                 </div>
 
-                <!-- Visualização Dinâmica dos Dados Interpretados -->
                 <div id="previewLoteContainer" class="hidden space-y-2">
                     <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Dados Mapeados (<span id="countPreviewItens">0</span> itens identificados)
                     </h4>
                     <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-40">
                         <table class="w-full text-[11px] text-left text-slate-600">
-                            <tbody id="tabelaPreviewLote">
-                                <!-- Preenchido dinamicamente -->
-                            </tbody>
+                            <tbody id="tabelaPreviewLote"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
             <div class="flex gap-3 mt-4 border-t border-slate-100 pt-4">
-                <button onclick="salvarImportacaoLote()" id="btnConfirmarImportacaoLote" disabled class="flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed">
+                <button onclick="salvarImportacaoLote()" id="btnConfirmarImportacaoLote" disabled class="flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60">
                     Confirmar Importação de Itens
                 </button>
                 <button onclick="fecharModalLote()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-lg text-sm transition cursor-pointer">
@@ -895,7 +831,6 @@
         </div>
     </div>
 
-    <!-- ÁREA OCULTA PARA IMPRESSÃO DE RELATÓRIO DINÂMICO (Formato A4) -->
     <div id="containerImpressaoRelatorio" class="hidden bg-white p-8 font-sans">
         <div class="flex justify-between items-start border-b-2 border-slate-300 pb-4 mb-6">
             <div class="flex items-center gap-3">
@@ -931,9 +866,7 @@
                     <th class="px-3 py-2 border border-slate-300">Estado</th>
                 </tr>
             </thead>
-            <tbody id="tabelaRelatorioCorpo">
-                <!-- Preenchido dinamicamente ao disparar a impressão -->
-            </tbody>
+            <tbody id="tabelaRelatorioCorpo"></tbody>
         </table>
 
         <div class="mt-12 text-center text-[10px] text-slate-400 border-t border-slate-200 pt-4">
@@ -964,8 +897,7 @@
         ];
 
         const defaultCategorias = [
-            "Equipamento Laboratorial", "TI / Informática", "Refrigeração / Conservação",
-            , "Outros"
+            "Equipamento Laboratorial", "TI / Informática", "Refrigeração / Conservação", "Outros"
         ];
 
         // Variáveis de Estado Sincronizadas
@@ -979,6 +911,7 @@
         let tipoCadastroRapido = "";
         let itensPrevisualizados = [];
         let syncStatus = "idle"; // idle, syncing, success, error
+        let autenticado = false; // Controle de estado lógico de autenticação
 
         // Inicialização do sistema no carregamento da janela
         window.onload = async function() {
@@ -986,22 +919,18 @@
             renderizarTabela();
             filtrarRelatorioTela();
             
-            // Tentativa de sincronização inicial antes de configurar segurança (para puxar a senha)
             if (URL_DO_GOOGLE_SCRIPT) {
                 await puxarDadosNuvem(false);
             }
             
             configurarEstruturaSeguranca();
             
-            // Ouvintes de evento do formulário principal
             document.getElementById('formInventario').addEventListener('submit', registrarEquipamento);
             document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
             atualizarBadgeNuvem();
         };
 
         // --- SISTEMA DE CRIPTOGRAFIA E CONTROLE DE ACESSO ---
-        
-        // Conversão de senha simples para Hash SHA-256 (Nativo do Navegador usando Web Crypto API)
         async function gerarHashSHA256(senha) {
             const encoder = new TextEncoder();
             const data = encoder.encode(senha);
@@ -1009,12 +938,20 @@
             return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // Verifica o estado de segurança na inicialização do dispositivo
+        // Bloqueio programático real baseado na variável de controle
+        function gerenciarVisibilidadeDoPainel(exibir) {
+            const painel = document.getElementById('conteudoPrincipal');
+            if (exibir) {
+                painel.classList.remove('hidden');
+            } else {
+                painel.classList.add('hidden');
+            }
+        }
+
         async function configurarEstruturaSeguranca() {
-            const segurancaAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false'; // Padrão: Ativo
+            const segurancaAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false';
             const hashSalvo = localStorage.getItem('pasteur_senha_hash');
 
-            // Atualiza o botão de status nas configurações
             const btnToggle = document.getElementById('btnToggleSeguranca');
             if (btnToggle) {
                 if (segurancaAtiva) {
@@ -1029,26 +966,30 @@
             }
 
             if (!segurancaAtiva) {
-                // Se a segurança estiver inativa, libera o acesso direto ocultando a tela de login
+                autenticado = true;
                 document.getElementById('telaLogin').classList.add('hidden');
+                gerenciarVisibilidadeDoPainel(true);
                 return;
             }
 
-            document.getElementById('telaLogin').classList.remove('hidden');
+            if (!autenticado) {
+                document.getElementById('telaLogin').classList.remove('hidden');
+                gerenciarVisibilidadeDoPainel(false);
 
-            if (!hashSalvo) {
-                // Se segurança ativa, mas sem senha cadastrada (Primeiro Acesso)
-                document.getElementById('containerConfigSenha').classList.remove('hidden');
-                document.getElementById('containerDesbloqueio').classList.add('hidden');
+                if (!hashSalvo) {
+                    document.getElementById('containerConfigSenha').classList.remove('hidden');
+                    document.getElementById('containerDesbloqueio').classList.add('hidden');
+                } else {
+                    document.getElementById('containerConfigSenha').classList.add('hidden');
+                    document.getElementById('containerDesbloqueio').classList.remove('hidden');
+                    document.getElementById('inputSenhaAcesso').focus();
+                }
             } else {
-                // Com senha já cadastrada, exige o desbloqueio
-                document.getElementById('containerConfigSenha').classList.add('hidden');
-                document.getElementById('containerDesbloqueio').classList.remove('hidden');
-                document.getElementById('inputSenhaAcesso').focus();
+                document.getElementById('telaLogin').classList.add('hidden');
+                gerenciarVisibilidadeDoPainel(true);
             }
         }
 
-        // Define a senha de administrador no primeiro acesso
         async function definirSenhaInicial() {
             const novaSenha = document.getElementById('inputNovaSenha').value;
             const confirmar = document.getElementById('inputNovaSenhaConfirmar').value;
@@ -1066,20 +1007,16 @@
             const hash = await gerarHashSHA256(novaSenha);
             localStorage.setItem('pasteur_senha_hash', hash);
             localStorage.setItem('pasteur_seguranca_ativa', 'true');
+            autenticado = true;
             
             mostrarAlerta("Senha mestre configurada com sucesso!", "success");
-            
-            // Força a persistência na nuvem imediatamente
             enviarDadosParaNuvem();
 
-            // Oculta tela e limpa campos
-            document.getElementById('telaLogin').classList.add('hidden');
             document.getElementById('inputNovaSenha').value = "";
             document.getElementById('inputNovaSenhaConfirmar').value = "";
             configurarEstruturaSeguranca();
         }
 
-        // Processa e valida a tentativa de desbloqueio seguro
         async function validarAcesso(event) {
             if (event) event.preventDefault();
             
@@ -1091,11 +1028,13 @@
             const hashDigitado = await gerarHashSHA256(input.value);
 
             if (hashDigitado === hashSalvo) {
+                autenticado = true;
                 erroMsg.classList.add('hidden');
-                document.getElementById('telaLogin').classList.add('hidden');
                 input.value = "";
                 mostrarAlerta("Acesso autorizado. Seja bem-vindo ao sistema do Lab Pasteur!", "success");
+                configurarEstruturaSeguranca();
             } else {
+                autenticado = false;
                 erroMsg.classList.remove('hidden');
                 painel.classList.add('error-shake');
                 input.value = "";
@@ -1107,13 +1046,11 @@
             }
         }
 
-        // Bloqueia a tela instantaneamente
         function bloquearTelaManualmente() {
-            document.getElementById('telaLogin').classList.remove('hidden');
+            autenticado = false;
             configurarEstruturaSeguranca();
         }
 
-        // Liga/Desliga a barreira de segurança global do navegador
         function alternarStatusSeguranca() {
             const atualmenteAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false';
             
@@ -1140,7 +1077,6 @@
             }
         }
 
-        // Processa alteração de senha a partir da aba de configurações
         async function processarAlteracaoSenha() {
             const senhaAtual = document.getElementById('inputSenhaConfigAtual').value;
             const novaSenha = document.getElementById('inputSenhaConfigNova').value;
@@ -1180,7 +1116,6 @@
             enviarDadosParaNuvem();
         }
 
-        // Alterna abas do sistema
         function mudarAba(abaId) {
             document.getElementById('abaInventario').classList.add('hidden');
             document.getElementById('abaRelatorios').classList.add('hidden');
@@ -1205,9 +1140,7 @@
             }
         }
 
-        // --- SISTEMA DE COMUNICAÇÃO DE DUPLA VIA (CLOUD INTERFACE) ---
-
-        // Atualiza a representação gráfica do status da nuvem
+        // --- CLOUD INTERFACE & BADGE SYNC ---
         function atualizarBadgeNuvem() {
             const badge = document.getElementById('badgeNuvem');
             const icone = document.getElementById('iconeNuvem');
@@ -1229,7 +1162,7 @@
                 texto.innerText = "Sincronizado";
                 icone.className = "w-4 h-4";
             } else if (syncStatus === "error") {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold border border-rose-200 transition cursor-pointer select-none animate-pulse";
+                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold border border-rose-200 transition cursor-pointer select-none";
                 texto.innerText = "Erro de Conexão";
                 icone.className = "w-4 h-4";
             } else {
@@ -1239,7 +1172,6 @@
             }
         }
 
-        // Puxa as informações completas da Planilha do Google (Read / Pull)
         async function puxarDadosNuvem(exibirFeedback = false) {
             if (!URL_DO_GOOGLE_SCRIPT) return;
 
@@ -1249,7 +1181,6 @@
             if (loginIcon) loginIcon.classList.add('animate-spin-custom');
 
             try {
-                // Utiliza uma chamada GET CORS nativa do Google Apps Script
                 const resposta = await fetch(URL_DO_GOOGLE_SCRIPT, { method: 'GET', mode: 'cors' });
                 const dados = await resposta.json();
 
@@ -1298,7 +1229,6 @@
             }
         }
 
-        // Envia as informações completas locais para salvar na Planilha do Google (Write / Push)
         async function enviarDadosParaNuvem() {
             if (!URL_DO_GOOGLE_SCRIPT) return;
 
@@ -1317,16 +1247,13 @@
             };
 
             try {
-                // Envia como requisição POST utilizando mode no-cors padrão de integração do Google App Script
                 await fetch(URL_DO_GOOGLE_SCRIPT, {
                     method: "POST",
                     mode: "no-cors",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                
                 syncStatus = "success";
-                console.log("Banco de dados sincronizado e persistido na nuvem!");
             } catch (err) {
                 console.error("Falha ao salvar dados na nuvem:", err);
                 syncStatus = "error";
@@ -1335,7 +1262,6 @@
             }
         }
 
-        // Força sincronização de duas vias imediata ao clicar no Badge do Cabeçalho
         async function forcarSincronizacaoGeral() {
             if (!URL_DO_GOOGLE_SCRIPT) {
                 mostrarAlerta("Conecte uma planilha nas Configurações para habilitar a nuvem.", "error");
@@ -1344,9 +1270,7 @@
             await puxarDadosNuvem(true);
         }
 
-        // --- GESTÃO BÁSICA DE CAMPOS ---
-
-        // Calcula a próxima numeração automática ao escolher uma sigla
+        // --- GESTÃO DE COMPONENTES E DATA INTERFACE ---
         function calcularProximoNumeroRef() {
             const sigla = document.getElementById('refCodigo').value;
             if (!sigla) return;
@@ -1363,7 +1287,6 @@
             }
         }
 
-        // Renderiza listas personalizadas em dropdowns
         function renderizarDropdowns() {
             const selectNome = document.getElementById('nome');
             const selectSetor = document.getElementById('setor');
@@ -1380,7 +1303,7 @@
             listaEquipamentos.forEach(eq => {
                 const opt = document.createElement('option');
                 opt.value = eq;
-                opt.innerText = eq;
+                opt.textContent = eq;
                 selectNome.appendChild(opt);
             });
 
@@ -1388,7 +1311,7 @@
             listaSetores.forEach(set => {
                 const opt = document.createElement('option');
                 opt.value = set;
-                opt.innerText = set;
+                opt.textContent = set;
                 selectSetor.appendChild(opt);
             });
 
@@ -1396,7 +1319,7 @@
             listaSetores.forEach(set => {
                 const opt = document.createElement('option');
                 opt.value = set;
-                opt.innerText = set;
+                opt.textContent = set;
                 selectFiltroSetor.appendChild(opt);
             });
 
@@ -1404,7 +1327,7 @@
             listaReferencias.forEach(ref => {
                 const opt = document.createElement('option');
                 opt.value = ref;
-                opt.innerText = ref;
+                opt.textContent = ref;
                 selectRefCodigo.appendChild(opt);
             });
 
@@ -1412,12 +1335,18 @@
             listaCategorias.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat;
-                opt.innerText = cat;
+                opt.textContent = cat;
                 selectCategoria.appendChild(opt);
             });
         }
 
-        // Processa o envio do formulário e insere no banco
+        // Sanitização básica contra ataques XSS injetados via planilhas
+        function sanitizarString(str) {
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+
         function registrarEquipamento(event) {
             event.preventDefault();
 
@@ -1447,25 +1376,20 @@
             };
 
             removerItensTeste();
-
             inventario.push(novoEquipamento);
             localStorage.setItem('inventario', JSON.stringify(inventario));
 
-            // Sincroniza em segundo plano com a nuvem (Push)
             enviarDadosParaNuvem();
-
             mostrarAlerta(`Equipamento ${refFinal} registrado com sucesso!`, "success");
             limparFormulario();
             renderizarTabela();
         }
 
-        // Limpa campos do formulário para digitação limpa
         function limparFormulario() {
             document.getElementById('formInventario').reset();
             document.getElementById('refNumero').value = "";
         }
 
-        // Remove itens de teste antigos de forma limpa
         function removerItensTeste() {
             const tamanhoOriginal = inventario.length;
             inventario = inventario.filter(item => {
@@ -1488,10 +1412,9 @@
             }
         }
 
-        // Renderiza a lista de equipamentos principais
+        // Renderização segura evitando atribuições em massa do innerHTML interno de dados variáveis
         function renderizarTabela() {
             removerItensTeste();
-
             const tbody = document.getElementById('tabelaItens');
             tbody.innerHTML = '';
             
@@ -1518,21 +1441,21 @@
                 if (item.status === 'Ativo') {
                     badgeEstado = '<span class="bg-[#9ada55]/15 text-[#85bc4b] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Ativo</span>';
                 } else if (item.status === 'Manutenção') {
-                    badgeEstado = '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Equipamentos em Manutenção</span>';
+                    badgeEstado = '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Manutenção</span>';
                 } else {
-                    badgeEstado = '<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Equipamento Descartado</span>';
+                    badgeEstado = '<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Descartado</span>';
                 }
 
                 tr.innerHTML = `
                     <td class="px-4 py-3.5">
                         <div class="flex flex-col">
-                            <span class="font-mono font-black text-[#85bc4b] tracking-wider text-xs">${item.referencia}</span>
-                            <span class="font-bold text-slate-900 mt-0.5 text-xs">${item.nome}</span>
-                            <span class="text-[10px] text-slate-400 mt-0.5">${item.marca}</span>
+                            <span class="font-mono font-black text-[#85bc4b] tracking-wider text-xs">${sanitizarString(item.referencia)}</span>
+                            <span class="font-bold text-slate-900 mt-0.5 text-xs">${sanitizarString(item.nome)}</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">${sanitizarString(item.marca)}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3.5 font-mono text-xs font-semibold text-slate-500">${item.serie}</td>
-                    <td class="px-4 py-3.5 text-xs font-bold text-slate-500">${item.setor}</td>
+                    <td class="px-4 py-3.5 font-mono text-xs font-semibold text-slate-500">${sanitizarString(item.serie)}</td>
+                    <td class="px-4 py-3.5 text-xs font-bold text-slate-500">${sanitizarString(item.setor)}</td>
                     <td class="px-4 py-3.5">${badgeEstado}</td>
                     <td class="px-4 py-3.5 text-center">
                         <div class="flex justify-center items-center gap-1.5 no-print">
@@ -1554,14 +1477,13 @@
             });
         }
 
-        // Filtra os itens da tabela dinamicamente na busca por texto
         function filtrarTabela() {
             const busca = document.getElementById('buscaEquipamento').value.toUpperCase();
             const linhas = document.getElementById('tabelaItens').getElementsByTagName('tr');
 
             for (let i = 0; i < linhas.length; i++) {
                 const td = linhas[i].getElementsByTagName('td')[0];
-                const tdSerie = linhas[i].getElementsByTagName('td')[1];
+                const tdSerie = lines = linhas[i].getElementsByTagName('td')[1];
                 
                 if (td && tdSerie) {
                     const texto = td.textContent || td.innerText;
@@ -1576,14 +1498,12 @@
             }
         }
 
-        // Limpa a barra de pesquisa
         function limparBusca() {
             document.getElementById('buscaEquipamento').value = '';
             filtrarTabela();
         }
 
-        // --- ABA DE ANÁLISES & CALCULADORA KPIs ---
-        
+        // --- SISTEMAS OPERACIONAIS DOS INSIGHTS (RELATÓRIOS) ---
         function calcularKPIs() {
             const total = inventario.length;
             const ativos = inventario.filter(i => i.status === 'Ativo').length;
@@ -1602,9 +1522,9 @@
             container.innerHTML = '';
 
             const categorias = [...listaCategorias];
-            
             let maxCount = 0;
             const contagem = {};
+
             categorias.forEach(cat => {
                 const count = inventario.filter(i => i.categoria === cat).length;
                 contagem[cat] = count;
@@ -1619,7 +1539,7 @@
                 div.className = "space-y-1";
                 div.innerHTML = `
                     <div class="flex justify-between text-xs font-semibold">
-                        <span class="text-slate-600">${cat}</span>
+                        <span class="text-slate-600">${sanitizarString(cat)}</span>
                         <span class="text-slate-900 font-bold">${count} item(ns)</span>
                     </div>
                     <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
@@ -1630,7 +1550,6 @@
             });
         }
 
-        // Filtra a tabela de relatório em tela dinamicamente
         function filtrarRelatorioTela() {
             const statusFiltro = document.getElementById('filtroStatusRelatorio').value;
             const setorFiltro = document.getElementById('filtroSetorRelatorio').value;
@@ -1663,41 +1582,36 @@
                 tr.className = "hover:bg-slate-50 border-b border-slate-100";
                 
                 let showStatus = item.status;
-                let showStatusLabel = showStatus === 'Manutenção' ? 'Manutenção' : (showStatus === 'Descartado' ? 'Descartado' : showStatus);
                 
                 tr.innerHTML = `
-                    <td class="px-3 py-2.5 font-mono font-bold text-[#85bc4b]">${item.referencia}</td>
-                    <td class="px-3 py-2.5 font-bold text-slate-900">${item.nome}</td>
-                    <td class="px-3 py-2.5">${item.marca}</td>
-                    <td class="px-3 py-2.5 font-mono">${item.serie}</td>
-                    <td class="px-3 py-2.5 font-semibold text-slate-500">${item.setor}</td>
-                    <td class="px-3 py-2.5">${item.responsavel}</td>
-                    <td class="px-3 py-2.5">${item.dataAquisicao}</td>
-                    <td class="px-3 py-2.5 font-bold text-xs ${showStatus === 'Ativo' ? 'text-green-600' : showStatus === 'Manutenção' ? 'text-amber-600' : 'text-red-600'}">${showStatusLabel}</td>
+                    <td class="px-3 py-2.5 font-mono font-bold text-[#85bc4b]">${sanitizarString(item.referencia)}</td>
+                    <td class="px-3 py-2.5 font-bold text-slate-900">${sanitizarString(item.nome)}</td>
+                    <td class="px-3 py-2.5">${sanitizarString(item.marca)}</td>
+                    <td class="px-3 py-2.5 font-mono">${sanitizarString(item.serie)}</td>
+                    <td class="px-3 py-2.5 font-semibold text-slate-500">${sanitizarString(item.setor)}</td>
+                    <td class="px-3 py-2.5">${sanitizarString(item.responsavel)}</td>
+                    <td class="px-3 py-2.5">${sanitizarString(item.dataAquisicao)}</td>
+                    <td class="px-3 py-2.5 font-bold text-xs ${showStatus === 'Ativo' ? 'text-green-600' : showStatus === 'Manutenção' ? 'text-amber-600' : 'text-red-600'}">${showStatus}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Imprime a seleção atual mostrada no relatório em tela
         function imprimirSelecaoRelatorio() {
             const statusFiltro = document.getElementById('filtroStatusRelatorio').value;
             const setorFiltro = document.getElementById('filtroSetorRelatorio').value;
-            
             let itensFiltrados = [...inventario];
 
             if (statusFiltro !== 'Todos') {
                 itensFiltrados = itensFiltrados.filter(i => i.status === statusFiltro);
             }
-
             if (setorFiltro !== 'Todos') {
                 itensFiltrados = itensFiltrados.filter(i => i.setor === setorFiltro);
             }
 
-            prepararDocumentoImpressaoRelatorio(itensFiltrados);
+            preparDocumentoImpressaoRelatorio(itensFiltrados);
         }
 
-        // Abre modal para cadastro rápido de novos nomes de equipamentos e setores
         function abrirModalOpcao(tipo) {
             tipoCadastroRapido = tipo;
             const modal = document.getElementById('modalCadastroOpcao');
@@ -1710,7 +1624,7 @@
 
             if (tipo === 'equipamento') {
                 titulo.innerText = "Novo Equipamento";
-                desc.innerText = "Cadastre um novo nome genérico de equipamento para o dropdown (Ex: AUTOCLAVE VERTICAL).";
+                desc.innerText = "Cadastre um novo nome genérico de equipamento para o dropdown.";
                 input.placeholder = "Ex: CENTRIFUGA REFRIGERADA";
             } else if (tipo === 'referencia') {
                 titulo.innerText = "Nova Sigla (Código de Referência)";
@@ -1732,7 +1646,6 @@
             document.getElementById('modalCadastroOpcao').classList.add('hidden');
         }
 
-        // Salva a nova opção personalizada cadastrada no dropdown
         function salvarNovaOpcao() {
             const valor = document.getElementById('novoItemValor').value.toUpperCase().trim();
             if (!valor) return;
@@ -1741,61 +1654,52 @@
                 if (!listaEquipamentos.includes(valor)) {
                     listaEquipamentos.push(valor);
                     localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-                    mostrarAlerta("Equipamento adicionado com sucesso!", "success");
+                    mostrarAlerta("Equipamento adicionado!", "success");
                 }
             } else if (tipoCadastroRapido === 'referencia') {
                 if (!listaReferencias.includes(valor)) {
                     listaReferencias.push(valor);
                     localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
-                    mostrarAlerta("Código de Referência adicionado com sucesso!", "success");
+                    mostrarAlerta("Sigla de Referência adicionada!", "success");
                 }
             } else if (tipoCadastroRapido === 'categoria') {
                 const valorFormatado = valor.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
                 if (!listaCategorias.includes(valorFormatado)) {
                     listaCategorias.push(valorFormatado);
                     localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
-                    mostrarAlerta("Categoria adicionada com sucesso!", "success");
+                    mostrarAlerta("Categoria adicionada!", "success");
                 }
             } else {
                 if (!listaSetores.includes(valor)) {
                     listaSetores.push(valor);
                     localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-                    mostrarAlerta("Setor adicionado com sucesso!", "success");
+                    mostrarAlerta("Setor adicionado!", "success");
                 }
             }
 
             renderizarDropdowns();
             fecharModalOpcao();
-            
-            // Força a sincronização em nuvem da nova opção adicionada
             enviarDadosParaNuvem();
         }
 
-        // --- SISTEMA DE EMISSÃO DE QR CODE (50x30mm) ---
-
-        // Prepara e abre o modal gerando o QRCode correspondente de forma garantida
+        // --- SISTEMA DE EMISSÃO DE ETIQUETAS E IMPRESSÃO DE QR CODES ---
         function gerarEtiquetaQR(referencia) {
             const item = inventario.find(i => i.referencia === referencia);
             if (!item) return;
 
-            // Injeta metadados
             document.getElementById('printReferencia').innerText = item.referencia;
             document.getElementById('printNome').innerText = item.nome;
             document.getElementById('printMarca').innerText = item.marca;
             document.getElementById('printSerie').innerText = item.serie;
             document.getElementById('printSetor').innerText = item.setor;
 
-            // Revela modal primeiro (Necessário para ganhar dimensões e renderizar QR Code)
             document.getElementById('modalQR').classList.remove('hidden');
 
-            // Limpa canvas anterior
             const canvas = document.getElementById('canvasQR');
             canvas.innerHTML = '';
 
-            // Dados compactados legíveis para inventariadores móveis
             const textoQR = `PAT: ${item.referencia}\nEQP: ${item.nome}\nSN: ${item.serie}\nLOC: ${item.setor}\nLAB: PASTEUR`;
 
-            // Desenha o QR Code em alta definição
             try {
                 if (typeof QRCode !== 'undefined') {
                     new QRCode(canvas, {
@@ -1807,11 +1711,9 @@
                         correctLevel: QRCode.CorrectLevel.M
                     });
                 } else {
-                    console.warn("QRCode.js offline indisponível. Ativando API de contingência.");
                     canvas.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(textoQR)}" alt="QR Code" width="140" height="140" class="mx-auto block" />`;
                 }
             } catch (err) {
-                console.error("Falha de renderização local. Acionando API remota.", err);
                 canvas.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(textoQR)}" alt="QR Code" width="140" height="140" class="mx-auto block" />`;
             }
         }
@@ -1820,21 +1722,18 @@
             document.getElementById('modalQR').classList.add('hidden');
         }
 
-        // Abre o disparo nativo de impressão da etiqueta patrimonial isolada
         function dispararImpressaoEtiqueta() {
             const modal = document.getElementById('modalQR');
-            
-            // Adiciona classe de isolamento para impressora
             document.body.classList.remove('print-report-mode');
             modal.classList.add('print-active-container');
-            window.print();
             
+            // Pequeno delay para garantir sincronia em motores Webkit/Chromium
             setTimeout(() => {
+                window.print();
                 modal.classList.remove('print-active-container');
-            }, 500);
+            }, 50);
         }
 
-        // Confirmação com modal customizado de exclusão (Elimina alerts de navegador)
         function confirmarExclusaoItem(id) {
             idItemSelecionadoParaExclusao = id;
             const modal = document.getElementById('modalExclusao');
@@ -1858,24 +1757,19 @@
             mostrarAlerta("Equipamento removido permanentemente!", "success");
             fecharModalExclusao();
             renderizarTabela();
-            
-            // Atualiza na nuvem a remoção (Push)
             enviarDadosParaNuvem();
         }
 
-        // Configuração Sheets
         async function salvarConfigSheets() {
             const url = document.getElementById('inputUrlSheets').value.trim();
             URL_DO_GOOGLE_SCRIPT = url;
             localStorage.setItem('urlGoogleSheets', url);
             mostrarAlerta("Conexão com o Google Sheets salva com sucesso!", "success");
             
-            // Executa a primeira carga dupla para harmonizar a nuvem e o local
             await enviarDadosParaNuvem();
             await puxarDadosNuvem(true);
         }
 
-        // Dispara modal de reset geral do armazenamento
         function abrirModalReset() {
             document.getElementById('modalResetTotal').classList.remove('hidden');
         }
@@ -1890,6 +1784,7 @@
             localStorage.removeItem('listaSetores');
             localStorage.removeItem('listaReferencias');
             localStorage.removeItem('listaCategorias');
+            
             inventario = [];
             listaEquipamentos = defaultEquipamentos;
             listaSetores = defaultSetores;
@@ -1904,7 +1799,6 @@
             enviarDadosParaNuvem();
         }
 
-        // Exportação consolidada de dados para formato CSV
         function exportarCSV() {
             if (inventario.length === 0) {
                 mostrarAlerta("Não há equipamentos salvos para exportar!", "error");
@@ -1916,15 +1810,8 @@
 
             inventario.forEach(item => {
                 const linha = [
-                    item.referencia,
-                    item.nome,
-                    item.marca,
-                    item.serie,
-                    item.categoria,
-                    item.setor,
-                    item.responsavel,
-                    item.dataAquisicao,
-                    item.status
+                    item.referencia, item.nome, item.marca, item.serie,
+                    item.categoria, item.setor, item.responsavel, item.dataAquisicao, item.status
                 ].map(txt => `"${String(txt).replace(/"/g, '""')}"`).join(";");
                 
                 csvContent += linha + "\n";
@@ -1941,12 +1828,11 @@
             document.body.removeChild(link);
         }
 
-        // Geração do relatório consolidado estruturado padrão A4 para impressão
         function prepararImpressaoRelatorio() {
-            prepararDocumentoImpressaoRelatorio(inventario);
+            preparDocumentoImpressaoRelatorio(inventario);
         }
 
-        function prepararDocumentoImpressaoRelatorio(listaItens) {
+        function preparDocumentoImpressaoRelatorio(listaItens) {
             const corpoTabela = document.getElementById('tabelaRelatorioCorpo');
             corpoTabela.innerHTML = '';
 
@@ -1965,39 +1851,33 @@
                 corpoTabela.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center">Nenhum item cadastrado ou filtrado para impressão.</td></tr>';
             } else {
                 listaItens.forEach(item => {
-                    let showStatus = item.status;
-                    let showStatusLabel = showStatus === 'Manutenção' ? 'Equipamentos em Manutenção' : (showStatus === 'Descartado' ? 'Equipamento Descartado' : showStatus);
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-slate-300";
                     tr.innerHTML = `
-                        <td class="px-3 py-2 border border-slate-300 font-mono font-bold">${item.referencia}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-bold">${item.nome}</td>
-                        <td class="px-3 py-2 border border-slate-300">${item.marca}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-mono">${item.serie}</td>
-                        <td class="px-3 py-2 border border-slate-300">${item.categoria}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-semibold">${item.setor}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-bold">${showStatusLabel}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-mono font-bold">${sanitizarString(item.referencia)}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-bold">${sanitizarString(item.nome)}</td>
+                        <td class="px-3 py-2 border border-slate-300">${sanitizarString(item.marca)}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-mono">${sanitizarString(item.serie)}</td>
+                        <td class="px-3 py-2 border border-slate-300">${sanitizarString(item.categoria)}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-semibold">${sanitizarString(item.setor)}</td>
+                        <td class="px-3 py-2 border border-slate-300 font-bold">${sanitizarString(item.status)}</td>
                     `;
                     corpoTabela.appendChild(tr);
                 });
             }
 
             const container = document.getElementById('containerImpressaoRelatorio');
-            
-            // Adiciona classe de relatório para margem A4
             document.body.classList.add('print-report-mode');
             container.classList.remove('hidden');
             container.classList.add('print-active-container');
             
-            window.print();
-
             setTimeout(() => {
+                window.print();
                 container.classList.remove('print-active-container');
                 container.classList.add('hidden');
-            }, 500);
+            }, 50);
         }
 
-        // Exportação de Backup completo em arquivo JSON
         function exportarBackupJSON() {
             const dadosBackup = {
                 versao: "1.2",
@@ -2007,404 +1887,3 @@
                 listaSetores: listaSetores,
                 listaReferencias: listaReferencias,
                 listaCategorias: listaCategorias,
-                urlGoogleSheets: URL_DO_GOOGLE_SCRIPT,
-                pasteur_senha_hash: localStorage.getItem('pasteur_senha_hash'),
-                pasteur_seguranca_ativa: localStorage.getItem('pasteur_seguranca_ativa')
-            };
-
-            const stringDados = JSON.stringify(dadosBackup, null, 2);
-            const blob = new Blob([stringDados], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `backup_inventario_pasteur_${new Date().toISOString().split('T')[0]}.json`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            mostrarAlerta("Backup gerado e baixado com sucesso!", "success");
-        }
-
-        // Importação de Backup de arquivo JSON
-        function importarBackupJSON(event) {
-            const arquivo = event.target.files[0];
-            if (!arquivo) return;
-
-            const leitor = new FileReader();
-            leitor.onload = function(e) {
-                try {
-                    const dados = JSON.parse(e.target.result);
-                    
-                    if (dados.inventario && Array.isArray(dados.inventario)) {
-                        inventario = dados.inventario;
-                        localStorage.setItem('inventario', JSON.stringify(inventario));
-                    }
-                    if (dados.listaEquipamentos && Array.isArray(dados.listaEquipamentos)) {
-                        listaEquipamentos = dados.listaEquipamentos;
-                        localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-                    }
-                    if (dados.listaSetores && Array.isArray(dados.listaSetores)) {
-                        listaSetores = dados.listaSetores;
-                        localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-                    }
-                    if (dados.listaReferencias && Array.isArray(dados.listaReferencias)) {
-                        listaReferencias = dados.listaReferencias;
-                        localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
-                    }
-                    if (dados.listaCategorias && Array.isArray(dados.listaCategorias)) {
-                        listaCategorias = dados.listaCategorias;
-                        localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
-                    }
-                    if (dados.urlGoogleSheets !== undefined) {
-                        URL_DO_GOOGLE_SCRIPT = dados.urlGoogleSheets;
-                        localStorage.setItem('urlGoogleSheets', URL_DO_GOOGLE_SCRIPT);
-                        document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
-                    }
-                    if (dados.pasteur_senha_hash) {
-                        localStorage.setItem('pasteur_senha_hash', dados.pasteur_senha_hash);
-                    }
-                    if (dados.pasteur_seguranca_ativa) {
-                        localStorage.setItem('pasteur_seguranca_ativa', dados.pasteur_seguranca_ativa);
-                    }
-
-                    renderizarDropdowns();
-                    renderizarTabela();
-                    filtrarRelatorioTela();
-                    configurarEstruturaSeguranca();
-                    
-                    mostrarAlerta("Backup importado com sucesso!", "success");
-                    enviarDadosParaNuvem();
-                } catch(err) {
-                    mostrarAlerta("Erro ao processar arquivo de backup. Verifique o formato.", "error");
-                }
-                event.target.value = ''; 
-            };
-            leitor.readAsText(arquivo);
-        }
-
-        // Copia o código do Apps Script para o clipboard
-        function copiarCodigoAppsScript() {
-            const codigo = `function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  // Garantir existência e estrutura da aba de Inventário
-  var sheetInv = ss.getSheetByName("Inventario") || ss.insertSheet("Inventario");
-  if (sheetInv.getLastRow() === 0) {
-    sheetInv.appendRow(["ID", "Referência", "Nome", "Marca / Modelo", "Número de Série", "Categoria", "Setor / Sala", "Responsável", "Data Aquisição", "Estado"]);
-  }
-  
-  var rowsInv = sheetInv.getDataRange().getValues();
-  var inventario = [];
-  for (var i = 1; i < rowsInv.length; i++) {
-    var r = rowsInv[i];
-    if (!r[0]) continue;
-    inventario.push({
-      id: Number(r[0]),
-      referencia: String(r[1]),
-      nome: String(r[2]),
-      marca: String(r[3]),
-      serie: String(r[4]),
-      categoria: String(r[5]),
-      setor: String(r[6]),
-      responsavel: String(r[7]),
-      dataAquisicao: String(r[8]),
-      status: String(r[9]),
-      refCodigo: String(r[1]).split("-")[0] || "",
-      refNumero: String(r[1]).split("-")[1] || ""
-    });
-  }
-  
-  // Garantir existência e estrutura da aba de Configurações do App
-  var sheetCfg = ss.getSheetByName("Config") || ss.insertSheet("Config");
-  if (sheetCfg.getLastRow() === 0) {
-    sheetCfg.appendRow(["Chave", "Valor"]);
-  }
-  var rowsCfg = sheetCfg.getDataRange().getValues();
-  var configs = {};
-  for (var i = 1; i < rowsCfg.length; i++) {
-    configs[rowsCfg[i][0]] = rowsCfg[i][1];
-  }
-  
-  var response = {
-    inventario: inventario,
-    listaEquipamentos: configs["listaEquipamentos"] ? JSON.parse(configs["listaEquipamentos"]) : null,
-    listaSetores: configs["listaSetores"] ? JSON.parse(configs["listaSetores"]) : null,
-    listaReferencias: configs["listaReferencias"] ? JSON.parse(configs["listaReferencias"]) : null,
-    listaCategorias: configs["listaCategorias"] ? JSON.parse(configs["listaCategorias"]) : null,
-    passwordHash: configs["passwordHash"] || null,
-    segurancaAtiva: configs["segurancaAtiva"] || null
-  };
-  
-  return ContentService.createTextOutput(JSON.stringify(response))
-                       .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var postData = JSON.parse(e.postData.contents);
-    var action = postData.action;
-    
-    if (action === "save_all") {
-      // Sobrescrever aba de Inventário
-      var sheetInv = ss.getSheetByName("Inventario") || ss.insertSheet("Inventario");
-      sheetInv.clear();
-      sheetInv.appendRow(["ID", "Referência", "Nome", "Marca / Modelo", "Número de Série", "Categoria", "Setor / Sala", "Responsável", "Data Aquisição", "Estado"]);
-      
-      var items = postData.inventario || [];
-      for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        sheetInv.appendRow([
-          item.id,
-          item.referencia,
-          item.nome,
-          item.marca,
-          item.serie,
-          item.categoria,
-          item.setor,
-          item.responsavel,
-          item.dataAquisicao,
-          item.status
-        ]);
-      }
-      
-      // Sobrescrever aba de Configurações
-      var sheetCfg = ss.getSheetByName("Config") || ss.insertSheet("Config");
-      sheetCfg.clear();
-      sheetCfg.appendRow(["Chave", "Valor"]);
-      
-      var configs = {
-        listaEquipamentos: JSON.stringify(postData.listaEquipamentos || []),
-        listaSetores: JSON.stringify(postData.listaSetores || []),
-        listaReferencias: JSON.stringify(postData.listaReferencias || []),
-        listaCategorias: JSON.stringify(postData.listaCategorias || []),
-        passwordHash: postData.passwordHash || "",
-        segurancaAtiva: postData.segurancaAtiva || "true"
-      };
-      
-      for (var key in configs) {
-        sheetCfg.appendRow([key, configs[key]]);
-      }
-      
-      return ContentService.createTextOutput(JSON.stringify({ "status": "success" }))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": "Acao desconhecida" }))
-                         .setMimeType(ContentService.MimeType.JSON);
-  } catch(error) {
-    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() }))
-                         .setMimeType(ContentService.MimeType.JSON);
-  }
-}`;
-            const tempInput = document.createElement("textarea");
-            tempInput.value = codigo;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-
-            mostrarAlerta("Código avançado copiado com sucesso!", "success");
-        }
-
-        // Mostra alertas na tela sem dar travamentos
-        function mostrarAlerta(mensagem, tipo) {
-            const alerta = document.getElementById('alertaFeedback');
-            const texto = document.getElementById('textoAlerta');
-
-            texto.innerText = mensagem;
-            alerta.classList.remove('hidden');
-
-            if (tipo === 'success') {
-                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-[#9ada55]/20 text-[#85bc4b] border border-[#9ada55]/30";
-            } else {
-                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-rose-50 text-rose-700 border border-rose-100";
-            }
-
-            setTimeout(() => {
-                fecharAlerta();
-            }, 5000);
-        }
-
-        function fecharAlerta() {
-            document.getElementById('alertaFeedback').classList.add('hidden');
-        }
-
-        // --- GESTÃO DE IMPORTAÇÃO EM LOTE ---
-        
-        function abrirModalLote() {
-            document.getElementById('modalImportacaoLote').classList.remove('hidden');
-            document.getElementById('textareaLote').value = '';
-            document.getElementById('previewLoteContainer').classList.add('hidden');
-            document.getElementById('btnConfirmarImportacaoLote').disabled = true;
-            document.getElementById('btnConfirmarImportacaoLote').className = "flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed";
-            itensPrevisualizados = [];
-        }
-
-        function fecharModalLote() {
-            document.getElementById('modalImportacaoLote').classList.add('hidden');
-        }
-
-        function analisarEntradaLote() {
-            const texto = document.getElementById('textareaLote').value;
-            processarDadosTexto(texto);
-        }
-
-        function importarCSVLote(event) {
-            const arquivo = event.target.files[0];
-            if (!arquivo) return;
-
-            const leitor = new FileReader();
-            leitor.onload = function(e) {
-                processarDadosTexto(e.target.result);
-                event.target.value = '';
-            };
-            leitor.readAsText(arquivo);
-        }
-
-        function processarDadosTexto(texto) {
-            if (!texto.trim()) {
-                document.getElementById('previewLoteContainer').classList.add('hidden');
-                document.getElementById('btnConfirmarImportacaoLote').disabled = true;
-                document.getElementById('btnConfirmarImportacaoLote').className = "flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed";
-                return;
-            }
-
-            const linhas = texto.split(/\r?\n/);
-            itensPrevisualizados = [];
-
-            linhas.forEach((linha, index) => {
-                if (!linha.trim()) return;
-                
-                if (index === 0 && (linha.toLowerCase().includes('sigla') || linha.toLowerCase().includes('nome_') || linha.toLowerCase().includes('responsável'))) {
-                    return; 
-                }
-
-                let delimitador = '\t';
-                if (linha.includes(';')) delimitador = ';';
-                else if (linha.includes(',') && !linha.includes('\t')) delimitador = ',';
-
-                const colunas = linha.split(delimitador).map(c => c.trim().replace(/^"|"$/g, ''));
-
-                if (colunas.length >= 3) {
-                    const sigla = colunas[0] ? colunas[0].toUpperCase() : 'GERAL';
-                    const numero = colunas[1] ? String(colunas[1]).padStart(3, '0') : '001';
-                    const nome = colunas[2] || 'Sem Nome';
-                    const marca = colunas[3] || 'N/D';
-                    const serie = colunas[4] || 'N/D';
-                    
-                    let categoria = colunas[5] || 'Equipamento Laboratorial';
-                    if (!listaCategorias.includes(categoria)) {
-                        categoria = 'Equipamento Laboratorial';
-                    }
-
-                    const setor = colunas[6] || 'SETOR TÉCNICO';
-                    const responsavel = colunas[7] || 'N/D';
-                    const dataAquisicao = colunas[8] || new Date().toISOString().split('T')[0];
-                    
-                    let status = colunas[9] || 'Ativo';
-                    if (status.toLowerCase().includes('manutenc') || status.toLowerCase().includes('manutenção')) {
-                        status = 'Manutenção';
-                    } else if (status.toLowerCase().includes('descartado') || status.toLowerCase().includes('inativo')) {
-                        status = 'Descartado';
-                    } else {
-                        status = 'Ativo';
-                    }
-
-                    itensPrevisualizados.push({
-                        id: Date.now() + index + Math.random(),
-                        refCodigo: sigla,
-                        refNumero: numero,
-                        referencia: `${sigla}-${numero}`,
-                        nome: nome.toUpperCase(),
-                        marca: marca,
-                        serie: serie,
-                        categoria: categoria,
-                        setor: setor.toUpperCase(),
-                        responsavel: responsavel,
-                        dataAquisicao: dataAquisicao,
-                        status: status
-                    });
-                }
-            });
-
-            const container = document.getElementById('previewLoteContainer');
-            const tbody = document.getElementById('tabelaPreviewLote');
-            const countSpan = document.getElementById('countPreviewItens');
-            tbody.innerHTML = '';
-
-            if (itensPrevisualizados.length > 0) {
-                container.classList.remove('hidden');
-                countSpan.innerText = itensPrevisualizados.length;
-                
-                const btn = document.getElementById('btnConfirmarImportacaoLote');
-                btn.disabled = false;
-                btn.className = "flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer";
-
-                itensPrevisualizados.slice(0, 10).forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'border-b border-slate-100 hover:bg-slate-50';
-                    tr.innerHTML = `
-                        <td class="px-2 py-1.5 font-mono font-bold text-[#85bc4b]">${item.referencia}</td>
-                        <td class="px-2 py-1.5 font-semibold truncate max-w-[150px]">${item.nome}</td>
-                        <td class="px-2 py-1.5 truncate max-w-[100px]">${item.marca}</td>
-                        <td class="px-2 py-1.5 font-mono">${item.serie}</td>
-                        <td class="px-2 py-1.5 truncate max-w-[120px]">${item.setor}</td>
-                        <td class="px-2 py-1.5">${item.status}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                if (itensPrevisualizados.length > 10) {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td colspan="6" class="px-2 py-2 text-center text-slate-400 italic">E mais ${itensPrevisualizados.length - 10} equipamentos identificados...</td>`;
-                    tbody.appendChild(tr);
-                }
-            } else {
-                container.classList.add('hidden');
-                document.getElementById('btnConfirmarImportacaoLote').disabled = true;
-                document.getElementById('btnConfirmarImportacaoLote').className = "flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed";
-            }
-        }
-
-        function salvarImportacaoLote() {
-            if (itensPrevisualizados.length === 0) return;
-
-            itensPrevisualizados.forEach(item => {
-                inventario.push(item);
-                
-                const nomeUpper = item.nome.toUpperCase();
-                if (!listaEquipamentos.includes(nomeUpper) && nomeUpper !== 'SEM NOME') {
-                    listaEquipamentos.push(nomeUpper);
-                }
-                
-                const setorUpper = item.setor.toUpperCase();
-                if (!listaSetores.includes(setorUpper)) {
-                    listaSetores.push(setorUpper);
-                }
-
-                const catFormatada = item.categoria.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
-                if (!listaCategorias.includes(catFormatada)) {
-                    listaCategorias.push(catFormatada);
-                }
-            });
-
-            localStorage.setItem('inventario', JSON.stringify(inventario));
-            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-            localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-            localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
-
-            renderizarDropdowns();
-            renderizarTabela();
-            fecharModalLote();
-
-            mostrarAlerta(`${itensPrevisualizados.length} equipamentos importados e cadastrados!`, "success");
-
-            // Persiste todo o novo lote na nuvem (Push)
-            enviarDadosParaNuvem();
-        }
-    </script>
-</body>
-</html>
