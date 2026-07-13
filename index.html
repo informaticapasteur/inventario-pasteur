@@ -1991,4 +1991,266 @@
         }
 
         function importarBackupJSON(event) {
-            const arquivo = event.
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const leitor = new FileReader();
+            leitor.onload = function(e) {
+                try {
+                    const dados = JSON.parse(e.target.result);
+                    
+                    if (dados.inventario && Array.isArray(dados.inventario)) {
+                        inventario = dados.inventario;
+                        localStorage.setItem('inventario', JSON.stringify(inventario));
+                    }
+                    if (dados.listaEquipamentos && Array.isArray(dados.listaEquipamentos)) {
+                        listaEquipamentos = dados.listaEquipamentos;
+                        localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+                    }
+                    if (dados.listaSetores && Array.isArray(dados.listaSetores)) {
+                        listaSetores = dados.listaSetores;
+                        localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
+                    }
+                    if (dados.listaReferencias && Array.isArray(dados.listaReferencias)) {
+                        listaReferencias = dados.listaReferencias;
+                        localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
+                    }
+                    if (dados.listaCategorias && Array.isArray(dados.listaCategorias)) {
+                        listaCategorias = dados.listaCategorias;
+                        localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
+                    }
+                    if (dados.urlGoogleSheets !== undefined) {
+                        URL_DO_GOOGLE_SCRIPT = dados.urlGoogleSheets;
+                        localStorage.setItem('urlGoogleSheets', URL_DO_GOOGLE_SCRIPT);
+                        document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
+                    }
+                    if (dados.pasteur_senha_hash) {
+                        localStorage.setItem('pasteur_senha_hash', dados.pasteur_senha_hash);
+                    }
+                    if (dados.pasteur_seguranca_ativa) {
+                        localStorage.setItem('pasteur_seguranca_ativa', dados.pasteur_seguranca_ativa);
+                    }
+
+                    renderizarDropdowns();
+                    renderizarTabela();
+                    filtrarRelatorioTela();
+                    configurarEstruturaSeguranca();
+                    
+                    mostrarAlerta("Backup importado com sucesso!", "success");
+                    enviarDadosParaNuvem();
+                } catch(err) {
+                    mostrarAlerta("Erro ao processar arquivo de backup. Verifique o formato.", "error");
+                }
+                event.target.value = ''; 
+            };
+            leitor.readAsText(arquivo);
+        }
+
+        function copiarCodigoAppsScript() {
+            const codigo = `function doGet(e) { ... }`; 
+            const tempInput = document.createElement("textarea");
+            tempInput.value = codigo;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            mostrarAlerta("Código avançado copiado com sucesso!", "success");
+        }
+
+        function mostrarAlerta(mensagem, tipo) {
+            const alerta = document.getElementById('alertaFeedback');
+            const texto = document.getElementById('textoAlerta');
+
+            texto.innerText = mensagem;
+            alerta.classList.remove('hidden');
+
+            if (tipo === 'success') {
+                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-[#9ada55]/20 text-[#85bc4b] border border-[#9ada55]/30";
+            } else {
+                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-rose-50 text-rose-700 border border-rose-100";
+            }
+
+            setTimeout(() => { fecharAlerta(); }, 5000);
+        }
+
+        function fecharAlerta() {
+            document.getElementById('alertaFeedback').classList.add('hidden');
+        }
+
+        // --- ENTRADA EM LOTE ---
+        function abrirModalLote() {
+            document.getElementById('modalImportacaoLote').classList.remove('hidden');
+            document.getElementById('textareaLote').value = '';
+            document.getElementById('previewLoteContainer').classList.add('hidden');
+            
+            const btn = document.getElementById('btnConfirmarImportacaoLote');
+            btn.disabled = true;
+            btn.className = "flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60";
+            itensPrevisualizados = [];
+        }
+
+        function fecharModalLote() {
+            document.getElementById('modalImportacaoLote').classList.add('hidden');
+        }
+
+        function analisarEntradaLote() {
+            const texto = document.getElementById('textareaLote').value;
+            processarDadosTexto(texto);
+        }
+
+        function importarCSVLote(event) {
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const leitor = new FileReader();
+            leitor.onload = function(e) {
+                processarDadosTexto(e.target.result);
+                event.target.value = '';
+            };
+            leitor.readAsText(arquivo);
+        }
+
+        function processarDadosTexto(texto) {
+            if (!texto.trim()) {
+                document.getElementById('previewLoteContainer').classList.add('hidden');
+                const btn = document.getElementById('btnConfirmarImportacaoLote');
+                btn.disabled = true;
+                btn.className = "flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60";
+                return;
+            }
+
+            const linhas = texto.split(/\r?\n/);
+            itensPrevisualizados = [];
+
+            linhas.forEach((linha, index) => {
+                if (!linha.trim()) return;
+                
+                if (index === 0 && (linha.toLowerCase().includes('sigla') || linha.toLowerCase().includes('nome_') || linha.toLowerCase().includes('responsável'))) {
+                    return; 
+                }
+
+                let delimitador = '\t';
+                if (linha.includes(';')) delimitador = ';';
+                else if (linha.includes(',') && !linha.includes('\t')) delimitador = ',';
+
+                const colunas = inlineCols = linha.split(delimitador).map(c => c.trim().replace(/^"|"$/g, ''));
+
+                if (colunas.length >= 3) {
+                    const sigla = colunas[0] ? colunas[0].toUpperCase() : 'GERAL';
+                    const numero = colunas[1] ? String(colunas[1]).padStart(3, '0') : '001';
+                    const nome = colunas[2] || 'Sem Nome';
+                    const marca = colunas[3] || 'N/D';
+                    const serie = colunas[4] || 'N/D';
+                    
+                    let categoria = colunas[5] || 'Equipamento Laboratorial';
+                    if (!listaCategorias.includes(categoria)) {
+                        categoria = 'Equipamento Laboratorial';
+                    }
+
+                    const setor = colunas[6] || 'SETOR TÉCNICO';
+                    const responsavel = colunas[7] || 'N/D';
+                    const dataAquisicao = colunas[8] || new Date().toISOString().split('T')[0];
+                    
+                    let status = colunas[9] || 'Ativo';
+                    if (status.toLowerCase().includes('manutenc') || status.toLowerCase().includes('manutenção')) {
+                        status = 'Manutenção';
+                    } else if (status.toLowerCase().includes('descartado') || status.toLowerCase().includes('inativo')) {
+                        status = 'Descartado';
+                    } else {
+                        status = 'Ativo';
+                    }
+
+                    itensPrevisualizados.push({
+                        id: Date.now() + index + Math.random(),
+                        refCodigo: sigla,
+                        refNumero: numero,
+                        referencia: `${sigla}-${numero}`,
+                        nome: nome.toUpperCase(),
+                        marca: marca,
+                        serie: serie,
+                        categoria: categoria,
+                        setor: setor.toUpperCase(),
+                        responsavel: responsavel,
+                        dataAquisicao: dataAquisicao,
+                        status: status
+                    });
+                }
+            });
+
+            const container = document.getElementById('previewLoteContainer');
+            const tbody = document.getElementById('tabelaPreviewLote');
+            const countSpan = document.getElementById('countPreviewItens');
+            tbody.innerHTML = '';
+
+            if (itensPrevisualizados.length > 0) {
+                container.classList.remove('hidden');
+                countSpan.innerText = itensPrevisualizados.length;
+                
+                const btn = document.getElementById('btnConfirmarImportacaoLote');
+                btn.disabled = false;
+                btn.className = "flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer";
+
+                itensPrevisualizados.slice(0, 10).forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-slate-100 hover:bg-slate-50';
+                    tr.innerHTML = `
+                        <td class="px-2 py-1.5 font-mono font-bold text-[#85bc4b]">${sanitizarString(item.referencia)}</td>
+                        <td class="px-2 py-1.5 font-semibold truncate max-w-[150px]">${sanitizarString(item.nome)}</td>
+                        <td class="px-2 py-1.5 truncate max-w-[100px]">${sanitizarString(item.marca)}</td>
+                        <td class="px-2 py-1.5 font-mono">${sanitizarString(item.serie)}</td>
+                        <td class="px-2 py-1.5 truncate max-w-[120px]">${sanitizarString(item.setor)}</td>
+                        <td class="px-2 py-1.5">${sanitizarString(item.status)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                if (itensPrevisualizados.length > 10) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td colspan="6" class="px-2 py-2 text-center text-slate-400 italic">E mais ${itensPrevisualizados.length - 10} equipamentos identificados...</td>`;
+                    tbody.appendChild(tr);
+                }
+            } else {
+                container.classList.add('hidden');
+                const btn = document.getElementById('btnConfirmarImportacaoLote');
+                btn.disabled = true;
+                btn.className = "flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60";
+            }
+        }
+
+        function salvarImportacaoLote() {
+            if (itensPrevisualizados.length === 0) return;
+
+            itensPrevisualizados.forEach(item => {
+                inventario.push(item);
+                
+                const nomeUpper = item.nome.toUpperCase();
+                if (!listaEquipamentos.includes(nomeUpper) && nomeUpper !== 'SEM NOME') {
+                    listaEquipamentos.push(nomeUpper);
+                }
+                
+                const setorUpper = item.setor.toUpperCase();
+                if (!listaSetores.includes(setorUpper)) {
+                    listaSetores.push(setorUpper);
+                }
+
+                const catFormatada = item.categoria.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
+                if (!listaCategorias.includes(catFormatada)) {
+                    listaCategorias.push(catFormatada);
+                }
+            });
+
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+            localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
+            localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
+
+            renderizarDropdowns();
+            renderizarTabela();
+            fecharModalLote();
+
+            mostrarAlerta(`${itensPrevisualizados.length} equipamentos importados e cadastrados!`, "success");
+            enviarDadosParaNuvem();
+        }
+    </script>
+</body>
+</html>
