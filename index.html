@@ -276,7 +276,7 @@
                             <div class="flex justify-between items-center mb-1">
                                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Setor / Sala *</label>
                                 <button type="button" onclick="abrirModalOpcao('setor')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svgNovo
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg Novo
                                 </button>
                             </div>
                             <select id="setor" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
@@ -537,7 +537,6 @@
     <div id="modalScanner" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl"><div id="reader" class="w-full bg-slate-100 rounded-xl overflow-hidden mb-4"></div><button onclick="fecharScannerQRCode()" class="w-full bg-slate-200 py-2 rounded-lg text-sm font-semibold">Fechar</button></div></div>
 
     <script>
-        // CONFIGURAÇÃO DOS DADOS BÁSICOS DO PASTEUR
         const defaultEquipamentos = ["CENTRIFUGA DE BANCADA", "AUTOCLAVE HORIZONTAL", "MICROSCÓPIO BINOCULAR", "BALANÇA SEMI-ANALÍTICA", "BANHO MARIA DIGITAL", "GELADEIRA DE CONSERVAÇÃO", "ESTUFA DE BACTERIOLOGIA", "LEITOR DE MICROPLACAS", "PIPETADOR AUTOMÁTICO", "ANALISADOR DE BIOQUÍMICA", "ANALISADOR DE HEMATOLOGIA", "COMPUTADOR / CPU", "IMPRESSORA TÉRMICA DE ETIQUETAS", "ESTABILIZADOR DE TENSÃO", "NOTEBOOK"];
         const defaultSetores = ["SETOR TÉCNICO", "MICROBIOLOGIA", "BIOQUÍMICA", "HEMATOLOGIA", "IMUNOLOGIA", "TRIAGEM", "COLETA 1", "COLETA 2", "ADMINISTRAÇÃO", "T.I. / INFORMAÇÃO", "EXPEDIÇÃO", "SALA DE ESTERILIZAÇÃO"];
         const defaultReferencias = ["ESTERI", "MMICRO", "BAL", "BAN", "CAM", "CENTRI", "GAS", "MBIO", "CPU", "EST", "ETIQ", "GEL", "BIOMOL", "IMP", "LEICARD", "LEITOR", "TEL", "MON", "ATEN", "NOB", "NOTE", "MIM", "WIFI", "MHEM", "SWITCH", "TABLET", "URI"];
@@ -556,74 +555,47 @@
         let autenticado = false;
         let html5QrcodeScanner = null;
 
-        // INICIALIZAÇÃO E APLICAÇÃO DOS TAMANHOS DE IMPRESSÃO SALVOS
         window.onload = async function() {
             renderizarDropdowns();
             renderizarTabela();
             filtrarRelatorioTela();
             
-            // Carregar valores de impressão salvos no navegador do usuário
             document.getElementById('cfgPrintLargura').value = localStorage.getItem('print_largura') || "50";
             document.getElementById('cfgPrintAltura').value = localStorage.getItem('print_altura') || "30";
             document.getElementById('cfgPrintRelatorioTipo').value = localStorage.getItem('print_relatorio_tipo') || "A4 portrait";
             
-            // Compilar e aplicar as regras de CSS de impressão na página
             aplicarLayoutCSSImpressao();
 
             if (URL_DO_GOOGLE_SCRIPT) { await puxarDadosNuvem(false); }
+            
+            // ATENÇÃO: fluxo de login verificado com prioridade absoluta
             configurarEstruturaSeguranca();
+            
             document.getElementById('formInventario').addEventListener('submit', registrarEquipamento);
             document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
             atualizarBadgeNuvem();
         };
 
-        // NOVO: MOTOR ENGINE DE CUSTOMIZAÇÃO DE CSS DE IMPRESSÃO
         function aplicarLayoutCSSImpressao() {
             const largura = document.getElementById('cfgPrintLargura').value || 50;
             const altura = document.getElementById('cfgPrintAltura').value || 30;
             const tipoRelatorio = document.getElementById('cfgPrintRelatorioTipo').value || "A4 portrait";
-
-            // Cálculo dinâmico para a caixa de preview em tela se adequar às proporções
             const previewEtiqueta = document.getElementById('areaImpressao');
             if (previewEtiqueta) {
-                previewEtiqueta.style.width = (largura * 7) + "px";   // Escalonador de tela para visualização confortável
+                previewEtiqueta.style.width = (largura * 7) + "px";   
                 previewEtiqueta.style.height = (altura * 7) + "px";
             }
-
-            // Injeta as regras de tamanho fisicamente no motor do navegador
             const folhaEstilos = document.getElementById('estilosImpressaoDinamica');
             folhaEstilos.innerHTML = `
                 @media print {
-                    @page {
-                        size: ${largura}mm ${altura}mm !important;
-                        margin: 0 !important;
-                    }
-                    .print-report-mode @page {
-                        size: ${tipoRelatorio} !important;
-                        margin: 15mm !important;
-                    }
-                    html, body, .print-active-container, #modalQR.print-active-container, #recipienteImpressaoEtiqueta, #areaImpressao {
-                        width: ${largura}mm !important;
-                        height: ${altura}mm !important;
-                    }
-                    #canvasQR {
-                        width: ${(altura * 0.55)}mm !important;
-                        height: ${(altura * 0.55)}mm !important;
-                    }
-                    #canvasQR img, #canvasQR canvas {
-                        width: ${(altura * 0.55)}mm !important;
-                        height: ${(altura * 0.55)}mm !important;
-                    }
-                    #printInfoPanel {
-                        width: ${(largura - (altura * 0.55) - 6)}mm !important;
-                        height: ${(altura - 4)}mm !important;
-                    }
-                    #printReferencia {
-                        font-size: ${(altura * 0.26)}pt !important;
-                    }
-                    .print-text {
-                        font-size: ${(altura * 0.18)}pt !important;
-                    }
+                    @page { size: ${largura}mm ${altura}mm !important; margin: 0 !important; }
+                    .print-report-mode @page { size: ${tipoRelatorio} !important; margin: 15mm !important; }
+                    html, body, .print-active-container, #modalQR.print-active-container, #recipienteImpressaoEtiqueta, #areaImpressao { width: ${largura}mm !important; height: ${altura}mm !important; }
+                    #canvasQR { width: ${(altura * 0.55)}mm !important; height: ${(altura * 0.55)}mm !important; }
+                    #canvasQR img, #canvasQR canvas { width: ${(altura * 0.55)}mm !important; height: ${(altura * 0.55)}mm !important; }
+                    #printInfoPanel { width: ${(largura - (altura * 0.55) - 6)}mm !important; height: ${(altura - 4)}mm !important; }
+                    #printReferencia { font-size: ${(altura * 0.26)}pt !important; }
+                    .print-text { font-size: ${(altura * 0.18)}pt !important; }
                 }
             `;
         }
@@ -632,22 +604,8 @@
             localStorage.setItem('print_largura', document.getElementById('cfgPrintLargura').value);
             localStorage.setItem('print_altura', document.getElementById('cfgPrintAltura').value);
             localStorage.setItem('print_relatorio_tipo', document.getElementById('cfgPrintRelatorioTipo').value);
-            
             aplicarLayoutCSSImpressao();
-            mostrarAlerta("Formato e layout de impressão configurados com sucesso!", "success");
-        }
-
-        // --- SISTEMA DE CRIPTOGRAFIA E CONTROLE DE ACESSO ---
-        async function gerarHashSHA256(senha) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(senha);
-            const hash = await crypto.subtle.digest('SHA-256', data);
-            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        function gerenciarVisibilidadeDoPainel(exibir) {
-            const painel = document.getElementById('conteudoPrincipal');
-            if (exibir) { painel.classList.remove('hidden'); } else { painel.classList.add('hidden'); }
+            mostrarAlerta("Formato de impressão salvo!", "success");
         }
 
         async function configurarEstruturaSeguranca() {
@@ -665,7 +623,14 @@
                     document.getElementById('secaoAlterarSenha').classList.add('opacity-50', 'pointer-events-none');
                 }
             }
-            if (!segurancaAtiva) { autenticado = true; document.getElementById('telaLogin').classList.add('hidden'); gerenciarVisibilidadeDoPainel(true); return; }
+            
+            if (!segurancaAtiva) { 
+                autenticado = true; 
+                document.getElementById('telaLogin').classList.add('hidden'); 
+                gerenciarVisibilidadeDoPainel(true); 
+                return; 
+            }
+            
             if (!autenticado) {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 gerenciarVisibilidadeDoPainel(false);
@@ -677,22 +642,22 @@
                     document.getElementById('containerDesbloqueio').classList.remove('hidden');
                     document.getElementById('inputSenhaAcesso').focus();
                 }
-            } else { document.getElementById('telaLogin').classList.add('hidden'); gerenciarVisibilidadeDoPainel(true); }
+            } else { 
+                document.getElementById('telaLogin').classList.add('hidden'); 
+                gerenciarVisibilidadeDoPainel(true); 
+            }
         }
 
         async function definirSenhaInicial() {
             const novaSenha = document.getElementById('inputNovaSenha').value;
             const confirmar = document.getElementById('inputNovaSenhaConfirmar').value;
-            if (novaSenha.length < 4) { mostrarAlerta("A senha deve possuir pelo menos 4 caracteres!", "error"); return; }
-            if (novaSenha !== confirmar) { mostrarAlerta("As senhas inseridas não coincidem!", "error"); return; }
-            const hash = await gerarHashSHA256(novaSenha);
-            localStorage.setItem('pasteur_senha_hash', hash);
+            if (novaSenha.length < 4) { mostrarAlerta("Mínimo 4 caracteres!", "error"); return; }
+            if (novaSenha !== confirmar) { mostrarAlerta("Senhas não coincidem!", "error"); return; }
+            localStorage.setItem('pasteur_senha_hash', await gerarHashSHA256(novaSenha));
             localStorage.setItem('pasteur_seguranca_ativa', 'true');
             autenticado = true;
-            mostrarAlerta("Senha mestre configurada!", "success");
+            mostrarAlerta("Senha configurada!", "success");
             enviarDadosParaNuvem();
-            document.getElementById('inputNovaSenha').value = "";
-            document.getElementById('inputNovaSenhaConfirmar').value = "";
             configurarEstruturaSeguranca();
         }
 
@@ -701,16 +666,12 @@
             const input = document.getElementById('inputSenhaAcesso');
             const erroMsg = document.getElementById('mensagemErroAcesso');
             const painel = input.closest('.bg-white');
-            const hashSalvo = localStorage.getItem('pasteur_senha_hash');
-            const hashDigitado = await gerarHashSHA256(input.value);
-            if (hashDigitado === hashSalvo) {
+            if (await gerarHashSHA256(input.value) === localStorage.getItem('pasteur_senha_hash')) {
                 autenticado = true;
                 erroMsg.classList.add('hidden');
                 input.value = "";
-                mostrarAlerta("Acesso autorizado!", "success");
                 configurarEstruturaSeguranca();
             } else {
-                autenticado = false;
                 erroMsg.classList.remove('hidden');
                 painel.classList.add('error-shake');
                 input.value = ""; input.focus();
@@ -718,25 +679,21 @@
             }
         }
 
-        function blockingTelaManualmente() { autenticado = false; configurarEstruturaSeguranca(); }
-        function bloquearTelaManualmente() { blockingTelaManualmente(); }
+        function bloquearTelaManualmente() { autenticado = false; configurarEstruturaSeguranca(); }
 
         function alternarStatusSeguranca() {
-            const atualmenteAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false';
-            if (atualmenteAtiva) {
-                const senhaConfirmar = prompt("Confirme sua Senha Mestre para desativar permanentemente:");
-                if (!senhaConfirmar) return;
-                gerarHashSHA256(senhaConfirmar).then(hashConfirmado => {
-                    if (hashConfirmado === localStorage.getItem('pasteur_senha_hash')) {
+            if (localStorage.getItem('pasteur_seguranca_ativa') !== 'false') {
+                const conf = prompt("Confirme a senha mestre para desativar:");
+                if (!conf) return;
+                gerarHashSHA256(conf).then(h => {
+                    if (h === localStorage.getItem('pasteur_senha_hash')) {
                         localStorage.setItem('pasteur_seguranca_ativa', 'false');
-                        mostrarAlerta("Proteção desativada!", "success");
                         configurarEstruturaSeguranca();
                         enviarDadosParaNuvem();
-                    } else { mostrarAlerta("Senha incorreta!", "error"); }
+                    } else { alert("Incorreta!"); }
                 });
             } else {
                 localStorage.setItem('pasteur_seguranca_ativa', 'true');
-                mostrarAlerta("Proteção por senha reativada!", "success");
                 configurarEstruturaSeguranca();
                 enviarDadosParaNuvem();
             }
@@ -746,15 +703,10 @@
             const senhaAtual = document.getElementById('inputSenhaConfigAtual').value;
             const novaSenha = document.getElementById('inputSenhaConfigNova').value;
             const confirmar = document.getElementById('inputSenhaConfigConfirmar').value;
-            if (!senhaAtual || !novaSenha || !confirmar) { mostrarAlerta("Todos os campos são obrigatórios!", "error"); return; }
             if (await gerarHashSHA256(senhaAtual) !== localStorage.getItem('pasteur_senha_hash')) { mostrarAlerta("Senha atual incorreta!", "error"); return; }
-            if (novaSenha.length < 4) { mostrarAlerta("Mínimo 4 dígitos!", "error"); return; }
-            if (novaSenha !== confirmar) { mostrarAlerta("Senhas não coincidem!", "error"); return; }
+            if (novaSenha !== confirmar || novaSenha.length < 4) { mostrarAlerta("Inconsistência nos campos!", "error"); return; }
             localStorage.setItem('pasteur_senha_hash', await gerarHashSHA256(novaSenha));
-            document.getElementById('inputSenhaConfigAtual').value = "";
-            document.getElementById('inputSenhaConfigNova').value = "";
-            document.getElementById('inputSenhaConfigConfirmar').value = "";
-            mostrarAlerta("Senha alterada com sucesso!", "success");
+            mostrarAlerta("Senha atualizada!", "success");
             enviarDadosParaNuvem();
         }
 
@@ -762,119 +714,85 @@
             document.getElementById('abaInventario').classList.add('hidden');
             document.getElementById('abaRelatorios').classList.add('hidden');
             document.getElementById('abaConfig').classList.add('hidden');
-            document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
-            document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
-            document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
+            document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition";
+            document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition";
+            document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition";
             if (abaId === 'inventario') {
                 document.getElementById('abaInventario').classList.remove('hidden');
-                document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
+                document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm";
             } else if (abaId === 'relatorios') {
                 document.getElementById('abaRelatorios').classList.remove('hidden');
-                document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
+                document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm";
                 calcularKPIs(); gerarGraficoCategorias(); filtrarRelatorioTela();
             } else if (abaId === 'config') {
                 document.getElementById('abaConfig').classList.remove('hidden');
-                document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
-            }
-        }
-
-        // --- INTEGRAÇÃO COM NUVEM ---
-        function atualizarBadgeNuvem() {
-            const badge = document.getElementById('badgeNuvem');
-            const icone = document.getElementById('iconeNuvem');
-            const texto = document.getElementById('textoNuvem');
-            if (!URL_DO_GOOGLE_SCRIPT) {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-semibold border border-slate-200 transition cursor-pointer select-none";
-                texto.innerText = "Sem Nuvem (Apenas Local)"; icone.className = "w-4 h-4"; return;
-            }
-            if (syncStatus === "syncing") {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-semibold border border-amber-200 transition cursor-pointer select-none";
-                texto.innerText = "Sincronizando..."; icone.className = "w-4 h-4 animate-spin-custom";
-            } else if (syncStatus === "success") {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-semibold border border-emerald-200 transition cursor-pointer select-none";
-                texto.innerText = "Sincronizado"; icone.className = "w-4 h-4";
-            } else if (syncStatus === "error") {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold border border-rose-200 transition cursor-pointer select-none";
-                texto.innerText = "Erro de Conexão"; icone.className = "w-4 h-4";
+                document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm";
             }
         }
 
         async function puxarDadosNuvem(exibirFeedback = false) {
             if (!URL_DO_GOOGLE_SCRIPT) return;
             syncStatus = "syncing"; atualizarBadgeNuvem();
-            const loginIcon = document.getElementById('loginSyncIcon');
-            if (loginIcon) loginIcon.classList.add('animate-spin-custom');
             try {
                 const resposta = await fetch(URL_DO_GOOGLE_SCRIPT, { method: 'GET', mode: 'cors' });
                 const dados = await resposta.json();
                 if (dados) {
-                    if (dados.inventario && Array.isArray(dados.inventario)) { inventario = dados.inventario; localStorage.setItem('inventario', JSON.stringify(inventario)); }
-                    if (dados.listaEquipamentos && Array.isArray(dados.listaEquipamentos)) { listaEquipamentos = dados.listaEquipamentos; localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos)); }
-                    if (dados.listaSetores && Array.isArray(dados.listaSetores)) { listaSetores = dados.listaSetores; localStorage.setItem('listaSetores', JSON.stringify(listaSetores)); }
-                    if (dados.listaReferencias && Array.isArray(dados.listaReferencias)) { listaReferencias = dados.listaReferencias; localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias)); }
-                    if (dados.listaCategorias && Array.isArray(dados.listaCategorias)) { listaCategorias = dados.listaCategorias; localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias)); }
+                    if (dados.inventario) { inventario = dados.inventario; localStorage.setItem('inventario', JSON.stringify(inventario)); }
                     if (dados.passwordHash) { localStorage.setItem('pasteur_senha_hash', dados.passwordHash); }
-                    if (dados.segurancaAtiva) { localStorage.setItem('pasteur_seguranca_ativa', dados.segurancaAtiva); }
                     renderizarDropdowns(); renderizarTabela(); filtrarRelatorioTela();
-                    syncStatus = "success"; if (exibirFeedback) mostrarAlerta("Dados baixados da nuvem!", "success");
+                    syncStatus = "success"; if (exibirFeedback) mostrarAlerta("Sincronizado!", "success");
                 }
-            } catch (err) { syncStatus = "error"; if (exibirFeedback) mostrarAlerta("Erro de conexão.", "error"); } finally { atualizarBadgeNuvem(); if (loginIcon) loginIcon.classList.remove('animate-spin-custom'); }
+            } catch (err) { syncStatus = "error"; } finally { atualizarBadgeNuvem(); }
         }
 
         async function enviarDadosParaNuvem() {
             if (!URL_DO_GOOGLE_SCRIPT) return;
             syncStatus = "syncing"; atualizarBadgeNuvem();
-            const payload = { action: "save_all", inventario: inventario, listaEquipamentos: listaEquipamentos, listaSetores: listaSetores, listaReferencias: listaReferencias, listaCategorias: listaCategorias, passwordHash: localStorage.getItem('pasteur_senha_hash') || "", segurancaAtiva: localStorage.getItem('pasteur_seguranca_ativa') || "true" };
             try {
-                await fetch(URL_DO_GOOGLE_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                await fetch(URL_DO_GOOGLE_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save_all", inventario, listaEquipamentos, listaSetores, listaReferencias, listaCategorias, passwordHash: localStorage.getItem('pasteur_senha_hash'), segurancaAtiva: localStorage.getItem('pasteur_seguranca_ativa') }) });
                 syncStatus = "success";
             } catch (err) { syncStatus = "error"; } finally { atualizarBadgeNuvem(); }
         }
 
-        function forcarSincronizacaoGeral() { if (!URL_DO_GOOGLE_SCRIPT) { mostrarAlerta("Configure a nuvem primeiro.", "error"); return; } puxarDadosNuvem(true); }
+        function forcarSincronizacaoGeral() { puxarDadosNuvem(true); }
 
-        // --- GERENCIAMENTO DO INVENTÁRIO ---
         function registrarEquipamento(event) {
             event.preventDefault();
             const sigla = document.getElementById('refCodigo').value;
             const numero = document.getElementById('refNumero').value.padStart(3, '0');
             const refFinal = `${sigla}-${numero}`;
-            if (inventario.find(item => item.referencia === refFinal)) { mostrarAlerta(`Patrimônio ${refFinal} já existe!`, "error"); return; }
-            const novoEquipamento = {
-                id: Date.now(), refCodigo: sigla, refNumero: numero, referencia: refFinal,
-                nome: document.getElementById('nome').value, marca: document.getElementById('marca').value || 'N/D', serie: document.getElementById('serie').value,
-                categoria: document.getElementById('categoria').value, setor: document.getElementById('setor').value, responsavel: document.getElementById('responsavel').value || 'N/D',
-                dataAquisicao: document.getElementById('dataAquisicao').value || new Date().toISOString().split('T')[0], status: document.getElementById('status').value
-            };
-            removerItensTeste(); inventario.push(novoEquipamento); localStorage.setItem('inventario', JSON.stringify(inventario));
-            enviarDadosParaNuvem(); mostrarAlerta(`Item registrado!`, "success"); limparFormulario(); renderizarTabela();
+            const novoEquipamento = { id: Date.now(), refCodigo: sigla, refNumero: numero, referencia: refFinal, nome: document.getElementById('nome').value, marca: document.getElementById('marca').value || 'N/D', serie: document.getElementById('serie').value, categoria: document.getElementById('categoria').value, setor: document.getElementById('setor').value, responsavel: document.getElementById('responsavel').value || 'N/D', dataAquisicao: document.getElementById('dataAquisicao').value || new Date().toISOString().split('T')[0], status: document.getElementById('status').value };
+            inventario.push(novoEquipamento); localStorage.setItem('inventario', JSON.stringify(inventario));
+            enviarDadosParaNuvem(); mostrarAlerta("Registrado!", "success"); limparFormulario(); renderizarTabela();
         }
 
         function removerItensTeste() {
-            inventario = inventario.filter(item => {
-                const n = (item.nome || '').toLowerCase(); const m = (item.marca || '').toLowerCase();
-                return !(n.includes('teste') || n.includes('mock') || m.includes('teste') || (item.serie || '').includes('12345'));
-            });
+            inventario = inventario.filter(i => !((i.nome || '').toLowerCase().includes('teste')));
         }
 
         function renderizarTabela() {
             removerItensTeste(); const tbody = document.getElementById('tabelaItens'); tbody.innerHTML = '';
             document.getElementById('contadorItens').innerText = `${inventario.length} Itens`;
-            if (inventario.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">Vazio.</td></tr>'; return; }
-            [...inventario].sort((a, b) => b.id - a.id).forEach(item => {
-                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 border-b border-slate-100 text-xs";
-                const b = item.status === 'Ativo' ? 'bg-[#9ada55]/15 text-[#85bc4b]' : item.status === 'Manutenção' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700';
+            if (inventario.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">Nenhum registro.</td></tr>'; return; }
+            [...inventario].sort((a,b)=>b.id-a.id).forEach(item => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 border-b text-xs";
                 tr.innerHTML = `
-                    <td class="px-4 py-3 font-medium"><span class="font-mono font-black text-[#85bc4b] text-xs">${sanitizarString(item.referencia)}</span><br><span class="font-bold text-slate-900">${sanitizarString(item.nome)}</span></td>
-                    <td class="px-4 py-3 font-mono">${sanitizarString(item.serie)}</td><td class="px-4 py-3 font-semibold text-slate-500">${sanitizarString(item.setor)}</td>
-                    <td class="px-4 py-3"><span class="${b} px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">${item.status}</span></td>
-                    <td class="px-4 py-3 text-center no-print"><div class="flex justify-center gap-1"><button onclick="gerarEtiquetaQR('${item.referencia}')" class="bg-slate-100 p-1.5 rounded-lg text-slate-500 hover:text-[#85bc4b]">QR</button><button onclick="confirmarExclusaoItem(${item.id})" class="bg-slate-100 p-1.5 rounded-lg text-slate-400 hover:text-rose-600">×</button></div></td>
+                    <td class="px-4 py-3"><span class="font-mono font-black text-[#85bc4b]">${sanitizarString(item.referencia)}</span><br><span class="font-bold">${sanitizarString(item.nome)}</span></td>
+                    <td class="px-4 py-3 font-mono">${sanitizarString(item.serie)}</td><td class="px-4 py-3">${sanitizarString(item.setor)}</td>
+                    <td class="px-4 py-3"><span class="bg-slate-100 px-2 py-0.5 rounded font-bold">${item.status}</span></td>
+                    <td class="px-4 py-3 text-center no-print"><div class="flex justify-center gap-2"><button onclick="gerarEtiquetaQR('${item.referencia}')" class="text-[#85bc4b] font-bold">QR</button><button onclick="confirmarExclusaoItem(${item.id})" class="text-rose-600 font-bold">×</button></div></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // --- EMISSÃO E VISUALIZAÇÃO DE EMBALAGEM DE ETIQUETAS ---
+        function calcularProximoNumeroRef() {
+            const sigla = document.getElementById('refCodigo').value; if (!sigla) return;
+            const sub = inventario.filter(i => i.refCodigo === sigla);
+            if (sub.length === 0) { document.getElementById('refNumero').value = "001"; } 
+            else { const nums = sub.map(i => parseInt(i.refNumero)).filter(n => !isNaN(n)); document.getElementById('refNumero').value = String(Math.max(...nums) + 1).padStart(3, '0'); }
+        }
+
         function gerarEtiquetaQR(referencia) {
             const item = inventario.find(i => i.referencia === referencia); if (!item) return;
             document.getElementById('printReferencia').innerText = item.referencia;
@@ -882,129 +800,77 @@
             document.getElementById('printMarca').innerText = item.marca;
             document.getElementById('printSerie').innerText = item.serie;
             document.getElementById('printSetor').innerText = item.setor;
-            
-            // Forçar readequação das proporções do preview antes de gerar o código QR
             aplicarLayoutCSSImpressao();
             document.getElementById('modalQR').classList.remove('hidden');
-
             const canvas = document.getElementById('canvasQR'); canvas.innerHTML = '';
-            const t = `PAT: ${item.referencia}\nEQP: ${item.nome}\nSN: ${item.serie}\nLOC: ${item.setor}`;
-            
-            // Determinar o tamanho proporcional perfeito da imagem do QR Code
-            const alturaBobina = document.getElementById('cfgPrintAltura').value || 30;
-            const tamanhoPixelQR = Math.round(alturaBobina * 3.5); // Escalonador responsivo da biblioteca
-
-            try {
-                new QRCode(canvas, { text: t, width: tamanhoPixelQR, height: tamanhoPixelQR, correctLevel: QRCode.CorrectLevel.M });
-            } catch (err) {
-                canvas.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x140&data=${encodeURIComponent(t)}" width="100" />`;
-            }
+            const text = `PAT: ${item.referencia}\nEQP: ${item.nome}\nSN: ${item.serie}`;
+            const h = document.getElementById('cfgPrintAltura').value || 30;
+            new QRCode(canvas, { text, width: Math.round(h * 3.5), height: Math.round(h * 3.5), correctLevel: QRCode.CorrectLevel.M });
         }
 
         function dispararImpressaoEtiqueta() {
-            const m = document.getElementById('modalQR');
-            document.body.classList.remove('print-report-mode');
-            m.classList.add('print-active-container');
+            const m = document.getElementById('modalQR'); document.body.classList.remove('print-report-mode'); m.classList.add('print-active-container');
             setTimeout(() => { window.print(); m.classList.remove('print-active-container'); }, 50);
         }
 
-        // --- SCANNER E AUXILIARES ---
         function abrirScannerQRCode() {
             document.getElementById('modalScanner').classList.remove('hidden');
             html5QrcodeScanner = new Html5Qrcode("reader");
-            html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, aoLerQRCodeSucesso, () => {});
-        }
-        function fecharScannerQRCode() {
-            document.getElementById('modalScanner').classList.add('hidden');
-            if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner = null; }); }
-        }
-        function aoLerQRCodeSucesso(txt) {
-            fecharScannerQRCode(); const m = txt.match(/PAT:\s*([A-Z0-9-]+)/i);
-            const res = m ? m[1] : txt.trim(); document.getElementById('buscaEquipamento').value = res;
-            filtrarTabela(); mostrarAlerta(`Escaneado: ${res}`, "success");
+            html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, (txt) => {
+                fecharScannerQRCode(); const m = txt.match(/PAT:\s*([A-Z0-9-]+)/i);
+                document.getElementById('buscaEquipamento').value = m ? m[1] : txt.trim(); filtrarTabela();
+            }, () => {});
         }
 
-        // CONFIGURAÇÕES E AUXILIARES COMPACTADOS COMPATÍVEIS
+        function fecharScannerQRCode() { document.getElementById('modalScanner').classList.add('hidden'); if (html5QrcodeScanner) { html5QrcodeScanner.stop(); } }
         function fecharModal() { document.getElementById('modalQR').classList.add('hidden'); }
-        function limparFormulario() { document.getElementById('formInventario').reset(); }
         function limparBusca() { document.getElementById('buscaEquipamento').value = ''; filtrarTabela(); }
         function filtrarTabela() {
             const b = document.getElementById('buscaEquipamento').value.toUpperCase();
             const l = document.getElementById('tabelaItens').getElementsByTagName('tr');
-            for(let i=0; i<l.length; i++) {
-                const t = l[i].textContent || l[i].innerText; l[i].style.display = t.toUpperCase().indexOf(b) > -1 ? "" : "none";
-            }
+            for(let i=0; i<l.length; i++) { const t = l[i].textContent || l[i].innerText; l[i].style.display = t.toUpperCase().indexOf(b) > -1 ? "" : "none"; }
         }
-        function calcularKPIs() {
-            document.getElementById('kpiTotal').innerText = inventario.length;
-            document.getElementById('kpiAtivos').innerText = inventario.filter(i=>i.status==='Ativo').length;
-            document.getElementById('kpiManutencao').innerText = inventario.filter(i=>i.status==='Manutenção').length;
-            document.getElementById('kpiAbatidos').innerText = inventario.filter(i=>i.status==='Descartado').length;
+
+        function renderizarDropdowns() {
+            const sNome = document.getElementById('nome'); const sSetor = document.getElementById('setor');
+            const sFiltro = document.getElementById('filtroSetorRelatorio'); const sRef = document.getElementById('refCodigo');
+            const sCat = document.getElementById('categoria');
+            sNome.innerHTML = ''; sSetor.innerHTML = ''; sFiltro.innerHTML = '<option value="Todos">Todos</option>'; sRef.innerHTML = ''; sCat.innerHTML = '';
+            listaEquipamentos.forEach(e => { const o = document.createElement('option'); o.value=e; o.textContent=e; sNome.appendChild(o); });
+            listaSetores.forEach(s => { const o = document.createElement('option'); o.value=s; o.textContent=s; sSetor.appendChild(o); const o2 = document.createElement('option'); o2.value=s; o2.textContent=s; sFiltro.appendChild(o2); });
+            listaReferencias.forEach(r => { const o = document.createElement('option'); o.value=r; o.textContent=r; sRef.appendChild(o); });
+            listaCategorias.forEach(c => { const o = document.createElement('option'); o.value=c; o.textContent=c; sCat.appendChild(o); });
         }
-        function gerarGraficoCategorias() {
-            const c = document.getElementById('distribuicaoCategorias'); c.innerHTML = '';
-            listaCategorias.forEach(cat => {
-                const count = inventario.filter(i=>i.categoria===cat).length;
-                const p = inventario.length > 0 ? (count / inventario.length) * 100 : 0;
-                const d = document.createElement('div'); d.className = "text-xs";
-                d.innerHTML = `<div class="flex justify-between font-semibold"><span>${cat}</span><span>${count}</span></div><div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-[#9ada55] h-full" style="width:${p}%"></div></div>`;
-                c.appendChild(d);
-            });
-        }
-        function filtrarRelatorioTela() {
-            const st = document.getElementById('filtroStatusRelatorio').value; const se = document.getElementById('filtroSetorRelatorio').value;
-            const tbody = document.getElementById('tabelaRelatorioTelaCorpo'); tbody.innerHTML = '';
-            inventario.filter(i => (st==='Todos'||i.status===st) && (se==='Todos'||i.setor===se)).forEach(item => {
-                const tr = document.createElement('tr'); tr.className = "border-b text-xs hover:bg-slate-50";
-                tr.innerHTML = `<td class="px-2 py-1.5 font-bold">${item.referencia}</td><td class="px-2 py-1.5 font-bold">${item.nome}</td><td class="px-2 py-1.5">${item.marca}</td><td class="px-2 py-1.5">${item.serie}</td><td class="px-2 py-1.5">${item.setor}</td><td class="px-2 py-1.5">${item.responsavel}</td><td class="px-2 py-1.5">${item.dataAquisicao}</td><td class="px-2 py-1.5 font-bold">${item.status}</td>`;
-                tbody.appendChild(tr);
-            });
-        }
-        function abrirModalOpcao(tipo) {
-            tipoCadastroRapido = tipo; document.getElementById('modalCadastroOpcao').classList.remove('hidden');
-            document.getElementById('novoItemValorDesc').innerText = "Cadastrar nova entrada para " + tipo;
-            document.getElementById('novoItemValor').value = ''; document.getElementById('novoItemValor').focus();
-        }
+
+        function abrirModalOpcao(tipo) { tipoCadastroRapido = tipo; document.getElementById('modalCadastroOpcao').classList.remove('hidden'); document.getElementById('novoItemValor').value=''; }
         function fecharModalOpcao() { document.getElementById('modalCadastroOpcao').classList.add('hidden'); }
         function salvarNovaOpcao() {
             const v = document.getElementById('novoItemValor').value.toUpperCase().trim(); if(!v) return;
-            if(tipoCadastroRapido==='equipamento') { if(!listaEquipamentos.includes(v)) listaEquipamentos.push(v); }
-            else if(tipoCadastroRapido==='referencia') { if(!listaReferencias.includes(v)) listaReferencias.push(v); }
-            else if(tipoCadastroRapido==='setor') { if(!listaSetores.includes(v)) listaSetores.push(v); }
-            else if(tipoCadastroRapido==='categoria') { if(!listaCategorias.includes(v)) listaCategorias.push(v); }
-            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos)); localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
+            if(tipoCadastroRapido==='equipamento') listaEquipamentos.push(v);
+            else if(tipoCadastroRapido==='referencia') listaReferencias.push(v);
+            else if(tipoCadastroRapido==='setor') listaSetores.push(v);
+            else if(tipoCadastroRapido==='categoria') listaCategorias.push(v);
             renderizarDropdowns(); fecharModalOpcao(); enviarDadosParaNuvem();
         }
-        function renderizarDropdowns() {
-            const selectNome = document.getElementById('nome'); const selectSetor = document.getElementById('setor');
-            const selectFiltroSetor = document.getElementById('filtroSetorRelatorio'); const selectRefCodigo = document.getElementById('refCodigo');
-            const selectCategoria = document.getElementById('categoria');
-            selectNome.innerHTML = ''; selectSetor.innerHTML = ''; selectFiltroSetor.innerHTML = '<option value="Todos">Todos</option>'; selectRefCodigo.innerHTML = ''; selectCategoria.innerHTML = '';
-            listaEquipamentos.forEach(e=>{const o=document.createElement('option'); o.value=e; o.textContent=e; selectNome.appendChild(o);});
-            listaSetores.forEach(s=>{const o=document.createElement('option'); o.value=s; o.textContent=s; selectSetor.appendChild(o); const o2=document.createElement('option'); o2.value=s; o2.textContent=s; selectFiltroSetor.appendChild(o2);});
-            listaReferencias.forEach(r=>{const o=document.createElement('option'); o.value=r; o.textContent=r; selectRefCodigo.appendChild(o);});
-            listaCategorias.forEach(c=>{const o=document.createElement('option'); o.value=c; o.textContent=c; selectCategoria.appendChild(o);});
-        }
-        function confirmarExclusaoItem(id) { idItemSelecionadoParaExclusao = id; document.getElementById('modalExclusao').classList.remove('hidden'); document.getElementById('btnConfirmarExclusao').onclick = () => { inventario=inventario.filter(i=>i.id!==id); localStorage.setItem('inventario',JSON.stringify(inventario)); fecharModalExclusao(); renderizarTabela(); enviarDadosParaNuvem(); }; }
+
         function fecharModalExclusao() { document.getElementById('modalExclusao').classList.add('hidden'); }
-        function abrirModalReset() { document.getElementById('modalResetTotal').classList.remove('hidden'); }
         function fecharModalReset() { document.getElementById('modalResetTotal').classList.add('hidden'); }
+        function abrirModalReset() { document.getElementById('modalResetTotal').classList.remove('hidden'); }
         function executarResetTotal() { localStorage.clear(); location.reload(); }
         function salvarConfigSheets() { localStorage.setItem('urlGoogleSheets', document.getElementById('inputUrlSheets').value.trim()); location.reload(); }
         function exportarBackupJSON() { const b = new Blob([JSON.stringify(inventario)], {type:"application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download="backup.json"; a.click(); }
         function importarBackupJSON(e) { const f = e.target.files[0]; if(!f)return; const r = new FileReader(); r.onload=(ev)=>{ inventario=JSON.parse(ev.target.result); localStorage.setItem('inventario',JSON.stringify(inventario)); renderizarTabela(); enviarDadosParaNuvem(); }; r.readAsText(f); }
         function abrirModalLote() { document.getElementById('modalImportacaoLote').classList.remove('hidden'); }
         function fecharModalLote() { document.getElementById('modalImportacaoLote').classList.add('hidden'); }
-        function analisarEntradaLote() { const t = document.getElementById('textareaLote').value; if(t) { document.getElementById('btnConfirmarImportacaoLote').disabled = false; } }
-        function salvarImportacaoLote() { 
-            const t = document.getElementById('textareaLote').value; 
-            t.split('\n').forEach(l => { 
-                const c = l.split('\t'); 
-                if(c.length >= 3) inventario.push({id:Date.now()+Math.random(), referencia:c[0]+"-"+c[1], nome:c[2], marca:c[3]||'N/D', serie:c[4]||'N/D', categoria:c[5]||'Outros', setor:c[6]||'Geral', responsavel:c[7]||'N/D', dataAquisicao:c[8]||'2026-01-01', status:c[9]||'Ativo', refCodigo:c[0], refNumero:c[1]}); 
-            }); 
+        function analisarEntradaLote() { document.getElementById('btnConfirmarImportacaoLote').disabled = false; }
+        function importarCSVLote(e) { const f=e.target.files[0]; const r=new FileReader(); r.onload=(ev)=>{ document.getElementById('textareaLote').value=ev.target.result; analisarEntradaLote(); }; r.readAsText(f); }
+        function salvarImportacaoLote() {
+            document.getElementById('textareaLote').value.split('\n').forEach(l => {
+                const c = l.split('\t'); if(c.length >= 3) inventario.push({id:Date.now()+Math.random(), referencia:c[0]+"-"+c[1], nome:c[2], marca:c[3]||'N/D', serie:c[4]||'N/D', categoria:c[5]||'Outros', setor:c[6]||'Geral', responsavel:c[7]||'N/D', dataAquisicao:c[8]||'2026-01-01', status:c[9]||'Ativo', refCodigo:c[0], refNumero:c[1]});
+            });
             localStorage.setItem('inventario', JSON.stringify(inventario)); renderizarTabela(); fecharModalLote(); enviarDadosParaNuvem();
         }
-        function importarCSVLote(e) { const f=e.target.files[0]; const r=new FileReader(); r.onload=(ev)=>{ document.getElementById('textareaLote').value=ev.target.result; analisarEntradaLote(); }; r.readAsText(f); }
+
         function prepararImpressaoRelatorio() {
             const body = document.getElementById('tabelaRelatorioCorpo'); body.innerHTML = '';
             document.getElementById('relatorioDataEmissao').innerText = new Date().toLocaleDateString('pt-BR');
@@ -1021,7 +887,6 @@
             c.classList.remove('hidden'); c.classList.add('print-active-container');
             setTimeout(() => { window.print(); c.classList.remove('print-active-container'); c.classList.add('hidden'); }, 50);
         }
-        function copiarCodigoAppsScript() { alert('Script básico gerado no console!'); console.log('Apps Script unificado ativo.'); }
     </script>
 </body>
 </html>
