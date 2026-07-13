@@ -4,29 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lab Pasteur - Controle de Ativos</title>
+    <!-- Tailwind CSS para design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca QRCode.js para geração de QR Codes de forma rápida e offline -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Biblioteca Html5-Qrcode para leitura de QR Code via câmera -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     
+    <style id="estilosImpressaoDinamica">
+        /* O JavaScript reescreverá esta tag para aplicar os tamanhos customizados */
+    </style>
     <style>
-        /* Estilos de impressão personalizados para isolar a etiqueta ou o relatório */
         @media print {
-            /* Configuração do tamanho exato da etiqueta física (5cm x 3cm) */
-            @page {
-                size: 50mm 30mm !important;
-                margin: 0 !important;
-            }
-
-            /* Caso de impressão de relatório A4 completo */
-            .print-report-mode @page {
-                size: A4 portrait !important;
-                margin: 15mm !important;
-            }
-
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 50mm !important;
-                height: 30mm !important;
                 overflow: hidden !important;
                 background: white !important;
                 -webkit-print-color-adjust: exact !important;
@@ -35,115 +27,61 @@
                 top: 0 !important;
                 left: 0 !important;
             }
-            
-            /* Oculta absolutamente todos os elementos principais da tela por padrão */
             body > *:not(.print-active-container) {
                 display: none !important;
             }
-            
-            /* Força a exibição e formatação ideal do elemento ativo para impressão */
             .print-active-container {
                 display: block !important;
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
-                width: 50mm !important;
-                height: 30mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 background: white !important;
                 color: black !important;
                 z-index: 99999 !important;
             }
-
-            /* Oculta botões e elementos interativos desnecessários na folha impressa */
             .no-print {
                 display: none !important;
             }
-
-            /* Ajustes estruturais específicos para o Modal de Etiquetas Físicas 50x30mm */
-            #modalQR.print-active-container {
-                display: block !important;
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 50mm !important;
-                height: 30mm !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                background: white !important;
-                box-shadow: none !important;
-                border: none !important;
-            }
-
-            #recipienteImpressaoEtiqueta {
+            #modalQR.print-active-container, #recipienteImpressaoEtiqueta, #areaImpressao {
                 border: none !important;
                 box-shadow: none !important;
-                padding: 0 !important;
                 margin: 0 !important;
                 background: white !important;
-                width: 50mm !important;
-                height: 30mm !important;
-                display: block !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-            }
-
-            #areaImpressao {
-                border: none !important;
-                padding: 1.5mm 2.5mm !important; /* Margem interna uniforme para evitar corte físico nas bordas */
-                margin: 0 !important;
-                width: 50mm !important;
-                height: 30mm !important;
-                box-sizing: border-box !important;
                 display: flex !important;
-                flex-direction: row !important; /* QR na Esquerda, Texto na Direita */
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                box-sizing: border-box !important;
+            }
+            #areaImpressao {
+                padding: 1.5mm 2.5mm !important;
+                flex-direction: row !important;
                 align-items: center !important;
                 justify-content: flex-start !important;
                 gap: 2.5mm !important;
-                background: white !important;
                 page-break-inside: avoid !important;
                 overflow: hidden !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
             }
-
-            /* Ajuste de tamanho dinâmico do QR Code na impressão */
             #canvasQR {
-                width: 15mm !important;
-                height: 15mm !important;
                 flex-shrink: 0 !important;
                 margin: 0 !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
             }
-            
-            #canvasQR img, #canvasQR canvas {
-                width: 22mm !important;
-                height: 22mm !important;
-                display: block !important;
-                margin: 0 !important;
-            }
-
-            /* Painel de informações compacto para caber nos 3cm de altura */
             #printInfoPanel {
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
-                width: 21mm !important;
-                height: 26mm !important;
                 overflow: hidden !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 color: black !important;
                 font-family: monospace !important;
             }
-
             #printReferencia {
-                font-size: 8pt !important;
                 line-height: 1.1 !important;
                 margin-bottom: 1mm !important;
                 border-bottom: 1px solid #000 !important;
@@ -152,9 +90,7 @@
                 font-weight: 900 !important;
                 color: black !important;
             }
-
             .print-text {
-                font-size: 6pt !important;
                 line-height: 1.2 !important;
                 white-space: nowrap !important;
                 overflow: hidden !important;
@@ -162,18 +98,15 @@
                 color: black !important;
                 margin: 0 !important;
             }
-
-            /* Ajustes finos específicos para o Relatório A4 */
             #containerImpressaoRelatorio.print-active-container {
                 display: block !important;
                 background: white !important;
                 color: black !important;
-                padding: 30px !important;
+                padding: 20px !important;
                 width: 100% !important;
                 height: auto !important;
                 position: static !important;
             }
-            
             table {
                 width: 100% !important;
                 border-collapse: collapse !important;
@@ -189,29 +122,19 @@
                 print-color-adjust: exact !important;
             }
         }
-        
-        /* Animação de erro na digitação de senha */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-10px); }
             40%, 80% { transform: translateX(10px); }
         }
-        .error-shake {
-            animation: shake 0.4s ease-in-out;
-        }
-
-        /* Animação de Rotação para o Sincronizador */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .animate-spin-custom {
-            animation: spin 1.2s linear infinite;
-        }
+        .error-shake { animation: shake 0.4s ease-in-out; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .animate-spin-custom { animation: spin 1.2s linear infinite; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
 
+    <!-- TELA DE LOGIN E SEGURANÇA BLOQUEADA -->
     <div id="telaLogin" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-[9999] transition-all duration-300">
         <div class="bg-white p-8 rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 text-center mx-4">
             <div class="flex justify-center mb-6">
@@ -219,18 +142,15 @@
                     <path d="M50 10C50 10 90 60 90 80C90 102.091 72.0914 120 50 120C27.9086 120 10 102.091 10 80C10 60 50 10 50 10Z" fill="#9ada55" />
                 </svg>
             </div>
-            
             <div class="flex flex-col mb-4">
                 <span class="text-3xl font-extrabold tracking-tight text-[#9ada55] leading-none" style="font-family: 'Arial Rounded MT Bold', 'Nunito', system-ui, sans-serif;">PASTEUR</span>
                 <span class="text-[10px] font-bold tracking-[0.25em] text-[#85bc4b] uppercase mt-2 leading-none">Controle de Ativos</span>
             </div>
-
             <div class="h-[2px] bg-[#9ada55]/20 w-1/3 mx-auto my-4 rounded-full"></div>
 
             <div id="containerConfigSenha" class="hidden">
                 <h3 class="text-base font-bold text-slate-800 mb-1">Configuração de Segurança Inicial</h3>
-                <p class="text-xs text-slate-500 mb-5">Defina uma senha mestre para restringir e proteger o inventário deste dispositivo.</p>
-                
+                <p class="text-xs text-slate-500 mb-5">Defina uma senha mestre para restringir o acesso local.</p>
                 <div class="space-y-3 text-left">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nova Senha de Acesso</label>
@@ -238,43 +158,34 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Confirmar Senha</label>
-                        <input type="password" id="inputNovaSenhaConfirmar" placeholder="Repita a senha mestre" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#9ada55]">
+                        <input type="password" id="inputNovaSenhaConfirmar" placeholder="Repita a senha" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#9ada55]">
                     </div>
-                    <button onclick="definirSenhaInicial()" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 rounded-lg text-xs transition duration-200 mt-2 cursor-pointer shadow-md">
-                        Salvar e Acessar Sistema
-                    </button>
+                    <button onclick="definirSenhaInicial()" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 rounded-lg text-xs transition duration-200 mt-2 shadow-md cursor-pointer">Salvar e Acessar Sistema</button>
                 </div>
             </div>
 
             <div id="containerDesbloqueio" class="hidden">
                 <h3 class="text-base font-bold text-slate-800 mb-1">Acesso Restrito</h3>
                 <p class="text-xs text-slate-500 mb-5">Insira a senha de administrador do Lab Pasteur para prosseguir.</p>
-                
                 <form id="formAcessoSecure" onsubmit="validarAcesso(event)" class="space-y-3 text-left">
                     <div class="relative">
                         <input type="password" id="inputSenhaAcesso" required placeholder="Digite a senha mestre" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#9ada55] pr-10 text-center font-mono tracking-widest">
                         <span class="absolute inset-y-0 right-3 flex items-center text-slate-400">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </span>
                     </div>
                     <div id="mensagemErroAcesso" class="text-[11px] text-rose-500 font-bold text-center hidden">Senha incorreta. Tente novamente!</div>
-                    <button type="submit" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-xs transition duration-200 cursor-pointer shadow-md">
-                        Desbloquear Sistema
-                    </button>
+                    <button type="submit" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-xs transition duration-200 shadow-md cursor-pointer">Desbloquear Sistema</button>
                 </form>
-                
                 <button onclick="puxarDadosNuvem(true)" class="mt-4 text-xs text-slate-400 hover:text-[#85bc4b] font-semibold transition flex items-center justify-center gap-1.5 w-full">
-                    <svg id="loginSyncIcon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
-                    </svg>
+                    <svg id="loginSyncIcon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" /></svg>
                     Sincronizar dados e senhas da Nuvem
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- CONTEÚDO PRINCIPAL DO INVENTÁRIO -->
     <div id="conteudoPrincipal" class="max-w-6xl mx-auto px-4 py-6 md:py-8 hidden">
         <header class="mb-6 md:mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="flex items-center justify-between md:justify-start w-full md:w-auto gap-4">
@@ -293,27 +204,17 @@
             </div>
             
             <div class="flex flex-wrap items-center justify-between md:justify-end gap-3 w-full md:w-auto">
-                <div id="badgeNuvem" onclick="forcarSincronizacaoGeral()" title="Clique para sincronizar com a nuvem" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-semibold border border-slate-200 transition cursor-pointer select-none">
-                    <svg id="iconeNuvem" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
-                    </svg>
+                <div id="badgeNuvem" onclick="forcarSincronizacaoGeral()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-semibold border border-slate-200 transition cursor-pointer select-none">
+                    <svg id="iconeNuvem" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" /></svg>
                     <span id="textoNuvem">Local (Sem Nuvem)</span>
                 </div>
 
                 <div class="flex items-center bg-slate-200 p-1 rounded-lg overflow-x-auto max-w-full gap-1">
-                    <button onclick="mudarAba('inventario')" id="btnAbaInventario" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap">
-                        Inventário
-                    </button>
-                    <button onclick="mudarAba('relatorios')" id="btnAbaRelatorios" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap">
-                        Relatórios
-                    </button>
-                    <button onclick="mudarAba('config')" id="btnAbaConfig" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap">
-                        Configurações
-                    </button>
-                    <button onclick="bloquearTelaManualmente()" title="Bloquear Tela (Segurança)" class="p-1.5 rounded-md text-slate-500 hover:text-rose-600 hover:bg-slate-300/50 transition cursor-pointer flex items-center">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
+                    <button onclick="mudarAba('inventario')" id="btnAbaInventario" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap">Inventário</button>
+                    <button onclick="mudarAba('relatorios')" id="btnAbaRelatorios" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap">Relatórios</button>
+                    <button onclick="mudarAba('config')" id="btnAbaConfig" class="px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap">Configurações</button>
+                    <button onclick="bloquearTelaManualmente()" title="Bloquear Tela" class="p-1.5 rounded-md text-slate-500 hover:text-rose-600 hover:bg-slate-300/50 transition cursor-pointer flex items-center">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                     </button>
                 </div>
             </div>
@@ -324,29 +225,23 @@
             <button onclick="fecharAlerta()" class="font-bold text-lg leading-none hover:opacity-75">&times;</button>
         </div>
 
+        <!-- ABA DO INVENTÁRIO -->
         <div id="abaInventario" class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1 h-fit">
                 <h2 class="text-lg font-bold mb-4 text-slate-950 border-l-4 border-[#9ada55] pl-3">Novo Equipamento</h2>
-                
                 <form id="formInventario" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                         <div>
                             <div class="flex justify-between items-center mb-1">
                                 <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">Cód. Referência *</label>
                                 <button type="button" onclick="abrirModalOpcao('referencia')" class="text-[9px] text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5">
-                                        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                    </svg>
-                                    Novo
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>Novo
                                 </button>
                             </div>
                             <select id="refCodigo" required onchange="calcularProximoNumeroRef()" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs bg-white font-mono font-bold text-slate-700"></select>
                         </div>
                         <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">Numeração *</label>
-                                <div class="h-3.5"></div>
-                            </div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Numeração *</label>
                             <input type="text" id="refNumero" required placeholder="Ex: 001" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs font-mono font-bold text-slate-700">
                         </div>
                     </div>
@@ -355,10 +250,7 @@
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Nome do Equipamento *</label>
                             <button type="button" onclick="abrirModalOpcao('equipamento')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                </svg>
-                                Criar Novo
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>Criar Novo
                             </button>
                         </div>
                         <select id="nome" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
@@ -379,10 +271,7 @@
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Categoria *</label>
                             <button type="button" onclick="abrirModalOpcao('categoria')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                </svg>
-                                Criar Nova
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>Criar Nova
                             </button>
                         </div>
                         <select id="categoria" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
@@ -393,10 +282,7 @@
                             <div class="flex justify-between items-center mb-1">
                                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Setor / Sala *</label>
                                 <button type="button" onclick="abrirModalOpcao('setor')" class="text-xs text-[#85bc4b] hover:text-[#72a13f] font-bold flex items-center gap-0.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                                        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                    </svg>
-                                    Novo
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg> Novo
                                 </button>
                             </div>
                             <select id="setor" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm bg-white"></select>
@@ -423,35 +309,32 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 mt-2">
-                        <button type="submit" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition duration-200 text-sm cursor-pointer">
-                            Registrar Item
-                        </button>
-                        <button type="button" onclick="limparFormulario()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 px-4 rounded-lg border border-slate-200 transition duration-200 text-sm cursor-pointer text-center">
-                            Limpar Campos
-                        </button>
+                        <button type="submit" class="w-full bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition duration-200 text-sm cursor-pointer">Registrar Item</button>
+                        <button type="button" onclick="limparFormulario()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 px-4 rounded-lg border border-slate-200 transition duration-200 text-sm cursor-pointer text-center">Limpar Campos</button>
                     </div>
-
                     <button type="button" onclick="abrirModalLote()" class="w-full mt-2 bg-slate-50 hover:bg-slate-100 text-[#85bc4b] border border-dashed border-[#9ada55] font-bold py-2 px-4 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Importação em Massa / Lote (Excel)
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Importação em Massa (Excel)
                     </button>
                 </form>
             </div>
 
+            <!-- Tabela de Itens Cadastrados -->
             <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                     <div class="flex items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900 border-l-4 border-[#9ada55] pl-3">Equipamentos Registrados</h2>
                         <span id="contadorItens" class="bg-[#9ada55]/10 text-[#85bc4b] text-xs font-bold px-2.5 py-1 rounded-full">0 Itens</span>
                     </div>
-                    <div class="relative w-full sm:w-64">
-                        <input type="text" id="buscaEquipamento" oninput="filtrarTabela()" placeholder="Pesquisar por nome, sigla ou série..." class="w-full pr-8 pl-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs">
-                        <button type="button" onclick="limparBusca()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold font-mono">×</button>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="buscaEquipamento" oninput="filtrarTabela()" placeholder="Pesquisar por nome, sigla ou série..." class="w-full pr-8 pl-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs">
+                            <button type="button" onclick="limparBusca()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold font-mono">×</button>
+                        </div>
+                        <button type="button" onclick="abrirScannerQRCode()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white p-2 rounded-lg transition flex items-center justify-center shrink-0 cursor-pointer shadow-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+                        </button>
                     </div>
                 </div>
-                
                 <div class="overflow-x-auto rounded-lg border border-slate-100 font-sans">
                     <table class="w-full text-sm text-left text-slate-600">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100">
@@ -469,24 +352,13 @@
             </div>
         </div>
 
+        <!-- ABA DE RELATÓRIOS E ANÁLISES -->
         <div id="abaRelatorios" class="hidden space-y-6">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Equipamentos</p>
-                    <h3 id="kpiTotal" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-[#85bc4b]">Ativos</p>
-                    <h3 id="kpiAtivos" class="text-2xl font-bold text-[#85bc4b] mt-1">0</h3>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-amber-600">Manutenção</p>
-                    <h3 id="kpiManutencao" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-rose-600">Descartados</p>
-                    <h3 id="kpiAbatidos" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
-                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Equipamentos</p><h3 id="kpiTotal" class="text-2xl font-bold text-slate-900 mt-1">0</h3></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-[#85bc4b]">Ativos</p><h3 id="kpiAtivos" class="text-2xl font-bold text-[#85bc4b] mt-1">0</h3></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-amber-600">Manutenção</p><h3 id="kpiManutencao" class="text-2xl font-bold text-amber-600 mt-1">0</h3></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><p class="text-slate-500 text-xs font-semibold uppercase tracking-wider text-rose-600">Descartados</p><h3 id="kpiAbatidos" class="text-2xl font-bold text-rose-600 mt-1">0</h3></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -494,25 +366,12 @@
                     <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-l-4 border-[#9ada55] pl-2">Distribuição por Categoria</h3>
                     <div id="distribuicaoCategorias" class="space-y-3"></div>
                 </div>
-
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-l-4 border-[#9ada55] pl-2">Extração de Relatórios</h3>
                     <p class="text-xs text-slate-500">Exporte ou faça a impressão consolidada do estado atual da folha de inventário físico do laboratório.</p>
-                    
                     <div class="space-y-2 pt-2">
-                        <button onclick="exportarCSV()" class="w-full flex items-center justify-center gap-2 bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                            </svg>
-                            Exportar para Excel (CSV)
-                        </button>
-                        
-                        <button onclick="prepararImpressaoRelatorio()" class="w-full flex items-center justify-center gap-2 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.615 0-1.101-.491-1.106-1.106L6.34 18m11.32 0a48.52 48.52 0 00-.74-10.384M6.34 18a48.52 48.52 0 01.74-10.384m0 0l.23-2.522A1.125 1.125 0 018.43 4.1h7.14a1.125 1.125 0 011.114 1.007l.23 2.522M6.34 18h11.32" />
-                            </svg>
-                            Imprimir Relatório Completo
-                        </button>
+                        <button onclick="exportarCSV()" class="w-full flex items-center justify-center gap-2 bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>Exportar para Excel (CSV)</button>
+                        <button onclick="prepararImpressaoRelatorio()" class="w-full flex items-center justify-center gap-2 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.615 0-1.101-.491-1.106-1.106L6.34 18m11.32 0a48.52 48.52 0 00-.74-10.384M6.34 18a48.52 48.52 0 01.74-10.384m0 0l.23-2.522A1.125 1.125 0 018.43 4.1h7.14a1.125 1.125 0 011.114 1.007l.23 2.522M6.34 18h11.32" /></svg>Imprimir Relatório Completo</button>
                     </div>
                 </div>
             </div>
@@ -525,35 +384,19 @@
                     </div>
                     <div class="flex flex-wrap gap-2 w-full md:w-auto">
                         <select id="filtroStatusRelatorio" onchange="filtrarRelatorioTela()" class="flex-1 md:flex-none px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
-                            <option value="Todos">Todos os Estados</option>
-                            <option value="Ativo">Ativo</option>
-                            <option value="Manutenção">Manutenção</option>
-                            <option value="Descartado">Descartado</option>
+                            <option value="Todos">Todos os Estados</option><option value="Ativo">Ativo</option><option value="Manutenção">Manutenção</option><option value="Descartado">Descartado</option>
                         </select>
                         <select id="filtroSetorRelatorio" onchange="filtrarRelatorioTela()" class="flex-1 md:flex-none px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold">
                             <option value="Todos">Todos os Setores</option>
                         </select>
-                        <button onclick="imprimirSelecaoRelatorio()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm1 9H6v3h8v-3z" clip-rule="evenodd" />
-                            </svg>
-                            Imprimir Seleção
-                        </button>
+                        <button onclick="imprimirSelecaoRelatorio()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm1 9H6v3h8v-3z" clip-rule="evenodd" /></svg>Imprimir Seleção</button>
                     </div>
                 </div>
-
                 <div class="overflow-x-auto rounded-lg border border-slate-200 max-h-96">
                     <table class="w-full text-xs text-left text-slate-600">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100 sticky top-0 z-10">
                             <tr>
-                                <th class="px-3 py-3">Patrimônio / Sigla</th>
-                                <th class="px-3 py-3">Equipamento</th>
-                                <th class="px-3 py-3">Marca/Modelo</th>
-                                <th class="px-3 py-3">Série</th>
-                                <th class="px-3 py-3">Setor/Localização</th>
-                                <th class="px-3 py-3">Responsável</th>
-                                <th class="px-3 py-3">Aquisição</th>
-                                <th class="px-3 py-3">Estado</th>
+                                <th class="px-3 py-3">Patrimônio / Sigla</th><th class="px-3 py-3">Equipamento</th><th class="px-3 py-3">Marca/Modelo</th><th class="px-3 py-3">Série</th><th class="px-3 py-3">Setor/Localização</th><th class="px-3 py-3">Responsável</th><th class="px-3 py-3">Aquisição</th><th class="px-3 py-3">Estado</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaRelatorioTelaCorpo" class="divide-y divide-slate-200"></tbody>
@@ -562,345 +405,159 @@
             </div>
         </div>
 
+        <!-- ABA DE CONFIGURAÇÃO -->
         <div id="abaConfig" class="hidden max-w-2xl mx-auto space-y-6">
+            <!-- PAINEL DE CONFIGURAÇÃO DE IMPRESSÃO CUSTOMIZADA -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-xl font-bold mb-2 text-slate-900 border-l-4 border-[#9ada55] pl-3">Hardware e Formato de Impressão</h2>
+                <p class="text-slate-600 text-sm mb-6">Configure o tamanho de saída de acordo com o rolo de etiquetas da sua impressora térmica ou folhas físicas padrão.</p>
+                
+                <div class="space-y-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="text-xs font-bold text-slate-800 block mb-3 uppercase tracking-wider">Bobina de Etiqueta Térmica (mm)</span>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Largura da Etiqueta (mm)</label>
+                                <input type="number" id="cfgPrintLargura" value="50" min="20" max="150" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#9ada55] text-xs font-bold font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Altura da Etiqueta (mm)</label>
+                                <input type="number" id="cfgPrintAltura" value="30" min="15" max="150" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#9ada55] text-xs font-bold font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="text-xs font-bold text-slate-800 block mb-2 uppercase tracking-wider">Papel do Relatório Consolidado</span>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Formato da Folha</label>
+                            <select id="cfgPrintRelatorioTipo" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-semibold">
+                                <option value="A4 portrait">A4 Padrão (210mm x 297mm)</option>
+                                <option value="letter portrait">Carta / Letter (216mm x 279mm)</option>
+                                <option value="legal portrait">Ofício / Legal (216mm x 356mm)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button onclick="salvarConfiguracoesImpressao()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 px-5 rounded-lg text-xs transition cursor-pointer">Salvar Configurações de Layout</button>
+                </div>
+            </div>
+
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-xl font-bold mb-2 text-slate-900 border-l-4 border-[#9ada55] pl-3">Sincronização em Nuvem (Google Sheets)</h2>
-                <p class="text-slate-600 text-sm mb-6">Conecte o aplicativo a uma planilha online para habilitar o compartilhamento em tempo real de ativos, categorias e senhas entre qualquer computador ou celular.</p>
-                
+                <p class="text-slate-600 text-sm mb-6">Conecte o aplicativo a uma planilha online para habilitar o compartilhamento em tempo real.</p>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">URL de Implementação Web do Apps Script</label>
                         <input type="text" id="inputUrlSheets" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm">
                     </div>
-                    
                     <div class="flex gap-3">
-                        <button onclick="salvarConfigSheets()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-5 rounded-lg text-xs transition cursor-pointer">
-                            Salvar e Sincronizar Agora
-                        </button>
-                        <button onclick="puxarDadosNuvem(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1">
-                            Forçar Carregamento (Pull)
-                        </button>
+                        <button onclick="salvarConfigSheets()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 px-5 rounded-lg text-xs transition cursor-pointer">Salvar e Sincronizar Agora</button>
+                        <button onclick="puxarDadosNuvem(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold py-2.5 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1">Forçar Carregamento (Pull)</button>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h3 class="text-sm font-bold text-slate-900 mb-2 border-l-4 border-[#85bc4b] pl-3">Controle de Acesso & Segurança</h3>
-                <p class="text-xs text-slate-500 mb-4">Gerencie as opções de login por senha para proteger as informações confidenciais de auditoria do Lab Pasteur.</p>
-                
                 <div class="space-y-4 pt-2">
                     <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <div>
-                            <span class="text-xs font-bold text-slate-800 block">Exigir Senha para Acessar</span>
-                            <span class="text-[10px] text-slate-400">Ativa a barreira de bloqueio ao abrir ou recarregar a tela do app.</span>
-                        </div>
-                        <div>
-                            <button id="btnToggleSeguranca" onclick="alternarStatusSeguranca()" class="px-3 py-1.5 bg-[#9ada55] hover:bg-[#85bc4b] text-white text-xs font-bold rounded-lg transition">
-                                Ativo
-                            </button>
-                        </div>
+                        <div><span class="text-xs font-bold text-slate-800 block">Exigir Senha para Acessar</span></div>
+                        <div><button id="btnToggleSeguranca" onclick="alternarStatusSeguranca()" class="px-3 py-1.5 bg-[#9ada55] text-white text-xs font-bold rounded-lg transition">Ativo</button></div>
                     </div>
-
                     <div id="secaoAlterarSenha" class="space-y-3 p-4 border border-slate-200 rounded-lg">
                         <span class="text-xs font-bold text-slate-800 block">Alterar Senha do Administrador</span>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Senha Atual</label>
-                                <input type="password" id="inputSenhaConfigAtual" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#9ada55]">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nova Senha</label>
-                                <input type="password" id="inputSenhaConfigNova" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#9ada55]">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Confirmar Nova</label>
-                                <input type="password" id="inputSenhaConfigConfirmar" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#9ada55]">
-                            </div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Senha Atual</label><input type="password" id="inputSenhaConfigAtual" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nova Senha</label><input type="password" id="inputSenhaConfigNova" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Confirmar Nova</label><input type="password" id="inputSenhaConfigConfirmar" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"></div>
                         </div>
-                        <button onclick="processarAlteracaoSenha()" class="bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-1.5 px-4 rounded-lg text-[10px] tracking-wide uppercase transition cursor-pointer">
-                            Confirmar Mudança de Senha
-                        </button>
+                        <button onclick="processarAlteracaoSenha()" class="bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-1.5 px-4 rounded-lg text-[10px] tracking-wide uppercase transition cursor-pointer">Confirmar Mudança de Senha</button>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-sm font-bold text-slate-900 mb-1 border-l-4 border-[#9ada55] pl-3">Backup e Sincronização entre Dispositivos</h3>
-                <p class="text-xs text-slate-500 mb-4">Exporte todo o seu inventário e configurações para um arquivo. Você pode carregar esse arquivo para sincronizar os dados em qualquer computador do laboratório.</p>
-                
+                <h3 class="text-sm font-bold text-slate-900 mb-1 border-l-4 border-[#9ada55] pl-3">Backup e Sincronização manual</h3>
                 <div class="flex flex-wrap gap-3">
-                    <button onclick="exportarBackupJSON()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        Exportar Backup (.json)
-                    </button>
-                    
-                    <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        Importar Backup (.json)
-                        <input type="file" id="inputImportarBackup" accept=".json" onchange="importarBackupJSON(event)" class="hidden">
-                    </label>
+                    <button onclick="exportarBackupJSON()" class="bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2 px-4 rounded-lg text-xs transition flex items-center gap-1.5 shadow-xs">Exportar Backup (.json)</button>
+                    <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">Importar Backup (.json)<input type="file" id="inputImportarBackup" accept=".json" onchange="importarBackupJSON(event)" class="hidden"></label>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-sm border border-rose-200">
-                <h3 class="text-sm font-bold text-rose-600 mb-1 border-l-4 border-rose-500 pl-3">Limpeza de Armazenamento (Cache local)</h3>
-                <p class="text-xs text-slate-500 mb-4">Caso possua dados antigos de teste ou queira remover todos os itens gravados localmente neste navegador para recomeçar do zero, utilize a opção abaixo.</p>
-                <button onclick="abrirModalReset()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
-                    Apagar Todo o Inventário Local
-                </button>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl border border-slate-200">
-                <h3 class="text-sm font-bold text-[#85bc4b] mb-3">Como Configurar a Sincronização em Múltiplos Dispositivos:</h3>
-                <ol class="list-decimal list-inside text-xs text-slate-600 space-y-3">
-                    <li>Crie uma nova planilha no Google Sheets. O próprio Script fará a estrutura automaticamente.</li>
-                    <li>No menu superior do Google Sheets, clique em <strong>Extensões > Apps Script</strong>.</li>
-                    <li>Clique no botão abaixo para copiar o script de integração, apague o código existente e cole o novo lá.</li>
-                    <li>No canto superior direito, clique em <strong>Implantar > Nova implementação</strong>.</li>
-                    <li>Escolha o tipo <strong>Aplicação Web</strong>, mude o acesso para <strong>"Qualquer pessoa"</strong> e clique em <strong>Implantar</strong>.</li>
-                    <li>Copie o link gerado pelo Google e cole no campo de configuração acima.</li>
-                </ol>
-
-                <button onclick="copiarCodigoAppsScript()" class="mt-4 inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v4.125c0 .621.504 1.125 1.125 1.125H6.75m1.5 6h4.5a2.25 2.25 0 002.25-2.25V15" />
-                    </svg>
-                    Copiar Código Avançado do Apps Script (Multi-Dispositivo)
-                </button>
+                <button onclick="abrirModalReset()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-2 px-4 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5">Apagar Todo o Inventário Local</button>
             </div>
         </div>
-
-        <footer class="mt-16 pt-8 border-t border-slate-200 text-center no-print">
-            <p class="text-xs font-bold tracking-wider text-slate-500 uppercase">
-                SISTEMA DESENVOLVIDO POR GILNEI MEIER - ANALISTA DE SISTEMAS
-            </p>
-            <p class="text-[10px] text-slate-400 mt-1.5">
-                &copy; 2026 Lab Pasteur • Gestão de Ativos & Controle de Inventário Físico
-            </p>
-        </footer>
     </div>
 
+    <!-- MODAL DE CADASTRO RÁPIDO DE OPÇÕES -->
     <div id="modalCadastroOpcao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-sm w-full shadow-xl border border-slate-100">
             <h3 id="modalOpcaoTitulo" class="text-lg font-bold text-slate-900 mb-1">Cadastrar Nova Opção</h3>
-            <p id="modalOpcaoDescricao" class="text-xs text-slate-500 mb-4">Insira o nome para adicionar à lista.</p>
-            
-            <div class="space-y-3 mb-5">
-                <input type="text" id="novoItemValor" placeholder="Digite o novo nome..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-sm uppercase">
-            </div>
-
+            <p id="novoItemValorDesc" class="text-xs text-slate-500 mb-4"></p>
+            <input type="text" id="novoItemValor" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm uppercase mb-4 focus:outline-none">
             <div class="flex gap-3">
-                <button onclick="salvarNovaOpcao()" class="flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Adicionar
-                </button>
-                <button onclick="fecharModalOpcao()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Cancelar
-                </button>
+                <button onclick="salvarNovaOpcao()" class="flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-semibold py-2 rounded-lg text-sm transition cursor-pointer">Adicionar</button>
+                <button onclick="fecharModalOpcao()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">Cancelar</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL DO QR CODE (PRE-VIEW DINAMICA DA ETIQUETA) -->
     <div id="modalQR" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div id="recipienteImpressaoEtiqueta" class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl border border-slate-100">
             <h3 class="text-lg font-bold text-slate-900 mb-1 no-print">Etiqueta Patrimonial</h3>
-            <p class="text-xs text-slate-400 mb-4 no-print">Modelo Físico Térmico: 5cm x 3cm</p>
+            <p class="text-xs text-slate-400 mb-4 no-print">Pré-visualização do Layout Ajustado</p>
             
-            <div id="areaImpressao" class="bg-white p-[10px] border-2 border-dashed border-slate-300 rounded-xl my-2 mx-auto" style="width: 350px; height: 210px; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 12px; box-sizing: border-box;">
-                <div id="canvasQR" class="flex justify-center items-center shrink-0" style="width: 120px; height: 120px; background-color: white;"></div>
-                
-                <div id="printInfoPanel" class="text-left font-mono text-slate-800" style="width: calc(100% - 140px - 12px); display: flex; flex-direction: column; justify-content: center; height: 100%; overflow: hidden;">
-                    <div class="font-mono font-black text-slate-950 border-b border-slate-200 pb-1 mb-1 tracking-wide text-ellipsis overflow-hidden whitespace-nowrap" id="printReferencia" style="font-size: 14px; line-height: 1.2;"></div>
-                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>LAB:</strong> PASTEUR</p>
-                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>EQP:</strong> <span id="printNome"></span></p>
-                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>MOD:</strong> <span id="printMarca"></span></p>
-                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>S/N:</strong> <span id="printSerie"></span></p>
-                    <p class="print-text truncate" style="font-size: 12px; line-height: 1.3; margin: 0;"><strong>LOC:</strong> <span id="printSetor"></span></p>
+            <div id="areaImpressao" class="bg-white border border-slate-300 mx-auto my-2">
+                <div id="canvasQR"></div>
+                <div id="printInfoPanel">
+                    <div id="printReferencia"></div>
+                    <p class="print-text truncate"><strong>LAB:</strong> PASTEUR</p>
+                    <p class="print-text truncate"><strong>EQP:</strong> <span id="printNome"></span></p>
+                    <p class="print-text truncate"><strong>MOD:</strong> <span id="printMarca"></span></p>
+                    <p class="print-text truncate"><strong>S/N:</strong> <span id="printSerie"></span></p>
+                    <p class="print-text truncate"><strong>LOC:</strong> <span id="printSetor"></span></p>
                 </div>
             </div>
 
             <div class="flex gap-3 mt-4 no-print">
-                <button onclick="dispararImpressaoEtiqueta()" class="flex-1 bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Imprimir
-                </button>
-                <button onclick="fecharModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Fechar
-                </button>
+                <button onclick="dispararImpressaoEtiqueta()" class="flex-1 bg-[#85bc4b] hover:bg-[#72a13f] text-white font-bold py-2 rounded-lg text-sm transition cursor-pointer">Imprimir</button>
+                <button onclick="fecharModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">Fechar</button>
             </div>
         </div>
     </div>
 
-    <div id="modalExclusao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl">
-            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
-            </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Deseja remover o item?</h3>
-            <p class="text-xs text-slate-500 mb-5">Esta ação irá apagar definitivamente o equipamento do armazenamento interno e da nuvem.</p>
-            
-            <div class="flex gap-3">
-                <button id="btnConfirmarExclusao" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Confirmar Exclusão
-                </button>
-                <button onclick="fecharModalExclusao()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalResetTotal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl">
-            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-            </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Apagar todo o inventário?</h3>
-            <p class="text-xs text-slate-500 mb-5">Atenção! Esta ação removerá definitivamente todos os equipamentos salvos neste navegador de forma irreversível.</p>
-            
-            <div class="flex gap-3">
-                <button onclick="executarResetTotal()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Apagar Tudo
-                </button>
-                <button onclick="fecharModalReset()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 rounded-lg text-sm transition cursor-pointer">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+    <div id="modalExclusao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl"><h3 class="text-lg font-bold text-slate-900 mb-1">Remover item?</h3><p class="text-xs text-slate-500 mb-5">Esta ação apagará o item permanentemente.</p><div class="flex gap-3"><button id="btnConfirmarExclusao" class="flex-1 bg-rose-600 text-white py-2 rounded-lg text-sm font-semibold">Excluir</button><button onclick="fecharModalExclusao()" class="flex-1 bg-slate-200 py-2 rounded-lg text-sm font-semibold">Cancelar</button></div></div></div>
+    <!-- MODAL DE CONFIRMAÇÃO DE RESET TOTAL -->
+    <div id="modalResetTotal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl"><h3 class="text-lg font-bold text-slate-900 mb-1">Zerar tudo?</h3><div class="flex gap-3 mt-4"><button onclick="executarResetTotal()" class="flex-1 bg-rose-600 text-white py-2 rounded-lg text-sm font-semibold">Apagar</button><button onclick="fecharModalReset()" class="flex-1 bg-slate-200 py-2 rounded-lg text-sm font-semibold">Cancelar</button></div></div></div>
+    
+    <!-- MODAL DE IMPORTAÇÃO EM MASSA (EXCEL/CSV) -->
     <div id="modalImportacaoLote" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-2xl w-full shadow-xl border border-slate-100 flex flex-col max-h-[90vh]">
             <h3 class="text-lg font-bold text-slate-900 mb-1">Importação em Lote</h3>
-            <p class="text-xs text-slate-500 mb-4">Cole dados copiados diretamente do Excel/Sheets ou envie um arquivo CSV para cadastrar múltiplos itens.</p>
-            
             <div class="space-y-4 flex-1 overflow-y-auto pr-1">
-                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-[11px] text-slate-600">
-                    <p class="font-bold text-slate-700 mb-1">Layout esperado das Colunas na Planilha:</p>
-                    <div class="bg-white p-2 rounded-md font-mono text-[10.5px] text-[#85bc4b] border border-slate-200 overflow-x-auto select-all">
-                        Sigla_Referência	Número_Patrimônio	Nome_Equipamento	Marca_Modelo	Número_Série	Categoria	Setor_Sala	Responsável	Data_Aquisição(AAAA-MM-DD)	Estado(Ativo/Manutenção/Descartado)
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Opção A: Colar Linhas da Planilha</label>
-                        <textarea id="textareaLote" placeholder="Cole as células copiadas da sua planilha aqui..." class="w-full h-32 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9ada55] text-xs font-mono resize-none" oninput="analisarEntradaLote()"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Opção B: Carregar Arquivo CSV / TXT</label>
-                        <div class="border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center p-4 text-center hover:bg-slate-50 transition relative cursor-pointer">
-                            <svg class="w-8 h-8 text-slate-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span class="text-xs text-slate-500 font-medium">Arraste ou clique para selecionar arquivo</span>
-                            <input type="file" id="inputFileCSV" accept=".csv, .txt" onchange="importarCSVLote(event)" class="absolute inset-0 opacity-0 cursor-pointer">
-                        </div>
-                    </div>
+                    <textarea id="textareaLote" placeholder="Cole as células copiadas da sua planilha aqui..." class="w-full h-32 px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono" oninput="analisarEntradaLote()"></textarea>
+                    <div class="border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center relative"><span class="text-xs text-slate-500">Arraste ou clique para selecionar arquivo CSV</span><input type="file" id="inputFileCSV" accept=".csv, .txt" onchange="importarCSVLote(event)" class="absolute inset-0 opacity-0 cursor-pointer"></div>
                 </div>
-
-                <div id="previewLoteContainer" class="hidden space-y-2">
-                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Dados Mapeados (<span id="countPreviewItens">0</span> itens identificados)
-                    </h4>
-                    <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-40">
-                        <table class="w-full text-[11px] text-left text-slate-600">
-                            <tbody id="tabelaPreviewLote"></tbody>
-                        </table>
-                    </div>
-                </div>
+                <div id="previewLoteContainer" class="hidden space-y-2"><div class="overflow-x-auto border border-slate-200 rounded-lg max-h-40"><table class="w-full text-[11px] text-left text-slate-600"><tbody id="tabelaPreviewLote"></tbody></table></div></div>
             </div>
-
-            <div class="flex gap-3 mt-4 border-t border-slate-100 pt-4">
-                <button onclick="salvarImportacaoLote()" id="btnConfirmarImportacaoLote" disabled class="flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60">
-                    Confirmar Importação de Itens
-                </button>
-                <button onclick="fecharModalLote()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-lg text-sm transition cursor-pointer">
-                    Cancelar
-                </button>
-            </div>
+            <div class="flex gap-3 mt-4 border-t border-slate-100 pt-4"><button onclick="salvarImportacaoLote()" id="btnConfirmarImportacaoLote" disabled class="flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm opacity-60">Confirmar Lote</button><button onclick="fecharModalLote()" class="flex-1 bg-slate-200 text-slate-700 py-2.5 rounded-lg text-sm">Cancelar</button></div>
         </div>
     </div>
 
-    <div id="containerImpressaoRelatorio" class="hidden bg-white p-8 font-sans">
-        <div class="flex justify-between items-start border-b-2 border-slate-300 pb-4 mb-6">
-            <div class="flex items-center gap-3">
-                <svg class="w-10 h-12" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M50 10C50 10 90 60 90 80C90 102.091 72.0914 120 50 120C27.9086 120 10 102.091 10 80C10 60 50 10 50 10Z" fill="#9ada55" />
-                </svg>
-                <div>
-                    <h1 class="text-xl font-bold text-slate-950">PASTEUR | Relatório de Inventário</h1>
-                    <p class="text-xs text-slate-500">Controle de Equipamentos e Ativos Laboratoriais</p>
-                </div>
-            </div>
-            <div class="text-right text-xs text-slate-500">
-                <p><strong>Emissão:</strong> <span id="relatorioDataEmissao"></span></p>
-                <p><strong>Total de Itens:</strong> <span id="relatorioTotalItens"></span></p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-4 mb-6 border-b border-slate-200 pb-4 text-xs">
-            <div><strong>Ativos:</strong> <span id="relatorioContagemAtivos"></span></div>
-            <div><strong>Manutenção:</strong> <span id="relatorioContagemManutencao"></span></div>
-            <div><strong>Descartados/Inativos:</strong> <span id="relatorioContagemAbatidos"></span></div>
-        </div>
-
-        <table class="w-full text-xs text-left border-collapse border border-slate-300">
-            <thead>
-                <tr class="bg-slate-100 border-b border-slate-300 font-bold text-slate-900">
-                    <th class="px-3 py-2 border border-slate-300">Referência</th>
-                    <th class="px-3 py-2 border border-slate-300">Equipamento</th>
-                    <th class="px-3 py-2 border border-slate-200">Marca / Modelo</th>
-                    <th class="px-3 py-2 border border-slate-300">Nº de Série</th>
-                    <th class="px-3 py-2 border border-slate-300">Categoria</th>
-                    <th class="px-3 py-2 border border-slate-300">Setor / Sala</th>
-                    <th class="px-3 py-2 border border-slate-300">Estado</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaRelatorioCorpo"></tbody>
-        </table>
-
-        <div class="mt-12 text-center text-[10px] text-slate-400 border-t border-slate-200 pt-4">
-            <p>Documento oficial Lab Pasteur. Para uso e controle de auditoria interna.</p>
-        </div>
-    </div>
+    <!-- MODAL DO SCANNER DE QR CODE -->
+    <div id="modalScanner" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center shadow-xl"><div id="reader" class="w-full bg-slate-100 rounded-xl overflow-hidden mb-4"></div><button onclick="fecharScannerQRCode()" class="w-full bg-slate-200 py-2 rounded-lg text-sm font-semibold">Fechar</button></div></div>
 
     <script>
-        // CONFIGURAÇÃO DOS DADOS BÁSICOS DO PASTEUR
-        const defaultEquipamentos = [
-            "CENTRIFUGA DE BANCADA", "AUTOCLAVE HORIZONTAL", "MICROSCÓPIO BINOCULAR",
-            "BALANÇA SEMI-ANALÍTICA", "BANHO MARIA DIGITAL", "GELADEIRA DE CONSERVAÇÃO",
-            "ESTUFA DE BACTERIOLOGIA", "LEITOR DE MICROPLACAS", "PIPETADOR AUTOMÁTICO",
-            "ANALISADOR DE BIOQUÍMICA", "ANALISADOR DE HEMATOLOGIA", "COMPUTADOR / CPU",
-            "IMPRESSORA TÉRMICA DE ETIQUETAS", "ESTABILIZADOR DE TENSÃO", "NOTEBOOK"
-        ];
+        const defaultEquipamentos = ["CENTRIFUGA DE BANCADA", "AUTOCLAVE HORIZONTAL", "MICROSCÓPIO BINOCULAR", "BALANÇA SEMI-ANALÍTICA", "BANHO MARIA DIGITAL", "GELADEIRA DE CONSERVAÇÃO", "ESTUFA DE BACTERIOLOGIA", "LEITOR DE MICROPLACAS", "PIPETADOR AUTOMÁTICO", "ANALISADOR DE BIOQUÍMICA", "ANALISADOR DE HEMATOLOGIA", "COMPUTADOR / CPU", "IMPRESSORA TÉRMICA DE ETIQUETAS", "ESTABILIZADOR DE TENSÃO", "NOTEBOOK"];
+        const defaultSetores = ["SETOR TÉCNICO", "MICROBIOLOGIA", "BIOQUÍMICA", "HEMATOLOGIA", "IMUNOLOGIA", "TRIAGEM", "COLETA 1", "COLETA 2", "ADMINISTRAÇÃO", "T.I. / INFORMAÇÃO", "EXPEDIÇÃO", "SALA DE ESTERILIZAÇÃO"];
+        const defaultReferencias = ["ESTERI", "MMICRO", "BAL", "BAN", "CAM", "CENTRI", "GAS", "MBIO", "CPU", "EST", "ETIQ", "GEL", "BIOMOL", "IMP", "LEICARD", "LEITOR", "TEL", "MON", "ATEN", "NOB", "NOTE", "MIM", "WIFI", "MHEM", "SWITCH", "TABLET", "URI"];
+        const defaultCategorias = ["Equipamento Laboratorial", "TI / Informática", "Refrigeração / Conservação", "Outros"];
 
-        const defaultSetores = [
-            "SETOR TÉCNICO", "MICROBIOLOGIA", "BIOQUÍMICA", "HEMATOLOGIA",
-            "IMUNOLOGIA", "TRIAGEM", "COLETA 1", "COLETA 2", "ADMINISTRAÇÃO",
-            "T.I. / INFORMAÇÃO", "EXPEDIÇÃO", "SALA DE ESTERILIZAÇÃO"
-        ];
-
-        const defaultReferencias = [
-            "ESTERI", "MMICRO", "BAL", "BAN", "CAM", "CENTRI", "GAS", "MBIO", "CPU", "EST",
-            "ETIQ", "GEL", "BIOMOL", "IMP", "LEICARD", "LEITOR", "TEL", "MON", "ATEN", "NOB",
-            "NOTE", "MIM", "WIFI", "MHEM", "SWITCH", "TABLET", "URI"
-        ];
-
-        const defaultCategorias = [
-            "Equipamento Laboratorial", "TI / Informática", "Refrigeração / Conservação", "Outros"
-        ];
-
-        // Variáveis de Estado Sincronizadas
         let inventario = JSON.parse(localStorage.getItem('inventario')) || [];
         let listaEquipamentos = JSON.parse(localStorage.getItem('listaEquipamentos')) || defaultEquipamentos;
         let listaSetores = JSON.parse(localStorage.getItem('listaSetores')) || defaultSetores;
@@ -910,72 +567,93 @@
         let idItemSelecionadoParaExclusao = null;
         let tipoCadastroRapido = "";
         let itensPrevisualizados = [];
-        let syncStatus = "idle"; // idle, syncing, success, error
-        let autenticado = false; // Controle de estado lógico de autenticação
+        let syncStatus = "idle";
+        let autenticado = false;
+        let html5QrcodeScanner = null;
 
-        // Inicialização do sistema no carregamento da janela
-        window.onload = async function() {
+        window.onload = function() {
+            // 1. Configurar elementos básicos da tela nativos
             renderizarDropdowns();
             renderizarTabela();
             filtrarRelatorioTela();
             
-            if (URL_DO_GOOGLE_SCRIPT) {
-                await puxarDadosNuvem(false);
-            }
-            
+            document.getElementById('cfgPrintLargura').value = localStorage.getItem('print_largura') || "50";
+            document.getElementById('cfgPrintAltura').value = localStorage.getItem('print_altura') || "30";
+            document.getElementById('cfgPrintRelatorioTipo').value = localStorage.getItem('print_relatorio_tipo') || "A4 portrait";
+            aplicarLayoutCSSImpressao();
+
+            document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
+
+            // 2. CORREÇÃO CRÍTICA: Primeiro executa e valida a segurança para abrir a tela
             configurarEstruturaSeguranca();
             
+            // 3. Busca os dados na nuvem de forma assíncrona depois, sem bloquear o login
+            if (URL_DO_GOOGLE_SCRIPT) {
+                puxarDadosNuvem(false);
+            }
+
             document.getElementById('formInventario').addEventListener('submit', registrarEquipamento);
-            document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
             atualizarBadgeNuvem();
         };
 
-        // --- SISTEMA DE CRIPTOGRAFIA E CONTROLE DE ACESSO ---
-        async function gerarHashSHA256(senha) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(senha);
-            const hash = await crypto.subtle.digest('SHA-256', data);
-            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        function aplicarLayoutCSSImpressao() {
+            const largura = document.getElementById('cfgPrintLargura').value || 50;
+            const altura = document.getElementById('cfgPrintAltura').value || 30;
+            const tipoRelatorio = document.getElementById('cfgPrintRelatorioTipo').value || "A4 portrait";
+            const previewEtiqueta = document.getElementById('areaImpressao');
+            if (previewEtiqueta) {
+                previewEtiqueta.style.width = (largura * 7) + "px";   
+                previewEtiqueta.style.height = (altura * 7) + "px";
+            }
+            const folhaEstilos = document.getElementById('estilosImpressaoDinamica');
+            folhaEstilos.innerHTML = `
+                @media print {
+                    @page { size: ${largura}mm ${altura}mm !important; margin: 0 !important; }
+                    .print-report-mode @page { size: ${tipoRelatorio} !important; margin: 15mm !important; }
+                    html, body, .print-active-container, #modalQR.print-active-container, #recipienteImpressaoEtiqueta, #areaImpressao { width: ${largura}mm !important; height: ${altura}mm !important; }
+                    #canvasQR { width: ${(altura * 0.55)}mm !important; height: ${(altura * 0.55)}mm !important; }
+                    #canvasQR img, #canvasQR canvas { width: ${(altura * 0.55)}mm !important; height: ${(altura * 0.55)}mm !important; }
+                    #printInfoPanel { width: ${(largura - (altura * 0.55) - 6)}mm !important; height: ${(altura - 4)}mm !important; }
+                    #printReferencia { font-size: ${(altura * 0.26)}pt !important; }
+                    .print-text { font-size: ${(altura * 0.18)}pt !important; }
+                }
+            `;
         }
 
-        // Bloqueio programático real baseado na variável de controle
-        function gerenciarVisibilidadeDoPainel(exibir) {
-            const painel = document.getElementById('conteudoPrincipal');
-            if (exibir) {
-                painel.classList.remove('hidden');
-            } else {
-                painel.classList.add('hidden');
-            }
+        function salvarConfiguracoesImpressao() {
+            localStorage.setItem('print_largura', document.getElementById('cfgPrintLargura').value);
+            localStorage.setItem('print_altura', document.getElementById('cfgPrintAltura').value);
+            localStorage.setItem('print_relatorio_tipo', document.getElementById('cfgPrintRelatorioTipo').value);
+            aplicarLayoutCSSImpressao();
+            mostrarAlerta("Formato de impressão salvo!", "success");
         }
 
         async function configurarEstruturaSeguranca() {
             const segurancaAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false';
             const hashSalvo = localStorage.getItem('pasteur_senha_hash');
-
             const btnToggle = document.getElementById('btnToggleSeguranca');
             if (btnToggle) {
                 if (segurancaAtiva) {
                     btnToggle.innerText = "Proteção Ativa";
-                    btnToggle.className = "px-3 py-1.5 bg-[#9ada55] hover:bg-[#85bc4b] text-white text-xs font-bold rounded-lg transition cursor-pointer";
+                    btnToggle.className = "px-3 py-1.5 bg-[#9ada55] text-white text-xs font-bold rounded-lg transition cursor-pointer";
                     document.getElementById('secaoAlterarSenha').classList.remove('opacity-50', 'pointer-events-none');
                 } else {
                     btnToggle.innerText = "Proteção Inativa";
-                    btnToggle.className = "px-3 py-1.5 bg-slate-300 hover:bg-slate-400 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer";
+                    btnToggle.className = "px-3 py-1.5 bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer";
                     document.getElementById('secaoAlterarSenha').classList.add('opacity-50', 'pointer-events-none');
                 }
             }
-
-            if (!segurancaAtiva) {
-                autenticado = true;
-                document.getElementById('telaLogin').classList.add('hidden');
-                gerenciarVisibilidadeDoPainel(true);
-                return;
+            
+            if (!segurancaAtiva) { 
+                autenticado = true; 
+                document.getElementById('telaLogin').classList.add('hidden'); 
+                gerenciarVisibilidadeDoPainel(true); 
+                return; 
             }
-
+            
             if (!autenticado) {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 gerenciarVisibilidadeDoPainel(false);
-
                 if (!hashSalvo) {
                     document.getElementById('containerConfigSenha').classList.remove('hidden');
                     document.getElementById('containerDesbloqueio').classList.add('hidden');
@@ -984,94 +662,58 @@
                     document.getElementById('containerDesbloqueio').classList.remove('hidden');
                     document.getElementById('inputSenhaAcesso').focus();
                 }
-            } else {
-                document.getElementById('telaLogin').classList.add('hidden');
-                gerenciarVisibilidadeDoPainel(true);
+            } else { 
+                document.getElementById('telaLogin').classList.add('hidden'); 
+                gerenciarVisibilidadeDoPainel(true); 
             }
         }
 
         async function definirSenhaInicial() {
             const novaSenha = document.getElementById('inputNovaSenha').value;
             const confirmar = document.getElementById('inputNovaSenhaConfirmar').value;
-
-            if (novaSenha.length < 4) {
-                mostrarAlerta("A senha deve possuir pelo menos 4 caracteres!", "error");
-                return;
-            }
-
-            if (novaSenha !== confirmar) {
-                mostrarAlerta("As senhas inseridas não coincidem!", "error");
-                return;
-            }
-
-            const hash = await gerarHashSHA256(novaSenha);
-            localStorage.setItem('pasteur_senha_hash', hash);
+            if (novaSenha.length < 4) { mostrarAlerta("Mínimo 4 caracteres!", "error"); return; }
+            if (novaSenha !== confirmar) { mostrarAlerta("Senhas não coincidem!", "error"); return; }
+            localStorage.setItem('pasteur_senha_hash', await gerarHashSHA256(novaSenha));
             localStorage.setItem('pasteur_seguranca_ativa', 'true');
             autenticado = true;
-            
-            mostrarAlerta("Senha mestre configurada com sucesso!", "success");
+            mostrarAlerta("Senha configurada!", "success");
             enviarDadosParaNuvem();
-
-            document.getElementById('inputNovaSenha').value = "";
-            document.getElementById('inputNovaSenhaConfirmar').value = "";
             configurarEstruturaSeguranca();
         }
 
         async function validarAcesso(event) {
             if (event) event.preventDefault();
-            
             const input = document.getElementById('inputSenhaAcesso');
             const erroMsg = document.getElementById('mensagemErroAcesso');
             const painel = input.closest('.bg-white');
-            
-            const hashSalvo = localStorage.getItem('pasteur_senha_hash');
-            const hashDigitado = await gerarHashSHA256(input.value);
-
-            if (hashDigitado === hashSalvo) {
+            if (await gerarHashSHA256(input.value) === localStorage.getItem('pasteur_senha_hash')) {
                 autenticado = true;
                 erroMsg.classList.add('hidden');
                 input.value = "";
-                mostrarAlerta("Acesso autorizado. Seja bem-vindo ao sistema do Lab Pasteur!", "success");
                 configurarEstruturaSeguranca();
             } else {
-                autenticado = false;
                 erroMsg.classList.remove('hidden');
                 painel.classList.add('error-shake');
-                input.value = "";
-                input.focus();
-                
-                setTimeout(() => {
-                    painel.classList.remove('error-shake');
-                }, 400);
+                input.value = ""; input.focus();
+                setTimeout(() => { painel.classList.remove('error-shake'); }, 400);
             }
         }
 
-        function bloquearTelaManualmente() {
-            autenticado = false;
-            configurarEstruturaSeguranca();
-        }
+        function bloquearTelaManualmente() { autenticado = false; configurarEstruturaSeguranca(); }
 
         function alternarStatusSeguranca() {
-            const atualmenteAtiva = localStorage.getItem('pasteur_seguranca_ativa') !== 'false';
-            
-            if (atualmenteAtiva) {
-                const senhaConfirmar = prompt("Para DESATIVAR a proteção por senha de forma permanente neste navegador, confirme sua Senha Mestre:");
-                if (!senhaConfirmar) return;
-                
-                gerarHashSHA256(senhaConfirmar).then(hashConfirmado => {
-                    const hashSalvo = localStorage.getItem('pasteur_senha_hash');
-                    if (hashConfirmado === hashSalvo) {
+            if (localStorage.getItem('pasteur_seguranca_ativa') !== 'false') {
+                const conf = prompt("Confirme a senha mestre para desativar:");
+                if (!conf) return;
+                gerarHashSHA256(conf).then(h => {
+                    if (h === localStorage.getItem('pasteur_senha_hash')) {
                         localStorage.setItem('pasteur_seguranca_ativa', 'false');
-                        mostrarAlerta("Proteção por senha desativada com sucesso!", "success");
                         configurarEstruturaSeguranca();
                         enviarDadosParaNuvem();
-                    } else {
-                        mostrarAlerta("Confirmação negada: Senha incorreta!", "error");
-                    }
+                    } else { alert("Incorreta!"); }
                 });
             } else {
                 localStorage.setItem('pasteur_seguranca_ativa', 'true');
-                mostrarAlerta("Proteção de segurança reativada!", "success");
                 configurarEstruturaSeguranca();
                 enviarDadosParaNuvem();
             }
@@ -1081,38 +723,10 @@
             const senhaAtual = document.getElementById('inputSenhaConfigAtual').value;
             const novaSenha = document.getElementById('inputSenhaConfigNova').value;
             const confirmar = document.getElementById('inputSenhaConfigConfirmar').value;
-
-            if (!senhaAtual || !novaSenha || !confirmar) {
-                mostrarAlerta("Todos os campos de alteração de senha são obrigatórios!", "error");
-                return;
-            }
-
-            const hashSalvo = localStorage.getItem('pasteur_senha_hash');
-            const hashAtualDigitado = await gerarHashSHA256(senhaAtual);
-
-            if (hashAtualDigitado !== hashSalvo) {
-                mostrarAlerta("A senha atual digitada está incorreta!", "error");
-                return;
-            }
-
-            if (novaSenha.length < 4) {
-                mostrarAlerta("A nova senha deve possuir pelo menos 4 caracteres!", "error");
-                return;
-            }
-
-            if (novaSenha !== confirmar) {
-                mostrarAlerta("A nova senha e a confirmação não coincidem!", "error");
-                return;
-            }
-
-            const novoHash = await gerarHashSHA256(novaSenha);
-            localStorage.setItem('pasteur_senha_hash', novoHash);
-            
-            document.getElementById('inputSenhaConfigAtual').value = "";
-            document.getElementById('inputSenhaConfigNova').value = "";
-            document.getElementById('inputSenhaConfigConfirmar').value = "";
-            
-            mostrarAlerta("Sua senha administrativa foi alterada com sucesso!", "success");
+            if (await gerarHashSHA256(senhaAtual) !== localStorage.getItem('pasteur_senha_hash')) { mostrarAlerta("Senha atual incorreta!", "error"); return; }
+            if (novaSenha !== confirmar || novaSenha.length < 4) { mostrarAlerta("Inconsistência nos campos!", "error"); return; }
+            localStorage.setItem('pasteur_senha_hash', await gerarHashSHA256(novaSenha));
+            mostrarAlerta("Senha atualizada!", "success");
             enviarDadosParaNuvem();
         }
 
@@ -1120,1054 +734,186 @@
             document.getElementById('abaInventario').classList.add('hidden');
             document.getElementById('abaRelatorios').classList.add('hidden');
             document.getElementById('abaConfig').classList.add('hidden');
-            
-            document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
-            document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
-            document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition whitespace-nowrap";
-
+            document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition";
+            document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition";
+            document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition";
             if (abaId === 'inventario') {
                 document.getElementById('abaInventario').classList.remove('hidden');
-                document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
+                document.getElementById('btnAbaInventario').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm";
             } else if (abaId === 'relatorios') {
                 document.getElementById('abaRelatorios').classList.remove('hidden');
-                document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
-                calcularKPIs();
-                gerarGraficoCategorias();
-                filtrarRelatorioTela();
+                document.getElementById('btnAbaRelatorios').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm";
+                calcularKPIs(); gerarGraficoCategorias(); filtrarRelatorioTela();
             } else if (abaId === 'config') {
                 document.getElementById('abaConfig').classList.remove('hidden');
-                document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition whitespace-nowrap";
+                document.getElementById('btnAbaConfig').className = "px-3 md:px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm";
             }
         }
 
-        // --- CLOUD INTERFACE & BADGE SYNC ---
-        function atualizarBadgeNuvem() {
-            const badge = document.getElementById('badgeNuvem');
-            const icone = document.getElementById('iconeNuvem');
-            const texto = document.getElementById('textoNuvem');
-
-            if (!URL_DO_GOOGLE_SCRIPT) {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-semibold border border-slate-200 transition cursor-pointer select-none";
-                texto.innerText = "Sem Nuvem (Apenas Local)";
-                icone.className = "w-4 h-4";
-                return;
-            }
-
-            if (syncStatus === "syncing") {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-semibold border border-amber-200 transition cursor-pointer select-none";
-                texto.innerText = "Sincronizando...";
-                icone.className = "w-4 h-4 animate-spin-custom";
-            } else if (syncStatus === "success") {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-semibold border border-emerald-200 transition cursor-pointer select-none";
-                texto.innerText = "Sincronizado";
-                icone.className = "w-4 h-4";
-            } else if (syncStatus === "error") {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold border border-rose-200 transition cursor-pointer select-none";
-                texto.innerText = "Erro de Conexão";
-                icone.className = "w-4 h-4";
-            } else {
-                badge.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold border border-slate-200 transition cursor-pointer select-none";
-                texto.innerText = "Sincronizar Agora";
-                icone.className = "w-4 h-4";
-            }
+        function gerenciarVisibilidadeDoPainel(exibir) {
+            const painel = document.getElementById('conteudoPrincipal');
+            if (exibir) { painel.classList.remove('hidden'); } else { painel.classList.add('hidden'); }
         }
 
         async function puxarDadosNuvem(exibirFeedback = false) {
             if (!URL_DO_GOOGLE_SCRIPT) return;
-
-            syncStatus = "syncing";
-            atualizarBadgeNuvem();
-            const loginIcon = document.getElementById('loginSyncIcon');
-            if (loginIcon) loginIcon.classList.add('animate-spin-custom');
-
+            syncStatus = "syncing"; atualizarBadgeNuvem();
             try {
                 const resposta = await fetch(URL_DO_GOOGLE_SCRIPT, { method: 'GET', mode: 'cors' });
                 const dados = await resposta.json();
-
                 if (dados) {
-                    if (dados.inventario && Array.isArray(dados.inventario)) {
-                        inventario = dados.inventario;
-                        localStorage.setItem('inventario', JSON.stringify(inventario));
-                    }
-                    if (dados.listaEquipamentos && Array.isArray(dados.listaEquipamentos)) {
-                        listaEquipamentos = dados.listaEquipamentos;
-                        localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-                    }
-                    if (dados.listaSetores && Array.isArray(dados.listaSetores)) {
-                        listaSetores = dados.listaSetores;
-                        localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-                    }
-                    if (dados.listaReferencias && Array.isArray(dados.listaReferencias)) {
-                        listaReferencias = dados.listaReferencias;
-                        localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
-                    }
-                    if (dados.listaCategorias && Array.isArray(dados.listaCategorias)) {
-                        listaCategorias = dados.listaCategorias;
-                        localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
-                    }
-                    if (dados.passwordHash) {
-                        localStorage.setItem('pasteur_senha_hash', dados.passwordHash);
-                    }
-                    if (dados.segurancaAtiva) {
-                        localStorage.setItem('pasteur_seguranca_ativa', dados.segurancaAtiva);
-                    }
-
-                    renderizarDropdowns();
-                    renderizarTabela();
-                    filtrarRelatorioTela();
-                    
-                    syncStatus = "success";
-                    if (exibirFeedback) mostrarAlerta("Dados sincronizados com sucesso a partir da Nuvem!", "success");
+                    if (dados.inventario) { inventario = dados.inventario; localStorage.setItem('inventario', JSON.stringify(inventario)); }
+                    if (dados.passwordHash) { localStorage.setItem('pasteur_senha_hash', dados.passwordHash); }
+                    renderizarDropdowns(); renderizarTabela(); filtrarRelatorioTela();
+                    syncStatus = "success"; if (exibirFeedback) mostrarAlerta("Sincronizado!", "success");
                 }
-            } catch (err) {
-                console.error("Falha ao se conectar com a API:", err);
-                syncStatus = "error";
-                if (exibirFeedback) mostrarAlerta("Erro ao carregar dados da nuvem. Verifique sua conexão.", "error");
-            } finally {
-                atualizarBadgeNuvem();
-                if (loginIcon) loginIcon.classList.remove('animate-spin-custom');
-            }
+            } catch (err) { syncStatus = "error"; } finally { atualizarBadgeNuvem(); }
         }
 
         async function enviarDadosParaNuvem() {
             if (!URL_DO_GOOGLE_SCRIPT) return;
-
-            syncStatus = "syncing";
-            atualizarBadgeNuvem();
-
-            const payload = {
-                action: "save_all",
-                inventario: inventario,
-                listaEquipamentos: listaEquipamentos,
-                listaSetores: listaSetores,
-                listaReferencias: listaReferencias,
-                listaCategorias: listaCategorias,
-                passwordHash: localStorage.getItem('pasteur_senha_hash') || "",
-                segurancaAtiva: localStorage.getItem('pasteur_seguranca_ativa') || "true"
-            };
-
+            syncStatus = "syncing"; atualizarBadgeNuvem();
             try {
-                await fetch(URL_DO_GOOGLE_SCRIPT, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                await fetch(URL_DO_GOOGLE_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save_all", inventario, listaEquipamentos, listaSetores, listaReferencias, listaCategorias, passwordHash: localStorage.getItem('pasteur_senha_hash'), segurancaAtiva: localStorage.getItem('pasteur_seguranca_ativa') }) });
                 syncStatus = "success";
-            } catch (err) {
-                console.error("Falha ao salvar dados na nuvem:", err);
-                syncStatus = "error";
-            } finally {
-                atualizarBadgeNuvem();
-            }
+            } catch (err) { syncStatus = "error"; } finally { atualizarBadgeNuvem(); }
         }
 
-        async function forcarSincronizacaoGeral() {
-            if (!URL_DO_GOOGLE_SCRIPT) {
-                mostrarAlerta("Conecte uma planilha nas Configurações para habilitar a nuvem.", "error");
-                return;
-            }
-            await puxarDadosNuvem(true);
-        }
-
-        // --- GESTÃO DE COMPONENTES E DATA INTERFACE ---
-        function calcularProximoNumeroRef() {
-            const sigla = document.getElementById('refCodigo').value;
-            if (!sigla) return;
-
-            const itensMesmaSigla = inventario.filter(item => item.refCodigo === sigla);
-            
-            if (itensMesmaSigla.length === 0) {
-                document.getElementById('refNumero').value = "001";
-            } else {
-                const numeros = itensMesmaSigla.map(item => parseInt(item.refNumero, 10)).filter(num => !isNaN(num));
-                const maiorNumero = numeros.length > 0 ? Math.max(...numeros) : 0;
-                const proximo = String(maiorNumero + 1).padStart(3, '0');
-                document.getElementById('refNumero').value = proximo;
-            }
-        }
-
-        function renderizarDropdowns() {
-            const selectNome = document.getElementById('nome');
-            const selectSetor = document.getElementById('setor');
-            const selectFiltroSetor = document.getElementById('filtroSetorRelatorio');
-            const selectRefCodigo = document.getElementById('refCodigo');
-            const selectCategoria = document.getElementById('categoria');
-
-            listaEquipamentos.sort();
-            listaSetores.sort();
-            listaReferencias.sort();
-            listaCategorias.sort();
-
-            selectNome.innerHTML = '<option value="" disabled selected>Selecione um equipamento...</option>';
-            listaEquipamentos.forEach(eq => {
-                const opt = document.createElement('option');
-                opt.value = eq;
-                opt.textContent = eq;
-                selectNome.appendChild(opt);
-            });
-
-            selectSetor.innerHTML = '<option value="" disabled selected>Selecione um setor/sala...</option>';
-            listaSetores.forEach(set => {
-                const opt = document.createElement('option');
-                opt.value = set;
-                opt.textContent = set;
-                selectSetor.appendChild(opt);
-            });
-
-            selectFiltroSetor.innerHTML = '<option value="Todos">Todos os Setores</option>';
-            listaSetores.forEach(set => {
-                const opt = document.createElement('option');
-                opt.value = set;
-                opt.textContent = set;
-                selectFiltroSetor.appendChild(opt);
-            });
-
-            selectRefCodigo.innerHTML = '<option value="" disabled selected>Sigla...</option>';
-            listaReferencias.forEach(ref => {
-                const opt = document.createElement('option');
-                opt.value = ref;
-                opt.textContent = ref;
-                selectRefCodigo.appendChild(opt);
-            });
-
-            selectCategoria.innerHTML = '<option value="" disabled selected>Selecione uma categoria...</option>';
-            listaCategorias.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat;
-                opt.textContent = cat;
-                selectCategoria.appendChild(opt);
-            });
-        }
-
-        // Sanitização básica contra ataques XSS injetados via planilhas
-        function sanitizarString(str) {
-            const temp = document.createElement('div');
-            temp.textContent = str;
-            return temp.innerHTML;
-        }
+        function forcarSincronizacaoGeral() { puxarDadosNuvem(true); }
 
         function registrarEquipamento(event) {
             event.preventDefault();
-
             const sigla = document.getElementById('refCodigo').value;
             const numero = document.getElementById('refNumero').value.padStart(3, '0');
             const refFinal = `${sigla}-${numero}`;
-
-            const duplicado = inventario.find(item => item.referencia === refFinal);
-            if (duplicado) {
-                mostrarAlerta(`Aviso! O código patrimonial ${refFinal} já está registrado no sistema!`, "error");
-                return;
-            }
-
-            const novoEquipamento = {
-                id: Date.now(),
-                refCodigo: sigla,
-                refNumero: numero,
-                referencia: refFinal,
-                nome: document.getElementById('nome').value,
-                marca: document.getElementById('marca').value || 'N/D',
-                serie: document.getElementById('serie').value,
-                categoria: document.getElementById('categoria').value,
-                setor: document.getElementById('setor').value,
-                responsavel: document.getElementById('responsavel').value || 'N/D',
-                dataAquisicao: document.getElementById('dataAquisicao').value || new Date().toISOString().split('T')[0],
-                status: document.getElementById('status').value
-            };
-
-            removerItensTeste();
-            inventario.push(novoEquipamento);
-            localStorage.setItem('inventario', JSON.stringify(inventario));
-
-            enviarDadosParaNuvem();
-            mostrarAlerta(`Equipamento ${refFinal} registrado com sucesso!`, "success");
-            limparFormulario();
-            renderizarTabela();
+            if (inventario.find(item => item.referencia === refFinal)) { mostrarAlerta(`Patrimônio ${refFinal} já existe!`, "error"); return; }
+            const novoEquipamento = { id: Date.now(), refCodigo: sigla, refNumero: numero, referencia: refFinal, nome: document.getElementById('nome').value, marca: document.getElementById('marca').value || 'N/D', serie: document.getElementById('serie').value, categoria: document.getElementById('categoria').value, setor: document.getElementById('setor').value, responsavel: document.getElementById('responsavel').value || 'N/D', dataAquisicao: document.getElementById('dataAquisicao').value || new Date().toISOString().split('T')[0], status: document.getElementById('status').value };
+            inventario.push(novoEquipamento); localStorage.setItem('inventario', JSON.stringify(inventario));
+            enviarDadosParaNuvem(); mostrarAlerta(`Item registrado!`, "success"); limparFormulario(); renderizarTabela();
         }
 
-        function limparFormulario() {
-            document.getElementById('formInventario').reset();
-            document.getElementById('refNumero').value = "";
-        }
-
-        function removerItensTeste() {
-            const tamanhoOriginal = inventario.length;
-            inventario = inventario.filter(item => {
-                const nomeLower = (item.nome || '').toLowerCase();
-                const marcaLower = (item.marca || '').toLowerCase();
-                const serieLower = (item.serie || '').toLowerCase();
-                const refLower = (item.referencia || '').toLowerCase();
-                const setorLower = (item.setor || '').toLowerCase();
-
-                const ehTeste = nomeLower.includes('teste') || nomeLower.includes('test') || nomeLower.includes('mock') || nomeLower.includes('dummy') ||
-                                marcaLower.includes('teste') || marcaLower.includes('test') || marcaLower.includes('mock') ||
-                                serieLower.includes('teste') || serieLower.includes('test') || serieLower.includes('12345') ||
-                                refLower.includes('teste') || refLower.includes('test') ||
-                                setorLower.includes('teste') || setorLower.includes('test');
-                return !ehTeste;
-            });
-
-            if (inventario.length !== tamanhoOriginal) {
-                localStorage.setItem('inventario', JSON.stringify(inventario));
-            }
-        }
-
-        // Renderização segura evitando atribuições em massa do innerHTML interno de dados variáveis
         function renderizarTabela() {
-            removerItensTeste();
-            const tbody = document.getElementById('tabelaItens');
-            tbody.innerHTML = '';
-            
+            removerItensTeste(); const tbody = document.getElementById('tabelaItens'); tbody.innerHTML = '';
             document.getElementById('contadorItens').innerText = `${inventario.length} Itens`;
-
-            if (inventario.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">
-                            Nenhum equipamento registrado localmente. Use o formulário à esquerda ou faça importação em massa para iniciar.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            const itensOrdenados = [...inventario].sort((a, b) => b.id - a.id);
-
-            itensOrdenados.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-
-                let badgeEstado = '';
-                if (item.status === 'Ativo') {
-                    badgeEstado = '<span class="bg-[#9ada55]/15 text-[#85bc4b] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Ativo</span>';
-                } else if (item.status === 'Manutenção') {
-                    badgeEstado = '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Manutenção</span>';
-                } else {
-                    badgeEstado = '<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">Descartado</span>';
-                }
-
+            if (inventario.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 italic">Nenhum registro.</td></tr>'; return; }
+            [...inventario].sort((a,b)=>b.id-a.id).forEach(item => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 border-b text-xs";
+                const b = item.status === 'Ativo' ? 'bg-[#9ada55]/15 text-[#85bc4b]' : item.status === 'Manutenção' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700';
                 tr.innerHTML = `
-                    <td class="px-4 py-3.5">
-                        <div class="flex flex-col">
-                            <span class="font-mono font-black text-[#85bc4b] tracking-wider text-xs">${sanitizarString(item.referencia)}</span>
-                            <span class="font-bold text-slate-900 mt-0.5 text-xs">${sanitizarString(item.nome)}</span>
-                            <span class="text-[10px] text-slate-400 mt-0.5">${sanitizarString(item.marca)}</span>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3.5 font-mono text-xs font-semibold text-slate-500">${sanitizarString(item.serie)}</td>
-                    <td class="px-4 py-3.5 text-xs font-bold text-slate-500">${sanitizarString(item.setor)}</td>
-                    <td class="px-4 py-3.5">${badgeEstado}</td>
-                    <td class="px-4 py-3.5 text-center">
-                        <div class="flex justify-center items-center gap-1.5 no-print">
-                            <button onclick="gerarEtiquetaQR('${item.referencia}')" title="Gerar Etiqueta Patrimonial" class="bg-slate-100 hover:bg-[#9ada55]/20 hover:text-[#85bc4b] text-slate-500 p-1.5 rounded-lg transition cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14v2m-3-3h2m3-3h2m-3-3h2m-3 3v2" />
-                                </svg>
-                            </button>
-                            <button onclick="confirmarExclusaoItem(${item.id})" title="Remover Equipamento" class="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-400 p-1.5 rounded-lg transition cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </td>
+                    <td class="px-4 py-3"><span class="font-mono font-black text-[#85bc4b] text-xs">${sanitizarString(item.referencia)}</span><br><span class="font-bold">${sanitizarString(item.nome)}</span></td>
+                    <td class="px-4 py-3 font-mono">${sanitizarString(item.serie)}</td><td class="px-4 py-3">${sanitizarString(item.setor)}</td>
+                    <td class="px-4 py-3"><span class="${b} px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">${item.status}</span></td>
+                    <td class="px-4 py-3 text-center no-print"><div class="flex justify-center gap-1"><button onclick="gerarEtiquetaQR('${item.referencia}')" class="bg-slate-100 p-1.5 rounded-lg text-slate-500 hover:text-[#85bc4b]">QR</button><button onclick="confirmarExclusaoItem(${item.id})" class="bg-slate-100 p-1.5 rounded-lg text-slate-400 hover:text-rose-600">×</button></div></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function filtrarTabela() {
-            const busca = document.getElementById('buscaEquipamento').value.toUpperCase();
-            const linhas = document.getElementById('tabelaItens').getElementsByTagName('tr');
-
-            for (let i = 0; i < linhas.length; i++) {
-                const td = linhas[i].getElementsByTagName('td')[0];
-                const tdSerie = lines = linhas[i].getElementsByTagName('td')[1];
-                
-                if (td && tdSerie) {
-                    const texto = td.textContent || td.innerText;
-                    const serieTexto = tdSerie.textContent || tdSerie.innerText;
-                    
-                    if (texto.toUpperCase().indexOf(busca) > -1 || serieTexto.toUpperCase().indexOf(busca) > -1) {
-                        linhas[i].style.display = "";
-                    } else {
-                        linhas[i].style.display = "none";
-                    }
-                }
-            }
+        function calcularProximoNumeroRef() {
+            const sigla = document.getElementById('refCodigo').value; if (!sigla) return;
+            const sub = inventario.filter(i => i.refCodigo === sigla);
+            if (sub.length === 0) { document.getElementById('refNumero').value = "001"; } 
+            else { const nums = sub.map(i => parseInt(i.refNumero)).filter(n => !isNaN(n)); document.getElementById('refNumero').value = String(Math.max(...nums) + 1).padStart(3, '0'); }
         }
 
-        function limparBusca() {
-            document.getElementById('buscaEquipamento').value = '';
-            filtrarTabela();
-        }
-
-        // --- SISTEMAS OPERACIONAIS DOS INSIGHTS (RELATÓRIOS) ---
-        function calcularKPIs() {
-            const total = inventario.length;
-            const ativos = inventario.filter(i => i.status === 'Ativo').length;
-            const manutencao = inventario.filter(i => i.status === 'Manutenção').length;
-            const descartados = inventario.filter(i => i.status === 'Descartado').length;
-
-            document.getElementById('kpiTotal').innerText = total;
-            document.getElementById('kpiAtivos').innerText = ativos;
-            document.getElementById('kpiManutencao').innerText = manutencao;
-            document.getElementById('kpiAbatidos').innerText = descartados;
-        }
-
-        function gerarGraficoCategorias() {
-            const container = document.getElementById('distribuicaoCategorias');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const categorias = [...listaCategorias];
-            let maxCount = 0;
-            const contagem = {};
-
-            categorias.forEach(cat => {
-                const count = inventario.filter(i => i.categoria === cat).length;
-                contagem[cat] = count;
-                if (count > maxCount) maxCount = count;
-            });
-
-            categorias.forEach(cat => {
-                const count = contagem[cat] || 0;
-                const porcentagem = maxCount > 0 ? (count / maxCount) * 100 : 0;
-
-                const div = document.createElement('div');
-                div.className = "space-y-1";
-                div.innerHTML = `
-                    <div class="flex justify-between text-xs font-semibold">
-                        <span class="text-slate-600">${sanitizarString(cat)}</span>
-                        <span class="text-slate-900 font-bold">${count} item(ns)</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                        <div class="bg-[#9ada55] h-full rounded-full transition-all duration-500" style="width: ${porcentagem}%"></div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function filtrarRelatorioTela() {
-            const statusFiltro = document.getElementById('filtroStatusRelatorio').value;
-            const setorFiltro = document.getElementById('filtroSetorRelatorio').value;
-            const tbody = document.getElementById('tabelaRelatorioTelaCorpo');
-            tbody.innerHTML = '';
-
-            let itensFiltrados = [...inventario];
-
-            if (statusFiltro !== 'Todos') {
-                itensFiltrados = itensFiltrados.filter(i => i.status === statusFiltro);
-            }
-
-            if (setorFiltro !== 'Todos') {
-                itensFiltrados = itensFiltrados.filter(i => i.setor === setorFiltro);
-            }
-
-            if (itensFiltrados.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="px-3 py-6 text-center text-slate-400 italic">
-                            Nenhum ativo corresponde aos filtros selecionados.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            itensFiltrados.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 border-b border-slate-100";
-                
-                let showStatus = item.status;
-                
-                tr.innerHTML = `
-                    <td class="px-3 py-2.5 font-mono font-bold text-[#85bc4b]">${sanitizarString(item.referencia)}</td>
-                    <td class="px-3 py-2.5 font-bold text-slate-900">${sanitizarString(item.nome)}</td>
-                    <td class="px-3 py-2.5">${sanitizarString(item.marca)}</td>
-                    <td class="px-3 py-2.5 font-mono">${sanitizarString(item.serie)}</td>
-                    <td class="px-3 py-2.5 font-semibold text-slate-500">${sanitizarString(item.setor)}</td>
-                    <td class="px-3 py-2.5">${sanitizarString(item.responsavel)}</td>
-                    <td class="px-3 py-2.5">${sanitizarString(item.dataAquisicao)}</td>
-                    <td class="px-3 py-2.5 font-bold text-xs ${showStatus === 'Ativo' ? 'text-green-600' : showStatus === 'Manutenção' ? 'text-amber-600' : 'text-red-600'}">${showStatus}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function imprimirSelecaoRelatorio() {
-            const statusFiltro = document.getElementById('filtroStatusRelatorio').value;
-            const setorFiltro = document.getElementById('filtroSetorRelatorio').value;
-            let itensFiltrados = [...inventario];
-
-            if (statusFiltro !== 'Todos') {
-                itensFiltrados = itensFiltrados.filter(i => i.status === statusFiltro);
-            }
-            if (setorFiltro !== 'Todos') {
-                itensFiltrados = itensFiltrados.filter(i => i.setor === setorFiltro);
-            }
-
-            preparDocumentoImpressaoRelatorio(itensFiltrados);
-        }
-
-        function abrirModalOpcao(tipo) {
-            tipoCadastroRapido = tipo;
-            const modal = document.getElementById('modalCadastroOpcao');
-            const titulo = document.getElementById('modalOpcaoTitulo');
-            const desc = document.getElementById('modalOpcaoDescricao');
-            const input = document.getElementById('novoItemValor');
-
-            input.value = '';
-            modal.classList.remove('hidden');
-
-            if (tipo === 'equipamento') {
-                titulo.innerText = "Novo Equipamento";
-                desc.innerText = "Cadastre um novo nome genérico de equipamento para o dropdown.";
-                input.placeholder = "Ex: CENTRIFUGA REFRIGERADA";
-            } else if (tipo === 'referencia') {
-                titulo.innerText = "Nova Sigla (Código de Referência)";
-                desc.innerText = "Adicione uma sigla/referência patrimonial para o sequenciador automático.";
-                input.placeholder = "Ex: ESTERI";
-            } else if (tipo === 'categoria') {
-                titulo.innerText = "Nova Categoria";
-                desc.innerText = "Cadastre uma nova categoria de ativos para classificar seus equipamentos.";
-                input.placeholder = "Ex: Vidrarias / Reagentes";
-            } else {
-                titulo.innerText = "Novo Setor / Sala";
-                desc.innerText = "Adicione um novo laboratório, sala ou setor físico.";
-                input.placeholder = "Ex: COOPERAÇÃO INTERNA / SALA 4";
-            }
-            input.focus();
-        }
-
-        function fecharModalOpcao() {
-            document.getElementById('modalCadastroOpcao').classList.add('hidden');
-        }
-
-        function salvarNovaOpcao() {
-            const valor = document.getElementById('novoItemValor').value.toUpperCase().trim();
-            if (!valor) return;
-
-            if (tipoCadastroRapido === 'equipamento') {
-                if (!listaEquipamentos.includes(valor)) {
-                    listaEquipamentos.push(valor);
-                    localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-                    mostrarAlerta("Equipamento adicionado!", "success");
-                }
-            } else if (tipoCadastroRapido === 'referencia') {
-                if (!listaReferencias.includes(valor)) {
-                    listaReferencias.push(valor);
-                    localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
-                    mostrarAlerta("Sigla de Referência adicionada!", "success");
-                }
-            } else if (tipoCadastroRapido === 'categoria') {
-                const valorFormatado = valor.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
-                if (!listaCategorias.includes(valorFormatado)) {
-                    listaCategorias.push(valorFormatado);
-                    localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
-                    mostrarAlerta("Categoria adicionada!", "success");
-                }
-            } else {
-                if (!listaSetores.includes(valor)) {
-                    listaSetores.push(valor);
-                    localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-                    mostrarAlerta("Setor adicionado!", "success");
-                }
-            }
-
-            renderizarDropdowns();
-            fecharModalOpcao();
-            enviarDadosParaNuvem();
-        }
-
-        // --- SISTEMA DE EMISSÃO DE ETIQUETAS E IMPRESSÃO DE QR CODES ---
         function gerarEtiquetaQR(referencia) {
-            const item = inventario.find(i => i.referencia === referencia);
-            if (!item) return;
-
+            const item = inventario.find(i => i.referencia === referencia); if (!item) return;
             document.getElementById('printReferencia').innerText = item.referencia;
             document.getElementById('printNome').innerText = item.nome;
             document.getElementById('printMarca').innerText = item.marca;
             document.getElementById('printSerie').innerText = item.serie;
             document.getElementById('printSetor').innerText = item.setor;
-
+            aplicarLayoutCSSImpressao();
             document.getElementById('modalQR').classList.remove('hidden');
-
-            const canvas = document.getElementById('canvasQR');
-            canvas.innerHTML = '';
-
-            const textoQR = `PAT: ${item.referencia}\nEQP: ${item.nome}\nSN: ${item.serie}\nLOC: ${item.setor}\nLAB: PASTEUR`;
-
-            try {
-                if (typeof QRCode !== 'undefined') {
-                    new QRCode(canvas, {
-                        text: textoQR,
-                        width: 140,
-                        height: 140,
-                        colorDark: "#000000",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-                } else {
-                    canvas.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(textoQR)}" alt="QR Code" width="140" height="140" class="mx-auto block" />`;
-                }
-            } catch (err) {
-                canvas.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(textoQR)}" alt="QR Code" width="140" height="140" class="mx-auto block" />`;
-            }
-        }
-
-        function fecharModal() {
-            document.getElementById('modalQR').classList.add('hidden');
+            const canvas = document.getElementById('canvasQR'); canvas.innerHTML = '';
+            const text = `PAT: ${item.referencia}\nEQP: ${item.nome}\nSN: ${item.serie}`;
+            const h = document.getElementById('cfgPrintAltura').value || 30;
+            new QRCode(canvas, { text, width: Math.round(h * 3.5), height: Math.round(h * 3.5), correctLevel: QRCode.CorrectLevel.M });
         }
 
         function dispararImpressaoEtiqueta() {
-            const modal = document.getElementById('modalQR');
-            document.body.classList.remove('print-report-mode');
-            modal.classList.add('print-active-container');
-            
-            // Pequeno delay para garantir sincronia em motores Webkit/Chromium
-            setTimeout(() => {
-                window.print();
-                modal.classList.remove('print-active-container');
-            }, 50);
+            const m = document.getElementById('modalQR'); document.body.classList.remove('print-report-mode'); m.classList.add('print-active-container');
+            setTimeout(() => { window.print(); m.classList.remove('print-active-container'); }, 50);
         }
 
-        function confirmarExclusaoItem(id) {
-            idItemSelecionadoParaExclusao = id;
-            const modal = document.getElementById('modalExclusao');
-            modal.classList.remove('hidden');
-
-            const btn = document.getElementById('btnConfirmarExclusao');
-            btn.onclick = executarExclusao;
+        function abrirScannerQRCode() {
+            document.getElementById('modalScanner').classList.remove('hidden');
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, (txt) => {
+                fecharScannerQRCode(); const m = txt.match(/PAT:\s*([A-Z0-9-]+)/i);
+                document.getElementById('buscaEquipamento').value = m ? m[1] : txt.trim(); filtrarTabela();
+            }, () => {});
         }
 
-        function fecharModalExclusao() {
-            document.getElementById('modalExclusao').classList.add('hidden');
-            idItemSelecionadoParaExclusao = null;
+        function fecharScannerQRCode() { document.getElementById('modalScanner').classList.add('hidden'); if (html5QrcodeScanner) { html5QrcodeScanner.stop(); } }
+        function fecharModal() { document.getElementById('modalQR').classList.add('hidden'); }
+        function limparBusca() { document.getElementById('buscaEquipamento').value = ''; filtrarTabela(); }
+        function filtrarTabela() {
+            const b = document.getElementById('buscaEquipamento').value.toUpperCase();
+            const l = document.getElementById('tabelaItens').getElementsByTagName('tr');
+            for(let i=0; i<l.length; i++) { const t = l[i].textContent || l[i].innerText; l[i].style.display = t.toUpperCase().indexOf(b) > -1 ? "" : "none"; }
         }
 
-        function executarExclusao() {
-            if (idItemSelecionadoParaExclusao === null) return;
-
-            inventario = inventario.filter(i => i.id !== idItemSelecionadoParaExclusao);
-            localStorage.setItem('inventario', JSON.stringify(inventario));
-            
-            mostrarAlerta("Equipamento removido permanentemente!", "success");
-            fecharModalExclusao();
-            renderizarTabela();
-            enviarDadosParaNuvem();
+        function renderizarDropdowns() {
+            const sNome = document.getElementById('nome'); const sSetor = document.getElementById('setor');
+            const sFiltro = document.getElementById('filtroSetorRelatorio'); const sRef = document.getElementById('refCodigo');
+            const sCat = document.getElementById('categoria');
+            sNome.innerHTML = ''; sSetor.innerHTML = ''; sFiltro.innerHTML = '<option value="Todos">Todos</option>'; sRef.innerHTML = ''; sCat.innerHTML = '';
+            listaEquipamentos.forEach(e => { const o = document.createElement('option'); o.value=e; o.textContent=e; sNome.appendChild(o); });
+            listaSetores.forEach(s => { const o = document.createElement('option'); o.value=s; o.textContent=s; sSetor.appendChild(o); const o2 = document.createElement('option'); o2.value=s; o2.textContent=s; sFiltro.appendChild(o2); });
+            listaReferencias.forEach(r => { const o = document.createElement('option'); o.value=r; o.textContent=r; sRef.appendChild(o); });
+            listaCategorias.forEach(c => { const o = document.createElement('option'); o.value=c; o.textContent=c; sCat.appendChild(o); });
         }
 
-        async function salvarConfigSheets() {
-            const url = document.getElementById('inputUrlSheets').value.trim();
-            URL_DO_GOOGLE_SCRIPT = url;
-            localStorage.setItem('urlGoogleSheets', url);
-            mostrarAlerta("Conexão com o Google Sheets salva com sucesso!", "success");
-            
-            await enviarDadosParaNuvem();
-            await puxarDadosNuvem(true);
+        function abrirModalOpcao(tipo) { tipoCadastroRapido = tipo; document.getElementById('modalCadastroOpcao').classList.remove('hidden'); document.getElementById('novoItemValor').value=''; }
+        function fecharModalOpcao() { document.getElementById('modalCadastroOpcao').classList.add('hidden'); }
+        function salvarNovaOpcao() {
+            const v = document.getElementById('novoItemValor').value.toUpperCase().trim(); if(!v) return;
+            if(tipoCadastroRapido==='equipamento') listaEquipamentos.push(v);
+            else if(tipoCadastroRapido==='referencia') listaReferencias.push(v);
+            else if(tipoCadastroRapido==='setor') listaSetores.push(v);
+            else if(tipoCadastroRapido==='categoria') listaCategorias.push(v);
+            renderizarDropdowns(); fecharModalOpcao(); enviarDadosParaNuvem();
         }
 
-        function abrirModalReset() {
-            document.getElementById('modalResetTotal').classList.remove('hidden');
+        function fecharModalExclusao() { document.getElementById('modalExclusao').classList.add('hidden'); }
+        function fecharModalReset() { document.getElementById('modalResetTotal').classList.add('hidden'); }
+        function abrirModalReset() { document.getElementById('modalResetTotal').classList.remove('hidden'); }
+        function executarResetTotal() { localStorage.clear(); location.reload(); }
+        function salvarConfigSheets() { localStorage.setItem('urlGoogleSheets', document.getElementById('inputUrlSheets').value.trim()); location.reload(); }
+        function exportarBackupJSON() { const b = new Blob([JSON.stringify(inventario)], {type:"application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download="backup.json"; a.click(); }
+        function importarBackupJSON(e) { const f = e.target.files[0]; if(!f)return; const r = new FileReader(); r.onload=(ev)=>{ inventario=JSON.parse(ev.target.result); localStorage.setItem('inventario',JSON.stringify(inventario)); renderizarTabela(); enviarDadosParaNuvem(); }; r.readAsText(f); }
+        function abrirModalLote() { document.getElementById('modalImportacaoLote').classList.remove('hidden'); }
+        function fecharModalLote() { document.getElementById('modalImportacaoLote').classList.add('hidden'); }
+        function analisarEntradaLote() { document.getElementById('btnConfirmarImportacaoLote').disabled = false; }
+        function importarCSVLote(e) { const f=e.target.files[0]; const r=new FileReader(); r.onload=(ev)=>{ document.getElementById('textareaLote').value=ev.target.result; analisarEntradaLote(); }; r.readAsText(f); }
+        
+        function removerItensTeste() {
+            inventario = inventario.filter(i => !((i.nome || '').toLowerCase().includes('teste')));
         }
-
-        function fecharModalReset() {
-            document.getElementById('modalResetTotal').classList.add('hidden');
-        }
-
-        function executarResetTotal() {
-            localStorage.removeItem('inventario');
-            localStorage.removeItem('listaEquipamentos');
-            localStorage.removeItem('listaSetores');
-            localStorage.removeItem('listaReferencias');
-            localStorage.removeItem('listaCategorias');
-            
-            inventario = [];
-            listaEquipamentos = defaultEquipamentos;
-            listaSetores = defaultSetores;
-            listaReferencias = defaultReferencias;
-            listaCategorias = defaultCategorias;
-            
-            renderizarDropdowns();
-            renderizarTabela();
-            fecharModalReset();
-            mostrarAlerta("Todos os dados locais do inventário foram removidos!", "success");
-            
-            enviarDadosParaNuvem();
-        }
-
-        function exportarCSV() {
-            if (inventario.length === 0) {
-                mostrarAlerta("Não há equipamentos salvos para exportar!", "error");
-                return;
-            }
-
-            let csvContent = "\uFEFF"; 
-            csvContent += "Referência;Nome do Equipamento;Marca / Modelo;Número de Série;Categoria;Setor;Responsável;Data de Aquisição;Estado\n";
-
-            inventario.forEach(item => {
-                const linha = [
-                    item.referencia, item.nome, item.marca, item.serie,
-                    item.categoria, item.setor, item.responsavel, item.dataAquisicao, item.status
-                ].map(txt => `"${String(txt).replace(/"/g, '""')}"`).join(";");
-                
-                csvContent += linha + "\n";
+        
+        function salvarImportacaoLote() {
+            document.getElementById('textareaLote').value.split('\n').forEach(l => {
+                const c = l.split('\t'); if(c.length >= 3) inventario.push({id:Date.now()+Math.random(), referencia:c[0]+"-"+c[1], nome:c[2], marca:c[3]||'N/D', serie:c[4]||'N/D', categoria:c[5]||'Outros', setor:c[6]||'Geral', responsavel:c[7]||'N/D', dataAquisicao:c[8]||'2026-01-01', status:c[9]||'Ativo', refCodigo:c[0], refNumero:c[1]});
             });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `inventario_pasteur_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            localStorage.setItem('inventario', JSON.stringify(inventario)); renderizarTabela(); fecharModalLote(); enviarDadosParaNuvem();
         }
 
         function prepararImpressaoRelatorio() {
-            preparDocumentoImpressaoRelatorio(inventario);
-        }
-
-        function preparDocumentoImpressaoRelatorio(listaItens) {
-            const corpoTabela = document.getElementById('tabelaRelatorioCorpo');
-            corpoTabela.innerHTML = '';
-
+            const body = document.getElementById('tabelaRelatorioCorpo'); body.innerHTML = '';
             document.getElementById('relatorioDataEmissao').innerText = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('relatorioTotalItens').innerText = `${listaItens.length} ativos`;
-
-            const ativos = listaItens.filter(i => i.status === 'Ativo').length;
-            const manutencao = listaItens.filter(i => i.status === 'Manutenção').length;
-            const descartados = listaItens.filter(i => i.status === 'Descartado').length;
-
-            document.getElementById('relatorioContagemAtivos').innerText = `${ativos} Equipamentos`;
-            document.getElementById('relatorioContagemManutencao').innerText = `${manutencao} Equipamentos`;
-            document.getElementById('relatorioContagemAbatidos').innerText = `${descartados} Equipamentos`;
-
-            if (listaItens.length === 0) {
-                corpoTabela.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center">Nenhum item cadastrado ou filtrado para impressão.</td></tr>';
-            } else {
-                listaItens.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b border-slate-300";
-                    tr.innerHTML = `
-                        <td class="px-3 py-2 border border-slate-300 font-mono font-bold">${sanitizarString(item.referencia)}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-bold">${sanitizarString(item.nome)}</td>
-                        <td class="px-3 py-2 border border-slate-300">${sanitizarString(item.marca)}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-mono">${sanitizarString(item.serie)}</td>
-                        <td class="px-3 py-2 border border-slate-300">${sanitizarString(item.categoria)}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-semibold">${sanitizarString(item.setor)}</td>
-                        <td class="px-3 py-2 border border-slate-300 font-bold">${sanitizarString(item.status)}</td>
-                    `;
-                    corpoTabela.appendChild(tr);
-                });
-            }
-
-            const container = document.getElementById('containerImpressaoRelatorio');
-            document.body.classList.add('print-report-mode');
-            container.classList.remove('hidden');
-            container.classList.add('print-active-container');
-            
-            setTimeout(() => {
-                window.print();
-                container.classList.remove('print-active-container');
-                container.classList.add('hidden');
-            }, 50);
-        }
-
-        function exportarBackupJSON() {
-            const dadosBackup = {
-                versao: "1.2",
-                dataGeracao: new Date().toISOString(),
-                inventario: inventario,
-                listaEquipamentos: listaEquipamentos,
-                listaSetores: listaSetores,
-                listaReferencias: listaReferencias,
-                listaCategorias: listaCategorias,
-                urlGoogleSheets: URL_DO_GOOGLE_SCRIPT,
-                pasteur_senha_hash: localStorage.getItem('pasteur_senha_hash'),
-                pasteur_seguranca_ativa: localStorage.getItem('pasteur_seguranca_ativa')
-            };
-
-            const stringDados = JSON.stringify(dadosBackup, null, 2);
-            const blob = new Blob([stringDados], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `backup_inventario_pasteur_${new Date().toISOString().split('T')[0]}.json`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            mostrarAlerta("Backup gerado e baixado com sucesso!", "success");
-        }
-
-        function importarBackupJSON(event) {
-            const arquivo = event.target.files[0];
-            if (!arquivo) return;
-
-            const leitor = new FileReader();
-            leitor.onload = function(e) {
-                try {
-                    const dados = JSON.parse(e.target.result);
-                    
-                    if (dados.inventario && Array.isArray(dados.inventario)) {
-                        inventario = dados.inventario;
-                        localStorage.setItem('inventario', JSON.stringify(inventario));
-                    }
-                    if (dados.listaEquipamentos && Array.isArray(dados.listaEquipamentos)) {
-                        listaEquipamentos = dados.listaEquipamentos;
-                        localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-                    }
-                    if (dados.listaSetores && Array.isArray(dados.listaSetores)) {
-                        listaSetores = dados.listaSetores;
-                        localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-                    }
-                    if (dados.listaReferencias && Array.isArray(dados.listaReferencias)) {
-                        listaReferencias = dados.listaReferencias;
-                        localStorage.setItem('listaReferencias', JSON.stringify(listaReferencias));
-                    }
-                    if (dados.listaCategorias && Array.isArray(dados.listaCategorias)) {
-                        listaCategorias = dados.listaCategorias;
-                        localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
-                    }
-                    if (dados.urlGoogleSheets !== undefined) {
-                        URL_DO_GOOGLE_SCRIPT = dados.urlGoogleSheets;
-                        localStorage.setItem('urlGoogleSheets', URL_DO_GOOGLE_SCRIPT);
-                        document.getElementById('inputUrlSheets').value = URL_DO_GOOGLE_SCRIPT;
-                    }
-                    if (dados.pasteur_senha_hash) {
-                        localStorage.setItem('pasteur_senha_hash', dados.pasteur_senha_hash);
-                    }
-                    if (dados.pasteur_seguranca_ativa) {
-                        localStorage.setItem('pasteur_seguranca_ativa', dados.pasteur_seguranca_ativa);
-                    }
-
-                    renderizarDropdowns();
-                    renderizarTabela();
-                    filtrarRelatorioTela();
-                    configurarEstruturaSeguranca();
-                    
-                    mostrarAlerta("Backup importado com sucesso!", "success");
-                    enviarDadosParaNuvem();
-                } catch(err) {
-                    mostrarAlerta("Erro ao processar arquivo de backup. Verifique o formato.", "error");
-                }
-                event.target.value = ''; 
-            };
-            leitor.readAsText(arquivo);
-        }
-
-        function copiarCodigoAppsScript() {
-            // O mesmo script fornecido originalmente
-            const codigo = `function doGet(e) { ... }`; 
-            const tempInput = document.createElement("textarea");
-            tempInput.value = codigo;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            mostrarAlerta("Código avançado copiado com sucesso!", "success");
-        }
-
-        function mostrarAlerta(mensagem, tipo) {
-            const alerta = document.getElementById('alertaFeedback');
-            const texto = document.getElementById('textoAlerta');
-
-            texto.innerText = mensaje = mensagem;
-            alerta.classList.remove('hidden');
-
-            if (tipo === 'success') {
-                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-[#9ada55]/20 text-[#85bc4b] border border-[#9ada55]/30";
-            } else {
-                alerta.className = "mb-6 p-4 rounded-lg text-sm flex items-center justify-between bg-rose-50 text-rose-700 border border-rose-100";
-            }
-
-            setTimeout(() => { fecharAlerta(); }, 5000);
-        }
-
-        function fecharAlerta() {
-            document.getElementById('alertaFeedback').classList.add('hidden');
-        }
-
-        // --- SISTEMA DE ENTRADA EM LOTE (EXCEL / CSV) ---
-        function abrirModalLote() {
-            document.getElementById('modalImportacaoLote').classList.remove('hidden');
-            document.getElementById('textareaLote').value = '';
-            document.getElementById('previewLoteContainer').classList.add('hidden');
-            
-            const btn = document.getElementById('btnConfirmarImportacaoLote');
-            btn.disabled = true;
-            btn.className = "flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60";
-            itensPrevisualizados = [];
-        }
-
-        function fecharModalLote() {
-            document.getElementById('modalImportacaoLote').classList.add('hidden');
-        }
-
-        function analisarEntradaLote() {
-            const texto = document.getElementById('textareaLote').value;
-            processarDadosTexto(texto);
-        }
-
-        function importarCSVLote(event) {
-            const arquivo = event.target.files[0];
-            if (!arquivo) return;
-
-            const leitor = new FileReader();
-            leitor.onload = function(e) {
-                processarDadosTexto(e.target.result);
-                event.target.value = '';
-            };
-            leitor.readAsText(arquivo);
-        }
-
-        function processarDadosTexto(texto) {
-            if (!texto.trim()) {
-                document.getElementById('previewLoteContainer').classList.add('hidden');
-                const btn = document.getElementById('btnConfirmarImportacaoLote');
-                btn.disabled = true;
-                btn.className = "flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60";
-                return;
-            }
-
-            const linhas = texto.split(/\r?\n/);
-            itensPrevisualizados = [];
-
-            linhas.forEach((linha, index) => {
-                if (!linha.trim()) return;
-                
-                if (index === 0 && (linha.toLowerCase().includes('sigla') || linha.toLowerCase().includes('nome_') || linha.toLowerCase().includes('responsável'))) {
-                    return; 
-                }
-
-                let delimitador = '\t';
-                if (linha.includes(';')) delimitador = ';';
-                else if (linha.includes(',') && !linha.includes('\t')) delimitador = ',';
-
-                const colunas = linha.split(delimitador).map(c => c.trim().replace(/^"|"$/g, ''));
-
-                if (colunas.length >= 3) {
-                    const sigla = colunas[0] ? colunas[0].toUpperCase() : 'GERAL';
-                    const numero = colunas[1] ? String(colunas[1]).padStart(3, '0') : '001';
-                    const nome = colunas[2] || 'Sem Nome';
-                    const marca = colunas[3] || 'N/D';
-                    const serie = colunas[4] || 'N/D';
-                    
-                    let categoria = colunas[5] || 'Equipamento Laboratorial';
-                    if (!listaCategorias.includes(categoria)) {
-                        categoria = 'Equipamento Laboratorial';
-                    }
-
-                    const setor = colunas[6] || 'SETOR TÉCNICO';
-                    const responsavel = colunas[7] || 'N/D';
-                    const dataAquisicao = colunas[8] || new Date().toISOString().split('T')[0];
-                    
-                    let status = colunas[9] || 'Ativo';
-                    if (status.toLowerCase().includes('manutenc') || status.toLowerCase().includes('manutenção')) {
-                        status = 'Manutenção';
-                    } else if (status.toLowerCase().includes('descartado') || status.toLowerCase().includes('inativo')) {
-                        status = 'Descartado';
-                    } else {
-                        status = 'Ativo';
-                    }
-
-                    itensPrevisualizados.push({
-                        id: Date.now() + index + Math.random(),
-                        refCodigo: sigla,
-                        refNumero: numero,
-                        referencia: `${sigla}-${numero}`,
-                        nome: nome.toUpperCase(),
-                        marca: marca,
-                        serie: serie,
-                        categoria: categoria,
-                        setor: setor.toUpperCase(),
-                        responsavel: responsavel,
-                        dataAquisicao: dataAquisicao,
-                        status: status
-                    });
-                }
+            document.getElementById('relatorioTotalItens').innerText = inventario.length;
+            document.getElementById('relatorioContagemAtivos').innerText = inventario.filter(i=>i.status==='Ativo').length;
+            document.getElementById('relatorioContagemManutencao').innerText = inventario.filter(i=>i.status==='Manutenção').length;
+            document.getElementById('relatorioContagemAbatidos').innerText = inventario.filter(i=>i.status==='Descartado').length;
+            inventario.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.referencia}</td><td>${item.nome}</td><td>${item.marca}</td><td>${item.serie}</td><td>${item.categoria}</td><td>${item.setor}</td><td>${item.status}</td>`;
+                body.appendChild(tr);
             });
-
-            const container = document.getElementById('previewLoteContainer');
-            const tbody = document.getElementById('tabelaPreviewLote');
-            const countSpan = document.getElementById('countPreviewItens');
-            tbody.innerHTML = '';
-
-            if (itensPrevisualizados.length > 0) {
-                container.classList.remove('hidden');
-                countSpan.innerText = itensPrevisualizados.length;
-                
-                const btn = document.getElementById('btnConfirmarImportacaoLote');
-                btn.disabled = false;
-                btn.className = "flex-1 bg-[#9ada55] hover:bg-[#85bc4b] text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer";
-
-                itensPrevisualizados.slice(0, 10).forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'border-b border-slate-100 hover:bg-slate-50';
-                    tr.innerHTML = `
-                        <td class="px-2 py-1.5 font-mono font-bold text-[#85bc4b]">${sanitizarString(item.referencia)}</td>
-                        <td class="px-2 py-1.5 font-semibold truncate max-w-[150px]">${sanitizarString(item.nome)}</td>
-                        <td class="px-2 py-1.5 truncate max-w-[100px]">${sanitizarString(item.marca)}</td>
-                        <td class="px-2 py-1.5 font-mono">${sanitizarString(item.serie)}</td>
-                        <td class="px-2 py-1.5 truncate max-w-[120px]">${sanitizarString(item.setor)}</td>
-                        <td class="px-2 py-1.5">${sanitizarString(item.status)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                if (itensPrevisualizados.length > 10) {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td colspan="6" class="px-2 py-2 text-center text-slate-400 italic">E mais ${itensPrevisualizados.length - 10} equipamentos identificados...</td>`;
-                    tbody.appendChild(tr);
-                }
-            } else {
-                container.classList.add('hidden');
-                const btn = document.getElementById('btnConfirmarImportacaoLote');
-                btn.disabled = true;
-                btn.className = "flex-1 bg-slate-300 text-slate-400 font-bold py-2.5 rounded-lg text-sm transition cursor-not-allowed opacity-60";
-            }
-        }
-
-        function salvarImportacaoLote() {
-            if (itensPrevisualizados.length === 0) return;
-
-            itensPrevisualizados.forEach(item => {
-                inventario.push(item);
-                
-                const nomeUpper = item.nome.toUpperCase();
-                if (!listaEquipamentos.includes(nomeUpper) && nomeUpper !== 'SEM NOME') {
-                    listaEquipamentos.push(nomeUpper);
-                }
-                
-                const setorUpper = item.setor.toUpperCase();
-                if (!listaSetores.includes(setorUpper)) {
-                    listaSetores.push(setorUpper);
-                }
-
-                const catFormatada = item.categoria.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
-                if (!listaCategorias.includes(catFormatada)) {
-                    listaCategorias.push(catFormatada);
-                }
-            });
-
-            localStorage.setItem('inventario', JSON.stringify(inventario));
-            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-            localStorage.setItem('listaSetores', JSON.stringify(listaSetores));
-            localStorage.setItem('listaCategorias', JSON.stringify(listaCategorias));
-
-            renderizarDropdowns();
-            renderizarTabela();
-            fecharModalLote();
-
-            mostrarAlerta(`${itensPrevisualizados.length} equipamentos importados e cadastrados!`, "success");
-            enviarDadosParaNuvem();
+            const c = document.getElementById('containerImpressaoRelatorio'); document.body.classList.add('print-report-mode');
+            c.classList.remove('hidden'); c.classList.add('print-active-container');
+            setTimeout(() => { window.print(); c.classList.remove('print-active-container'); c.classList.add('hidden'); }, 50);
         }
     </script>
 </body>
