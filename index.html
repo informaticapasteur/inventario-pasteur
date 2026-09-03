@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratório Pasteur - Gestão de Inventário e Ativos (Firebase)</title>
+    <title>Laboratório Pasteur - Gestão de Inventário e Ativos</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
     <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase SDKs (App & Firestore) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <!-- QRCode.js CDN para Geração de QR Codes -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -62,7 +58,7 @@
                     <i class="fa-solid fa-flask-vial"></i>
                 </div>
                 <h1 id="login-empresa-titulo" class="text-xl font-bold text-slate-900">Laboratório Pasteur SM</h1>
-                <p class="text-xs text-slate-500">Sistema Avançado de Inventário (Firebase Cloud)</p>
+                <p class="text-xs text-slate-500">Sistema Avançado de Inventário (Backup Local)</p>
             </div>
             
             <div id="login-erro" class="hidden bg-red-50 text-red-700 p-3 rounded-lg text-xs font-medium text-center border border-red-200"></div>
@@ -94,7 +90,7 @@
                     </div>
                     <div>
                         <h1 id="empresa-nome" class="font-bold text-lg text-slate-900 leading-tight">Laboratório Pasteur SM</h1>
-                        <p class="text-xs text-slate-500">Controle Patrimonial em Firebase</p>
+                        <p class="text-xs text-slate-500">Controle Patrimonial Integrado</p>
                     </div>
                 </div>
                 <nav class="flex flex-wrap items-center gap-1">
@@ -105,7 +101,7 @@
                     <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-right-left mr-1"></i> Rastreio</button>
                     <button onclick="mudarAba('setores')" id="btn-setores" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-building mr-1"></i> Setores</button>
                     <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-chart-pie mr-1"></i> Relatórios & IA</button>
-                    <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-gear mr-1"></i> Ajustes</button>
+                    <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-gear mr-1"></i> Ajustes & Backup</button>
                     <button onclick="fazerLogout()" class="px-2 py-2 text-xs font-medium rounded-lg text-red-600 hover:bg-red-50 transition ml-1 border border-red-200" title="Sair do Sistema"><i class="fa-solid fa-right-from-bracket"></i></button>
                 </nav>
             </div>
@@ -418,7 +414,7 @@
                                 <i class="fa-solid fa-bolt"></i> Executar Mudança
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400">A IA interpretará seu comando, atualizará os dados e salvará automaticamente no Firebase.</p>
+                        <p class="text-[11px] text-slate-400">A IA interpretará seu comando, atualizará os dados e salvará automaticamente.</p>
                     </div>
 
                     <div id="resultado-ia-container" class="hidden bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20 text-sm space-y-3 leading-relaxed">
@@ -468,9 +464,9 @@
                 </div>
             </section>
 
-            <!-- ABA CONFIGURAÇÕES & DADOS -->
+            <!-- ABA CONFIGURAÇÕES & BACKUP MANUAL -->
             <section id="aba-configuracoes" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 no-print">
-                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout, Segurança & Firebase</h2>
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações, Layout & Backup Manual (PC ⇄ Celular)</h2>
                 
                 <div class="space-y-4">
                     <div>
@@ -501,46 +497,40 @@
                         <label class="block text-sm font-medium text-slate-700 mb-1">Chave da API do Gemini (Google AI Studio)</label>
                         <input type="password" id="config-gemini-key" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono" placeholder="AIzaSy...">
                     </div>
-                    <button onclick="salvarConfiguracoes()" class="w-full bg-primary text-white py-2 rounded-lg font-medium shadow hover:opacity-90 transition">Salvar Alterações no Firebase</button>
+                    <button onclick="salvarConfiguracoes()" class="w-full bg-primary text-white py-2 rounded-lg font-medium shadow hover:opacity-90 transition">Salvar Alterações</button>
                 </div>
 
-                <!-- FERRAMENTA DE MIGRAÇÃO DE DADOS LOCAIS -->
+                <!-- FERRAMENTA DE BACKUP RÁPIDO (PC para Celular) -->
                 <div class="border-t pt-6 space-y-4">
-                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-cloud-arrow-up mr-2 text-emerald-600"></i>Resgatar & Migrar Dados Antigos do Navegador</h3>
-                    <p class="text-xs text-slate-500">Se você possui dados salvos no cache deste navegador e deseja enviá-los para o Firebase, clique abaixo.</p>
-                    <button onclick="migrarDadosLocaisParaFirebase()" class="bg-emerald-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium shadow hover:bg-emerald-700 transition w-full flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Migrar Dados Locais para o Firebase
-                    </button>
+                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-down mr-2 text-emerald-600"></i>Sincronização por Backup (Levar para o Celular)</h3>
+                    <p class="text-xs text-slate-500">Para atualizar seu celular com os dados cadastrados no computador, clique em "Baixar Backup" no PC, envie o arquivo para o seu celular (via WhatsApp/E-mail) e clique em "Importar Backup" no celular.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onclick="exportarBackupJSON()" class="bg-emerald-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium shadow hover:bg-emerald-700 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download"></i> Baixar Backup (.json)
+                        </button>
+                        <label class="bg-indigo-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium shadow hover:bg-indigo-700 transition flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> Importar Backup (.json)
+                            <input type="file" id="input-importar-backup" accept=".json" class="hidden" onchange="importarBackupJSON(event)">
+                        </label>
+                    </div>
                 </div>
 
                 <div class="border-t pt-6 space-y-4">
                     <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-down mr-2 text-primary"></i>Importador em Massa por Texto</h3>
                     <textarea id="texto-importacao-massa" rows="4" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="Exemplo: CENTRI-05/ 00147-CENTRIFUGA PROCESSAMENTO PM UNI 1,0 CENTRIFUGA"></textarea>
                     <div class="flex gap-2">
-                        <button onclick="importarTextoEmMassa()" class="flex-grow bg-indigo-600 text-white py-2 px-4 rounded-lg text-xs font-medium shadow hover:bg-indigo-700 transition">Processar e Adicionar no Firebase</button>
+                        <button onclick="importarTextoEmMassa()" class="flex-grow bg-indigo-600 text-white py-2 px-4 rounded-lg text-xs font-medium shadow hover:bg-indigo-700 transition">Processar e Adicionar</button>
                         <button onclick="carregarDadosPasteur()" class="bg-slate-700 text-white py-2 px-4 rounded-lg text-xs font-medium shadow hover:bg-slate-800 transition">Restaurar Base Padrão</button>
                     </div>
                 </div>
 
                 <!-- ZONA DE PERIGO -->
                 <div class="border-t pt-6 space-y-4">
-                    <h3 class="font-bold text-red-600 text-md"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo - Limpeza de Dados no Firebase</h3>
-                    <p class="text-xs text-slate-500">Apague permanentemente todos os registros do banco de dados na nuvem.</p>
+                    <h3 class="font-bold text-red-600 text-md"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo - Limpeza de Dados</h3>
+                    <p class="text-xs text-slate-500">Apague permanentemente todos os equipamentos atuais do navegador.</p>
                     <button onclick="zerarBaseDados()" class="bg-red-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium shadow hover:bg-red-700 transition w-full flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-trash-can"></i> Zerar Toda a Base no Firebase
+                        <i class="fa-solid fa-trash-can"></i> Zerar Toda a Base de Dados
                     </button>
-                </div>
-
-                <div class="border-t pt-6 space-y-4">
-                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-fire mr-2 text-amber-500"></i>Credenciais Firebase Firestore</h3>
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                        <div class="grid grid-cols-1 gap-2">
-                            <input type="text" id="config-fb-apikey" placeholder="API Key" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono">
-                            <input type="text" id="config-fb-projectid" placeholder="Project ID" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono">
-                            <input type="text" id="config-fb-appId" placeholder="App ID" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono">
-                        </div>
-                        <button onclick="salvarConfigFirebase()" class="bg-slate-800 text-white py-2 px-4 rounded-lg text-xs font-medium hover:bg-slate-900 transition w-full">Salvar Conexão Firebase</button>
-                    </div>
                 </div>
             </section>
         </main>
@@ -758,7 +748,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA (FIREBASE FIRESTORE) -->
+    <!-- SCRIPT DE LÓGICA (LOCALSTORAGE + BACKUP JSON) -->
     <script>
         const dadosCompletosPasteur = {
             equipamentos: [
@@ -806,24 +796,20 @@
                 logo: '',
                 usuario: 'admin',
                 senha: 'admin',
-                geminiKey: '',
-                firebaseApiKey: 'AIzaSy_demo_key_replace_with_yours',
-                firebaseProjectId: 'laboratorio-pasteur-sm',
-                firebaseAppId: '1:123456:web:abcd'
+                geminiKey: ''
             }
         };
 
         let db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
-        let firestoreDb = null;
 
         let paginaAtual = 1;
         const itensPorPagina = 25;
         let listaEquipamentosFiltradaCache = [];
         let debounceTimer = null;
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarBancoLocal();
             verificarSessao();
-            await inicializarFirebase();
             aplicarConfiguracoes();
             filtrarTabela();
             renderizarManutencao();
@@ -836,40 +822,59 @@
             document.getElementById('print-data-atual').innerText = new Date().toLocaleDateString('pt-BR');
         });
 
-        async function inicializarFirebase() {
-            try {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp({
-                        apiKey: db.config.firebaseApiKey,
-                        projectId: db.config.firebaseProjectId,
-                        appId: db.config.firebaseAppId
-                    });
-                }
-                firestoreDb = firebase.firestore();
-                const docRef = firestoreDb.collection('inventario_pasteur').doc('dados_gerais');
-                const docSnap = await docRef.get();
-                if (docSnap.exists) {
-                    db = docSnap.data();
+        function carregarBancoLocal() {
+            const salvo = localStorage.getItem('inventario_pasteur_db');
+            if (salvo) {
+                try {
+                    db = JSON.parse(salvo);
                     if (!db.manutencoes) db.manutencoes = [];
                     if (!db.chamados) db.chamados = [];
                     if (!db.comodatos) db.comodatos = [];
                     if (!db.transferencias) db.transferencias = [];
-                } else {
-                    await docRef.set(db);
-                }
-            } catch (e) {
-                console.error('Erro ao conectar com Firebase:', e);
+                } catch(e) {}
             }
         }
 
-        async function salvarBanco() {
-            if (firestoreDb) {
+        function salvarBanco() {
+            localStorage.setItem('inventario_pasteur_db', JSON.stringify(db));
+        }
+
+        function exportarBackupJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `backup_pasteur_${new Date().toISOString().slice(0,10)}.json`);
+            dlAnchorElem.click();
+        }
+
+        function importarBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
                 try {
-                    await firestoreDb.collection('inventario_pasteur').doc('dados_gerais').set(db);
-                } catch (e) {
-                    console.error('Erro ao sincronizar com Firebase:', e);
+                    const content = JSON.parse(e.target.result);
+                    if (content && content.equipamentos) {
+                        db = content;
+                        salvarBanco();
+                        filtrarTabela();
+                        renderizarManutencao();
+                        renderizarChamados();
+                        renderizarFinanceiro();
+                        renderizarRastreabilidade();
+                        renderizarSetores();
+                        atualizarRelatorios();
+                        popularSelects();
+                        aplicarConfiguracoes();
+                        alert('Backup importado com sucesso!');
+                    } else {
+                        alert('O arquivo selecionado não é um backup válido.');
+                    }
+                } catch(err) {
+                    alert('Erro ao ler arquivo: ' + err.message);
                 }
-            }
+            };
+            reader.readAsText(file);
         }
 
         function verificarSessao() {
@@ -1031,59 +1036,6 @@
             renderizarTabelaPaginada();
         }
 
-        async function migrarDadosLocaisParaFirebase() {
-            let dadosLocais = null;
-            for (let i = 0; i < localStorage.length; i++) {
-                let key = localStorage.key(i);
-                try {
-                    let val = JSON.parse(localStorage.getItem(key));
-                    if (val && val.equipamentos && val.equipamentos.length > 10) {
-                        dadosLocais = val;
-                        break;
-                    }
-                } catch(e) {}
-            }
-
-            if (!dadosLocais) {
-                let keysComuns = ['inventario_pasteur', 'db_pasteur', 'inventario', 'dados'];
-                for (let k of keysComuns) {
-                    let item = localStorage.getItem(k);
-                    if (item) {
-                        try {
-                            let parsed = JSON.parse(item);
-                            if (parsed && parsed.equipamentos && parsed.equipamentos.length > 0) {
-                                dadosLocais = parsed;
-                                break;
-                            }
-                        } catch(e){}
-                    }
-                }
-            }
-
-            if (dadosLocais && dadosLocais.equipamentos && dadosLocais.equipamentos.length > 0) {
-                if (confirm(`Encontrados ${dadosLocais.equipamentos.length} equipamentos no navegador. Deseja enviá-los para o Firebase agora?`)) {
-                    db = dadosLocais;
-                    if (!db.manutencoes) db.manutencoes = [];
-                    if (!db.chamados) db.chamados = [];
-                    if (!db.comodatos) db.comodatos = [];
-                    if (!db.transferencias) db.transferencias = [];
-                    await salvarBanco();
-                    filtrarTabela();
-                    renderizarManutencao();
-                    renderizarChamados();
-                    renderizarFinanceiro();
-                    renderizarRastreabilidade();
-                    renderizarSetores();
-                    atualizarRelatorios();
-                    popularSelects();
-                    alert(`Sucesso! ${db.equipamentos.length} equipamentos foram migrados para o Firebase.`);
-                    mudarAba('inventario');
-                }
-            } else {
-                alert('Nenhum dado local anterior foi encontrado no navegador. Utilize a importação em texto se necessário.');
-            }
-        }
-
         function exportarCSV() {
             let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;Serial;Posse;Data Entrada;Status\n";
             listaEquipamentosFiltradaCache.forEach(eq => {
@@ -1108,15 +1060,15 @@
             a.click();
         }
 
-        async function zerarBaseDados() {
-            if (confirm('ATENÇÃO: Deseja realmente zerar toda a base de dados no Firebase? Todos os registros serão apagados.')) {
+        function zerarBaseDados() {
+            if (confirm('ATENÇÃO: Deseja realmente zerar toda a base de dados? Todos os registros serão apagados.')) {
                 db.equipamentos = [];
                 db.manutencoes = [];
                 db.chamados = [];
                 db.comodatos = [];
                 db.transferencias = [];
                 db.setores = ['Setor', 'PM', 'HBM', 'JC', 'Recepção'];
-                await salvarBanco();
+                salvarBanco();
                 filtrarTabela();
                 renderizarManutencao();
                 renderizarChamados();
@@ -1125,12 +1077,12 @@
                 renderizarSetores();
                 atualizarRelatorios();
                 popularSelects();
-                alert('A base de dados no Firebase foi zerada!');
+                alert('A base de dados foi zerada!');
                 mudarAba('inventario');
             }
         }
 
-        async function importarTextoEmMassa() {
+        function importarTextoEmMassa() {
             const texto = document.getElementById('texto-importacao-massa').value.trim();
             if (!texto) return alert('Cole o texto do relatório.');
 
@@ -1166,17 +1118,17 @@
                 adicionados++;
             });
 
-            await salvarBanco();
+            salvarBanco();
             filtrarTabela();
             atualizarRelatorios();
-            alert(`${adicionados} itens importados e salvos no Firebase com sucesso!`);
+            alert(`${adicionados} itens importados com sucesso!`);
             document.getElementById('texto-importacao-massa').value = '';
         }
 
-        async function carregarDadosPasteur() {
-            if (confirm('Deseja restaurar a base padrão no Firebase com todos os ativos do Laboratório Pasteur?')) {
+        function carregarDadosPasteur() {
+            if (confirm('Deseja restaurar a base padrão com todos os ativos do Laboratório Pasteur?')) {
                 db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
-                await salvarBanco();
+                salvarBanco();
                 filtrarTabela();
                 renderizarManutencao();
                 renderizarChamados();
@@ -1186,7 +1138,7 @@
                 atualizarRelatorios();
                 popularSelects();
                 aplicarConfiguracoes();
-                alert('Base restaurada no Firebase com sucesso!');
+                alert('Base restaurada com sucesso!');
                 mudarAba('inventario');
             }
         }
@@ -1233,7 +1185,7 @@
             document.getElementById('modal-manutencao').classList.add('hidden');
         }
 
-        async function salvarManutencao() {
+        function salvarManutencao() {
             const equipamentoId = Number(document.getElementById('man-eq-select').value);
             const tipo = document.getElementById('man-tipo').value;
             const data = document.getElementById('man-data').value;
@@ -1242,16 +1194,16 @@
 
             const novoId = db.manutencoes.length > 0 ? Math.max(...db.manutencoes.map(m => m.id)) + 1 : 1;
             db.manutencoes.push({ id: novoId, equipamentoId, tipo, data, proxima, laudo, status: 'Em dia' });
-            await salvarBanco();
+            salvarBanco();
             fecharModalManutencao();
             renderizarManutencao();
-            alert('Calibração/Manutenção registrada no Firebase!');
+            alert('Calibração/Manutenção registrada!');
         }
 
-        async function excluirManutencao(id) {
+        function excluirManutencao(id) {
             if (confirm('Deseja remover este registro?')) {
                 db.manutencoes = db.manutencoes.filter(m => m.id !== id);
-                await salvarBanco();
+                salvarBanco();
                 renderizarManutencao();
             }
         }
@@ -1299,7 +1251,7 @@
             document.getElementById('modal-chamado').classList.add('hidden');
         }
 
-        async function salvarChamado() {
+        function salvarChamado() {
             const equipamentoId = Number(document.getElementById('chamado-eq-select').value);
             const unidade = document.getElementById('chamado-unidade').value;
             const prioridade = document.getElementById('chamado-prioridade').value;
@@ -1309,25 +1261,25 @@
 
             const novoId = db.chamados.length > 0 ? Math.max(...db.chamados.map(c => c.id)) + 1 : 101;
             db.chamados.push({ id: novoId, equipamentoId, unidade, prioridade, descricao, status: 'Aberto' });
-            await salvarBanco();
+            salvarBanco();
             fecharModalChamado();
             renderizarChamados();
-            alert('Chamado técnico salvo no Firebase!');
+            alert('Chamado técnico salvo!');
         }
 
-        async function alternarStatusChamado(id) {
+        function alternarStatusChamado(id) {
             const c = db.chamados.find(ch => ch.id === id);
             if (c) {
                 c.status = c.status === 'Aberto' ? 'Resolvido' : 'Aberto';
-                await salvarBanco();
+                salvarBanco();
                 renderizarChamados();
             }
         }
 
-        async function excluirChamado(id) {
+        function excluirChamado(id) {
             if (confirm('Deseja excluir este chamado?')) {
                 db.chamados = db.chamados.filter(c => c.id !== id);
-                await salvarBanco();
+                salvarBanco();
                 renderizarChamados();
             }
         }
@@ -1390,7 +1342,7 @@
             document.getElementById('modal-comodato').classList.add('hidden');
         }
 
-        async function salvarComodato() {
+        function salvarComodato() {
             const equipamentoId = Number(document.getElementById('com-eq-select').value);
             const fornecedor = document.getElementById('com-fornecedor').value.trim();
             const vigencia = document.getElementById('com-vigencia').value;
@@ -1403,17 +1355,17 @@
 
             const novoId = db.comodatos.length > 0 ? Math.max(...db.comodatos.map(c => c.id)) + 1 : 1;
             db.comodatos.push({ id: novoId, equipamentoId, fornecedor, vigencia, custo, status: 'Ativo' });
-            await salvarBanco();
+            salvarBanco();
             fecharModalComodato();
             renderizarFinanceiro();
             filtrarTabela();
-            alert('Contrato de comodato salvo no Firebase!');
+            alert('Contrato de comodato salvo!');
         }
 
-        async function excluirComodato(id) {
+        function excluirComodato(id) {
             if (confirm('Deseja excluir este contrato?')) {
                 db.comodatos = db.comodatos.filter(c => c.id !== id);
-                await salvarBanco();
+                salvarBanco();
                 renderizarFinanceiro();
             }
         }
@@ -1468,7 +1420,7 @@
             document.getElementById('modal-transferencia').classList.add('hidden');
         }
 
-        async function salvarTransferencia() {
+        function salvarTransferencia() {
             const eqId = Number(document.getElementById('tr-eq-select').value);
             const origem = document.getElementById('tr-origem').value;
             const destino = document.getElementById('tr-destino').value;
@@ -1484,11 +1436,11 @@
             const novoId = db.transferencias.length > 0 ? Math.max(...db.transferencias.map(t => t.id)) + 1 : 1;
             db.transferencias.push({ id: novoId, data: agora, equipamento: eq.nome, origem, destino, responsavel, motivo });
 
-            await salvarBanco();
+            salvarBanco();
             fecharModalTransferencia();
             renderizarRastreabilidade();
             filtrarTabela();
-            alert('Transferência registrada no Firebase!');
+            alert('Transferência registrada!');
         }
 
         function abrirModalQR(id) {
@@ -1559,7 +1511,7 @@
             });
         }
 
-        async function salvarSetor() {
+        function salvarSetor() {
             const input = document.getElementById('novo-setor-nome');
             const indexEdit = document.getElementById('setor-index-edit').value;
             let nomeSetor = input.value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -1575,7 +1527,7 @@
                 db.setores.push(nomeSetor);
             }
             input.value = '';
-            await salvarBanco();
+            salvarBanco();
             renderizarSetores();
             popularSelects();
             filtrarTabela();
@@ -1587,12 +1539,12 @@
             document.getElementById('setor-index-edit').value = index;
         }
 
-        async function excluirSetor(index) {
+        function excluirSetor(index) {
             const setorNome = db.setores[index];
             if (db.equipamentos.some(eq => eq.setor === setorNome)) return alert('Não é possível excluir um setor com equipamentos vinculados.');
             if (confirm(`Deseja excluir o setor "${setorNome}"?`)) {
                 db.setores.splice(index, 1);
-                await salvarBanco();
+                salvarBanco();
                 renderizarSetores();
                 popularSelects();
                 atualizarRelatorios();
@@ -1631,7 +1583,7 @@
             document.getElementById('modal-equipamento').classList.add('hidden');
         }
 
-        async function salvarEquipamento() {
+        function salvarEquipamento() {
             const id = document.getElementById('eq-id').value;
             let codigo = document.getElementById('eq-codigo').value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase();
             let nome = document.getElementById('eq-nome').value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -1651,17 +1603,17 @@
                 const novoId = db.equipamentos.length > 0 ? Math.max(...db.equipamentos.map(e => e.id)) + 1 : 1;
                 db.equipamentos.push({ id: novoId, codigo, nome, tipo, setor, serial, posse, status, dataEntrada });
             }
-            await salvarBanco();
+            salvarBanco();
             fecharModalEquipamento();
             filtrarTabela();
             atualizarRelatorios();
         }
 
         function editarEquipamento(id) { abrirModalEquipamento(id); }
-        async function excluirEquipamento(id) {
+        function excluirEquipamento(id) {
             if (confirm('Deseja excluir este equipamento?')) {
                 db.equipamentos = db.equipamentos.filter(e => e.id !== id);
-                await salvarBanco();
+                salvarBanco();
                 filtrarTabela();
                 atualizarRelatorios();
             }
@@ -1782,7 +1734,7 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Auditando...';
             document.getElementById('resultado-ia-container').classList.remove('hidden');
-            document.getElementById('conteudo-ia-analise').innerHTML = '<p class="text-indigo-200 italic animate-pulse">A IA está auditando a integridade dos dados no Firebase...</p>';
+            document.getElementById('conteudo-ia-analise').innerHTML = '<p class="text-indigo-200 italic animate-pulse">A IA está auditando a integridade dos dados...</p>';
 
             const payload = {
                 totalEquipamentos: db.equipamentos.length,
@@ -1790,7 +1742,7 @@
                 tipos: db.tipos
             };
 
-            const promptAuditoria = `Atue como Arquiteto de Software Sênior. Analise o inventário no Firebase do Laboratório Pasteur SM: ${JSON.stringify(payload)}.
+            const promptAuditoria = `Atue como Arquiteto de Software Sênior. Analise o inventário do Laboratório Pasteur SM: ${JSON.stringify(payload)}.
             Gere um relatório de auditoria com:
             1. <strong>Integridade dos Dados</strong>
             2. <strong>Novas Features Sugeridas</strong>
@@ -1827,7 +1779,7 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processando...';
             document.getElementById('resultado-ia-container').classList.remove('hidden');
-            document.getElementById('conteudo-ia-analise').innerHTML = '<p class="text-amber-200 italic animate-pulse">Aplicando alterações no Firebase...</p>';
+            document.getElementById('conteudo-ia-analise').innerHTML = '<p class="text-amber-200 italic animate-pulse">Aplicando alterações...</p>';
 
             const promptMassa = `Instrução do usuário: "${comando}".
             Base de dados (JSON): ${JSON.stringify(db.equipamentos)}
@@ -1855,7 +1807,7 @@
                             if (!db.setores.includes(sNorm)) db.setores.push(sNorm);
                         });
                     }
-                    await salvarBanco();
+                    salvarBanco();
                     filtrarTabela();
                     renderizarSetores();
                     atualizarRelatorios();
@@ -1863,7 +1815,7 @@
 
                     document.getElementById('conteudo-ia-analise').innerHTML = `
                         <div class="p-3 bg-emerald-900/50 text-emerald-200 rounded-lg text-xs space-y-1">
-                            <p class="font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Alteração em massa salva no Firebase com sucesso!</p>
+                            <p class="font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Alteração em massa salva com sucesso!</p>
                             <p><strong>Resumo:</strong> ${jsonResultado.mensagem}</p>
                         </div>`;
                     document.getElementById('ai-comando-massa').value = '';
@@ -1878,16 +1830,7 @@
             }
         }
 
-        async function salvarConfigFirebase() {
-            db.config.firebaseApiKey = document.getElementById('config-fb-apikey').value.trim();
-            db.config.firebaseProjectId = document.getElementById('config-fb-projectid').value.trim();
-            db.config.firebaseAppId = document.getElementById('config-fb-appId').value.trim();
-            await salvarBanco();
-            await inicializarFirebase();
-            alert('Configuração do Firebase atualizada com sucesso!');
-        }
-
-        async function salvarConfiguracoes() {
+        function salvarConfiguracoes() {
             try {
                 db.config.empresa = document.getElementById('config-empresa').value || 'Laboratório Pasteur SM';
                 db.config.cor = document.getElementById('config-cor').value;
@@ -1903,23 +1846,23 @@
                 if (file) {
                     if (file.size > 1024 * 1024) {
                         alert('Logotipo maior que 1MB.');
-                        await salvarBanco();
+                        salvarBanco();
                         aplicarConfiguracoes();
                         return;
                     }
 
                     const reader = new FileReader();
-                    reader.onload = async e => {
+                    reader.onload = e => {
                         db.config.logo = e.target.result;
-                        await salvarBanco();
+                        salvarBanco();
                         aplicarConfiguracoes();
-                        alert('Configurações e logotipo salvos no Firebase!');
+                        alert('Configurações e logotipo salvos com sucesso!');
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    await salvarBanco();
+                    salvarBanco();
                     aplicarConfiguracoes();
-                    alert('Configurações salvas no Firebase com sucesso!');
+                    alert('Configurações salvas com sucesso!');
                 }
             } catch (err) {
                 alert('Erro ao processar as configurações: ' + err.message);
@@ -1936,9 +1879,6 @@
             document.getElementById('config-usuario').value = db.config.usuario;
             document.getElementById('config-senha').value = '';
             document.getElementById('config-gemini-key').value = db.config.geminiKey || '';
-            document.getElementById('config-fb-apikey').value = db.config.firebaseApiKey || '';
-            document.getElementById('config-fb-projectid').value = db.config.firebaseProjectId || '';
-            document.getElementById('config-fb-appId').value = db.config.firebaseAppId || '';
 
             if (db.config.logo) {
                 document.getElementById('logo-container').innerHTML = `<img src="${db.config.logo}" class="w-full h-full object-contain p-0.5">`;
