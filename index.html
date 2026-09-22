@@ -828,7 +828,10 @@
                 
                 docRef.onSnapshot((docSnap) => {
                     if (docSnap.exists) {
-                        db = docSnap.data();
+                        const dadosRemotos = docSnap.data();
+                        if (dadosRemotos && dadosRemotos.equipamentos) {
+                            db = dadosRemotos;
+                        }
                         if (!db.manutencoes) db.manutencoes = [];
                         if (!db.chamados) db.chamados = [];
                         if (!db.comodatos) db.comodatos = [];
@@ -854,7 +857,6 @@
 
             } catch (e) {
                 console.error('Erro ao inicializar Firebase:', e);
-                alert('Erro ao conectar com o Firebase. Verifique sua conexão.');
             }
         }
 
@@ -885,15 +887,16 @@
             const s = document.getElementById('login-senha').value.trim();
             const erroDiv = document.getElementById('login-erro');
 
-            const usuarioSalvo = db.config?.usuario || 'admin';
-            const senhaSalva = db.config?.senha || 'admin';
+            const usuarioSalvo = (db.config && db.config.usuario) ? db.config.usuario.trim() : 'admin';
+            const senhaSalva = (db.config && db.config.senha) ? db.config.senha.trim() : 'admin';
 
+            // Aceita credenciais salvas OU o padrão universal 'admin'/'admin'
             if ((u === usuarioSalvo && s === senhaSalva) || (u === 'admin' && s === 'admin')) {
                 sessionStorage.setItem('inventario_logado', 'true');
                 erroDiv.classList.add('hidden');
                 verificarSessao();
             } else {
-                erroDiv.innerText = 'Usuário ou senha inválidos!';
+                erroDiv.innerText = 'Usuário ou senha inválidos! (Padrão: admin / admin)';
                 erroDiv.classList.remove('hidden');
             }
         }
@@ -916,6 +919,9 @@
         }
 
         document.getElementById('login-senha').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') fazerLogin();
+        });
+        document.getElementById('login-usuario').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') fazerLogin();
         });
 
@@ -1806,7 +1812,7 @@
                 <p><strong>Auditoria do Sistema e Sugestões de Novos Recursos:</strong></p>
                 <p>1. <strong>Módulo de Assinatura Digital:</strong> Adicionar validação de entrega de EPIs e equipamentos por assinatura na tela touch.</p>
                 <p>2. <strong>Alerta por E-mail / WhatsApp:</strong> Integrar notificações automáticas 15 dias antes do vencimento de calibrações RBC.</p>
-                <p>3. <strong>Leitor de Código de Câmera (Barcode Scanner):</strong> Permitir escanear códigos de barras e QR Codes diretamente pela câmera do celular do técnico em campo.</p>
+                <p>3. <strong>Leitor de Câmera (Barcode Scanner):</strong> Permitir escanear códigos de barras e QR Codes diretamente pela câmera do celular do técnico em campo.</p>
                 <p class="text-xs text-emerald-300 mt-2">A arquitetura atual em Firebase e Tailwind CSS está robusta e pronta para expansão.</p>
             `;
         }
