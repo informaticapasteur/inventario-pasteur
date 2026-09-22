@@ -746,7 +746,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA (FIREBASE FIRESTORE COM CREDENCIAIS) -->
+    <!-- SCRIPT DE LÓGICA (COM SINCRONIZAÇÃO EM TEMPO REAL) -->
     <script>
         const dadosCompletosPasteur = {
             equipamentos: [
@@ -816,17 +816,10 @@
             verificarSessao();
             await inicializarFirebase();
             aplicarConfiguracoes();
-            filtrarTabela();
-            renderizarManutencao();
-            renderizarChamados();
-            renderizarFinanceiro();
-            renderizarRastreabilidade();
-            renderizarSetores();
-            atualizarRelatorios();
-            popularSelects();
             document.getElementById('print-data-atual').innerText = new Date().toLocaleDateString('pt-BR');
         });
 
+        // INICIALIZAÇÃO E OUVINTE EM TEMPO REAL (REAL-TIME SYNC)
         async function inicializarFirebase() {
             try {
                 if (!firebase.apps.length) {
@@ -841,21 +834,38 @@
                 }
                 firestoreDb = firebase.firestore();
                 const docRef = firestoreDb.collection('inventario_pasteur').doc('dados_gerais');
-                const docSnap = await docRef.get();
-                if (docSnap.exists) {
-                    db = docSnap.data();
-                    if (!db.manutencoes) db.manutencoes = [];
-                    if (!db.chamados) db.chamados = [];
-                    if (!db.comodatos) db.comodatos = [];
-                    if (!db.transferencias) db.transferencias = [];
-                } else {
-                    await docRef.set(db);
-                }
+                
+                // OUVINTE EM TEMPO REAL: atualiza automaticamente a interface em qualquer dispositivo
+                docRef.onSnapshot((docSnap) => {
+                    if (docSnap.exists) {
+                        db = docSnap.data();
+                        if (!db.manutencoes) db.manutencoes = [];
+                        if (!db.chamados) db.chamados = [];
+                        if (!db.comodatos) db.comodatos = [];
+                        if (!db.transferencias) db.transferencias = [];
+                        
+                        // Atualiza todas as telas e tabelas instantaneamente
+                        filtrarTabela();
+                        renderizarManutencao();
+                        renderizarChamados();
+                        renderizarFinanceiro();
+                        renderizarRastreabilidade();
+                        renderizarSetores();
+                        atualizarRelatorios();
+                        popularSelects();
+                    } else {
+                        docRef.set(db);
+                    }
+                }, (error) => {
+                    console.warn('Erro na sincronização em tempo real:', error);
+                });
+
             } catch (e) {
-                console.warn('Modo Offline / Erro Firebase. Utilizando armazenamento local.', e);
+                console.warn('Modo Offline. Utilizando dados locais.', e);
                 const localData = localStorage.getItem('inventario_pasteur_local');
                 if (localData) {
                     db = JSON.parse(localData);
+                    filtrarTabela();
                 }
             }
         }
@@ -1009,10 +1019,15 @@
         }
 
         function filtrarTabela() {
-            const busca = document.getElementById('filtro-busca').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-            const setorFiltro = document.getElementById('filtro-setor').value;
-            const posseFiltro = document.getElementById('filtro-posse').value;
-            const statusFiltro = document.getElementById('filtro-status').value;
+            const buscaEl = document.getElementById('filtro-busca');
+            const setorEl = document.getElementById('filtro-setor');
+            const posseEl = document.getElementById('filtro-posse');
+            const statusEl = document.getElementById('filtro-status');
+
+            const busca = buscaEl ? buscaEl.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "") : "";
+            const setorFiltro = setorEl ? setorEl.value : "";
+            const posseFiltro = posseEl ? posseEl.value : "";
+            const statusFiltro = statusEl ? statusEl.value : "";
 
             listaEquipamentosFiltradaCache = db.equipamentos.filter(eq => {
                 const nomeNorm = (eq.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
@@ -1026,7 +1041,6 @@
                 const matchStatus = statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro;
                 return matchBusca && matchSetor && matchPosse && matchStatus;
             });
-            paginaAtual = 1;
             renderizarTabelaPaginada();
         }
 
@@ -1041,14 +1055,6 @@
                 if (confirm(`Encontrados ${dadosLocais.equipamentos.length} equipamentos salvos localmente. Deseja enviá-los para o Firebase agora?`)) {
                     db = dadosLocais;
                     await salvarBanco();
-                    filtrarTabela();
-                    renderizarManutencao();
-                    renderizarChamados();
-                    renderizarFinanceiro();
-                    renderizarRastreabilidade();
-                    renderizarSetores();
-                    atualizarRelatorios();
-                    popularSelects();
                     alert(`Sucesso! ${db.equipamentos.length} equipamentos foram migrados para o Firebase.`);
                     mudarAba('inventario');
                 }
@@ -1090,14 +1096,6 @@
                 db.transferencias = [];
                 db.setores = ['Setor', 'PM', 'HBM', 'JC', 'Recepção'];
                 await salvarBanco();
-                filtrarTabela();
-                renderizarManutencao();
-                renderizarChamados();
-                renderizarFinanceiro();
-                renderizarRastreabilidade();
-                renderizarSetores();
-                atualizarRelatorios();
-                popularSelects();
                 alert('A base de dados foi zerada!');
                 mudarAba('inventario');
             }
@@ -1140,8 +1138,6 @@
             });
 
             await salvarBanco();
-            filtrarTabela();
-            atualizarRelatorios();
             alert(`${adicionados} itens importados com sucesso!`);
             document.getElementById('texto-importacao-massa').value = '';
         }
@@ -1150,15 +1146,6 @@
             if (confirm('Deseja restaurar a base padrão com todos os ativos do Laboratório Pasteur?')) {
                 db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
                 await salvarBanco();
-                filtrarTabela();
-                renderizarManutencao();
-                renderizarChamados();
-                renderizarFinanceiro();
-                renderizarRastreabilidade();
-                renderizarSetores();
-                atualizarRelatorios();
-                popularSelects();
-                aplicarConfiguracoes();
                 alert('Base restaurada com sucesso!');
                 mudarAba('inventario');
             }
@@ -1166,6 +1153,7 @@
 
         function renderizarManutencao() {
             const tbody = document.getElementById('tabela-manutencao-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
             if (db.manutencoes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhum registro de manutenção ou calibração.</td></tr>`;
@@ -1217,7 +1205,6 @@
             db.manutencoes.push({ id: novoId, equipamentoId, tipo, data, proxima, laudo, status: 'Em dia' });
             await salvarBanco();
             fecharModalManutencao();
-            renderizarManutencao();
             alert('Calibração/Manutenção registrada!');
         }
 
@@ -1225,12 +1212,12 @@
             if (confirm('Deseja remover este registro?')) {
                 db.manutencoes = db.manutencoes.filter(m => m.id !== id);
                 await salvarBanco();
-                renderizarManutencao();
             }
         }
 
         function renderizarChamados() {
             const tbody = document.getElementById('tabela-chamados-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
             if (db.chamados.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhum chamado técnico registrado.</td></tr>`;
@@ -1284,7 +1271,6 @@
             db.chamados.push({ id: novoId, equipamentoId, unidade, prioridade, descricao, status: 'Aberto' });
             await salvarBanco();
             fecharModalChamado();
-            renderizarChamados();
             alert('Chamado técnico salvo!');
         }
 
@@ -1293,7 +1279,6 @@
             if (c) {
                 c.status = c.status === 'Aberto' ? 'Resolvido' : 'Aberto';
                 await salvarBanco();
-                renderizarChamados();
             }
         }
 
@@ -1301,12 +1286,12 @@
             if (confirm('Deseja excluir este chamado?')) {
                 db.chamados = db.chamados.filter(c => c.id !== id);
                 await salvarBanco();
-                renderizarChamados();
             }
         }
 
         function renderizarFinanceiro() {
             const tbody = document.getElementById('tabela-financeiro-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
             let totalCusto = 0;
             let alertasVenc = 0;
@@ -1378,8 +1363,6 @@
             db.comodatos.push({ id: novoId, equipamentoId, fornecedor, vigencia, custo, status: 'Ativo' });
             await salvarBanco();
             fecharModalComodato();
-            renderizarFinanceiro();
-            filtrarTabela();
             alert('Contrato de comodato salvo!');
         }
 
@@ -1387,12 +1370,12 @@
             if (confirm('Deseja excluir este contrato?')) {
                 db.comodatos = db.comodatos.filter(c => c.id !== id);
                 await salvarBanco();
-                renderizarFinanceiro();
             }
         }
 
         function renderizarRastreabilidade() {
             const tbody = document.getElementById('tabela-rastreio-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
             if (db.transferencias.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma movimentação registrada no audit trail.</td></tr>`;
@@ -1459,8 +1442,6 @@
 
             await salvarBanco();
             fecharModalTransferencia();
-            renderizarRastreabilidade();
-            filtrarTabela();
             alert('Transferência registrada!');
         }
 
@@ -1499,24 +1480,35 @@
         function popularSelects() {
             const selectFiltro = document.getElementById('filtro-setor');
             const selectModalSetor = document.getElementById('eq-setor');
-            selectFiltro.innerHTML = '<option value="">Todos os Setores</option>';
-            selectModalSetor.innerHTML = '';
-            db.setores.forEach(setor => {
-                selectFiltro.innerHTML += `<option value="${setor}">${setor}</option>`;
-                selectModalSetor.innerHTML += `<option value="${setor}">${setor}</option>`;
-            });
+            if (selectFiltro && selectModalSetor) {
+                const valorAtualSetorFiltro = selectFiltro.value;
+                const valorAtualModalSetor = selectModalSetor.value;
+
+                selectFiltro.innerHTML = '<option value="">Todos os Setores</option>';
+                selectModalSetor.innerHTML = '';
+                db.setores.forEach(setor => {
+                    selectFiltro.innerHTML += `<option value="${setor}">${setor}</option>`;
+                    selectModalSetor.innerHTML += `<option value="${setor}">${setor}</option>`;
+                });
+
+                selectFiltro.value = valorAtualSetorFiltro;
+                selectModalSetor.value = valorAtualModalSetor;
+            }
 
             const selectModalTipo = document.getElementById('eq-tipo');
             if (selectModalTipo) {
+                const valorAtualTipo = selectModalTipo.value;
                 selectModalTipo.innerHTML = '';
                 db.tipos.forEach(tipo => {
                     selectModalTipo.innerHTML += `<option value="${tipo}">${tipo}</option>`;
                 });
+                selectModalTipo.value = valorAtualTipo;
             }
         }
 
         function renderizarSetores() {
             const tbody = document.getElementById('tabela-setores-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
             db.setores.forEach((setor, index) => {
                 const tr = document.createElement('tr');
@@ -1549,10 +1541,6 @@
             }
             input.value = '';
             await salvarBanco();
-            renderizarSetores();
-            popularSelects();
-            filtrarTabela();
-            atualizarRelatorios();
         }
 
         function editarSetor(index) {
@@ -1566,9 +1554,6 @@
             if (confirm(`Deseja excluir o setor "${setorNome}"?`)) {
                 db.setores.splice(index, 1);
                 await salvarBanco();
-                renderizarSetores();
-                popularSelects();
-                atualizarRelatorios();
             }
         }
 
@@ -1626,8 +1611,6 @@
             }
             await salvarBanco();
             fecharModalEquipamento();
-            filtrarTabela();
-            atualizarRelatorios();
         }
 
         function editarEquipamento(id) { abrirModalEquipamento(id); }
@@ -1635,8 +1618,6 @@
             if (confirm('Deseja excluir este equipamento?')) {
                 db.equipamentos = db.equipamentos.filter(e => e.id !== id);
                 await salvarBanco();
-                filtrarTabela();
-                atualizarRelatorios();
             }
         }
 
@@ -1656,11 +1637,17 @@
                 if (anos >= 5) count5++;
             });
 
-            document.getElementById('relatorio-4-anos').innerText = count4;
-            document.getElementById('relatorio-5-anos').innerText = count5;
-            document.getElementById('relatorio-proprio').innerText = countProprio;
-            document.getElementById('relatorio-comodato').innerText = countComodato;
-            document.getElementById('relatorio-total').innerText = db.equipamentos.length;
+            const r4 = document.getElementById('relatorio-4-anos');
+            const r5 = document.getElementById('relatorio-5-anos');
+            const rp = document.getElementById('relatorio-proprio');
+            const rc = document.getElementById('relatorio-comodato');
+            const rt = document.getElementById('relatorio-total');
+
+            if (r4) r4.innerText = count4;
+            if (r5) r5.innerText = count5;
+            if (rp) rp.innerText = countProprio;
+            if (rc) rc.innerText = countComodato;
+            if (rt) rt.innerText = db.equipamentos.length;
 
             const porSetor = {}; db.setores.forEach(s => porSetor[s] = 0);
             const porTipo = {};
@@ -1741,13 +1728,11 @@
                 reader.onload = async function(e) {
                     db.config.logo = e.target.result;
                     await salvarBanco();
-                    aplicarConfiguracoes();
                     alert('Configurações e Logotipo salvos com sucesso!');
                 };
                 reader.readAsDataURL(logoInput.files[0]);
             } else {
                 await salvarBanco();
-                aplicarConfiguracoes();
                 alert('Configurações salvas com sucesso!');
             }
         }
@@ -1811,7 +1796,6 @@
             alert(`Comando "${comando}" processado. (Exemplo: Substituições em lote aplicadas com sucesso e salvas no Firebase).`);
             document.getElementById('ai-comando-massa').value = '';
             await salvarBanco();
-            filtrarTabela();
         }
     </script>
 </body>
