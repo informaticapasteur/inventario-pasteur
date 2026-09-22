@@ -746,7 +746,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA (COM SINCRONIZAÇÃO EM TEMPO REAL) -->
+    <!-- SCRIPT DE LÓGICA -->
     <script>
         const dadosCompletosPasteur = {
             equipamentos: [
@@ -815,11 +815,10 @@
         document.addEventListener('DOMContentLoaded', async () => {
             verificarSessao();
             await inicializarFirebase();
-            aplicarConfiguracoes();
             document.getElementById('print-data-atual').innerText = new Date().toLocaleDateString('pt-BR');
         });
 
-        // INICIALIZAÇÃO E OUVINTE EM TEMPO REAL (REAL-TIME SYNC)
+        // INICIALIZAÇÃO E OUVINTE EM TEMPO REAL
         async function inicializarFirebase() {
             try {
                 if (!firebase.apps.length) {
@@ -835,7 +834,6 @@
                 firestoreDb = firebase.firestore();
                 const docRef = firestoreDb.collection('inventario_pasteur').doc('dados_gerais');
                 
-                // OUVINTE EM TEMPO REAL: atualiza automaticamente a interface em qualquer dispositivo
                 docRef.onSnapshot((docSnap) => {
                     if (docSnap.exists) {
                         db = docSnap.data();
@@ -843,8 +841,9 @@
                         if (!db.chamados) db.chamados = [];
                         if (!db.comodatos) db.comodatos = [];
                         if (!db.transferencias) db.transferencias = [];
+                        if (!db.config) db.config = dadosCompletosPasteur.config;
                         
-                        // Atualiza todas as telas e tabelas instantaneamente
+                        aplicarConfiguracoes();
                         filtrarTabela();
                         renderizarManutencao();
                         renderizarChamados();
@@ -865,6 +864,7 @@
                 const localData = localStorage.getItem('inventario_pasteur_local');
                 if (localData) {
                     db = JSON.parse(localData);
+                    aplicarConfiguracoes();
                     filtrarTabela();
                 }
             }
@@ -897,7 +897,7 @@
             const s = document.getElementById('login-senha').value.trim();
             const erroDiv = document.getElementById('login-erro');
 
-            if (u === db.config.usuario && s === db.config.senha) {
+            if (u === (db.config.usuario || 'admin') && s === (db.config.senha || 'admin')) {
                 sessionStorage.setItem('inventario_logado', 'true');
                 erroDiv.classList.add('hidden');
                 verificarSessao();
@@ -961,6 +961,7 @@
 
         function renderizarTabelaPaginada() {
             const tbody = document.getElementById('tabela-equipamentos-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
             
             const totalItens = listaEquipamentosFiltradaCache.length;
@@ -1000,10 +1001,15 @@
                 });
             }
 
-            document.getElementById('paginacao-info').innerText = `Mostrando ${totalItens > 0 ? inicio + 1 : 0} a ${Math.min(fim, totalItens)} de ${totalItens} registros`;
-            document.getElementById('paginacao-numeracao').innerText = `${paginaAtual} / ${totalPaginas}`;
-            document.getElementById('btn-prev-pagina').disabled = paginaAtual === 1;
-            document.getElementById('btn-next-pagina').disabled = paginaAtual === totalPaginas || totalPaginas === 0;
+            const infoEl = document.getElementById('paginacao-info');
+            const numEl = document.getElementById('paginacao-numeracao');
+            const prevEl = document.getElementById('btn-prev-pagina');
+            const nextEl = document.getElementById('btn-next-pagina');
+
+            if (infoEl) infoEl.innerText = `Mostrando ${totalItens > 0 ? inicio + 1 : 0} a ${Math.min(fim, totalItens)} de${totalItens} registros`;
+            if (numEl) numEl.innerText = `${paginaAtual} /${totalPaginas}`;
+            if (prevEl) prevEl.disabled = paginaAtual === 1;
+            if (nextEl) nextEl.disabled = paginaAtual === totalPaginas || totalPaginas === 0;
         }
 
         function mudarPagina(direcao) {
@@ -1181,7 +1187,7 @@
             const select = document.getElementById('man-eq-select');
             select.innerHTML = '';
             db.equipamentos.forEach(e => {
-                select.innerHTML += `<option value="${e.id}">${e.codigo} - ${e.nome}</option>`;
+                select.innerHTML += `<option value="${e.id}">${e.codigo} -${e.nome}</option>`;
             });
             document.getElementById('man-data').value = new Date().toISOString().slice(0,10);
             let prox = new Date();
@@ -1339,7 +1345,7 @@
             const select = document.getElementById('com-eq-select');
             select.innerHTML = '';
             db.equipamentos.forEach(e => {
-                select.innerHTML += `<option value="${e.id}">${e.codigo} - ${e.nome}</option>`;
+                select.innerHTML += `<option value="${e.id}">${e.codigo} -${e.nome}</option>`;
             });
             document.getElementById('modal-comodato').classList.remove('hidden');
         }
@@ -1453,7 +1459,7 @@
             const container = document.getElementById('qr-code-container');
             container.innerHTML = '';
 
-            const textoQR = `Empresa: ${db.config.empresa}\nCód Ref: ${eq.codigo || 'N/A'}\nAtivo: ${eq.nome}\nSetor: ${eq.setor}\nSérie: ${eq.serial || 'N/A'}\n[HELP DESK]`;
+            const textoQR = `Empresa: ${db.config.empresa}\nCód Ref: ${eq.codigo \vert{}\vert{} 'N/A'}\nAtivo:${eq.nome}\nSetor: ${eq.setor}\nSérie: ${eq.serial || 'N/A'}\n[HELP DESK]`;
 
             new QRCode(container, {
                 text: textoQR,
@@ -1696,25 +1702,62 @@
         }
 
         function aplicarConfiguracoes() {
+            if (!db.config) return;
+
+            // Nome da empresa
             if (db.config.empresa) {
-                document.getElementById('empresa-nome').innerText = db.config.empresa;
-                document.getElementById('print-empresa-nome').innerText = db.config.empresa;
-                document.getElementById('login-empresa-titulo').innerText = db.config.empresa;
-                document.getElementById('config-empresa').value = db.config.empresa;
+                const elEmp = document.getElementById('empresa-nome');
+                const elPrint = document.getElementById('print-empresa-nome');
+                const elLogin = document.getElementById('login-empresa-titulo');
+                const elInput = document.getElementById('config-empresa');
+
+                if (elEmp) elEmp.innerText = db.config.empresa;
+                if (elPrint) elPrint.innerText = db.config.empresa;
+                if (elLogin) elLogin.innerText = db.config.empresa;
+                if (elInput) elInput.value = db.config.empresa;
             }
+
+            // Cor principal
             if (db.config.cor) {
                 document.documentElement.style.setProperty('--cor-primaria', db.config.cor);
-                document.getElementById('config-cor').value = db.config.cor;
+                const elCor = document.getElementById('config-cor');
+                if (elCor) elCor.value = db.config.cor;
             }
+
+            // Logotipo
+            const logoContainer = document.getElementById('logo-container');
+            const printLogoContainer = document.getElementById('print-logo-container');
+            if (db.config.logo) {
+                if (logoContainer) {
+                    logoContainer.innerHTML = `<img src="${db.config.logo}" alt="Logo" class="w-full h-full object-cover">`;
+                }
+                if (printLogoContainer) {
+                    printLogoContainer.innerHTML = `<img src="${db.config.logo}" alt="Logo" class="max-h-12 object-contain">`;
+                }
+            } else {
+                if (logoContainer) {
+                    logoContainer.innerHTML = `<i class="fa-solid fa-flask-vial text-lg"></i>`;
+                }
+                if (printLogoContainer) {
+                    printLogoContainer.innerHTML = ``;
+                }
+            }
+
+            // Usuário
             if (db.config.usuario) {
-                document.getElementById('config-usuario').value = db.config.usuario;
+                const elUser = document.getElementById('config-usuario');
+                if (elUser) elUser.value = db.config.usuario;
             }
+
+            // Chave Gemini
             if (db.config.geminiKey) {
-                document.getElementById('config-gemini-key').value = db.config.geminiKey;
+                const elGem = document.getElementById('config-gemini-key');
+                if (elGem) elGem.value = db.config.geminiKey;
             }
         }
 
         async function salvarConfiguracoes() {
+            if (!db.config) db.config = {};
             db.config.empresa = document.getElementById('config-empresa').value.trim() || 'Laboratório Pasteur';
             db.config.cor = document.getElementById('config-cor').value;
             db.config.usuario = document.getElementById('config-usuario').value.trim() || 'admin';
@@ -1728,11 +1771,13 @@
                 reader.onload = async function(e) {
                     db.config.logo = e.target.result;
                     await salvarBanco();
+                    aplicarConfiguracoes();
                     alert('Configurações e Logotipo salvos com sucesso!');
                 };
                 reader.readAsDataURL(logoInput.files[0]);
             } else {
                 await salvarBanco();
+                aplicarConfiguracoes();
                 alert('Configurações salvas com sucesso!');
             }
         }
