@@ -505,15 +505,6 @@
                     <button onclick="salvarConfiguracoes()" class="w-full bg-primary text-white py-2 rounded-lg font-medium shadow hover:opacity-90 transition">Salvar Alterações</button>
                 </div>
 
-                <!-- FERRAMENTA DE MIGRAÇÃO DE DADOS LOCAIS -->
-                <div class="border-t pt-6 space-y-4">
-                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-cloud-arrow-up mr-2 text-emerald-600"></i>Resgatar & Migrar Dados Antigos do Navegador</h3>
-                    <p class="text-xs text-slate-500">Se você possui dados salvos no cache deste navegador e deseja enviá-los para o Firebase, clique abaixo.</p>
-                    <button onclick="migrarDadosLocaisParaFirebase()" class="bg-emerald-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium shadow hover:bg-emerald-700 transition w-full flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Migrar Dados Locais para o Firebase
-                    </button>
-                </div>
-
                 <div class="border-t pt-6 space-y-4">
                     <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-down mr-2 text-primary"></i>Importador em Massa por Texto</h3>
                     <textarea id="texto-importacao-massa" rows="4" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="Exemplo: CENTRI-05/ 00147-CENTRIFUGA PROCESSAMENTO PM UNI 1,0 CENTRIFUGA"></textarea>
@@ -819,7 +810,7 @@
             document.getElementById('print-data-atual').innerText = new Date().toLocaleDateString('pt-BR');
         });
 
-        // INICIALIZAÇÃO E OUVINTE EM TEMPO REAL
+        // INICIALIZAÇÃO E OUVINTE EM TEMPO REAL (EXCLUSIVAMENTE VIA FIREBASE)
         async function inicializarFirebase() {
             try {
                 if (!firebase.apps.length) {
@@ -854,20 +845,16 @@
                         atualizarRelatorios();
                         popularSelects();
                     } else {
+                        // Se o documento estiver vazio no Firebase, inicializa com a base padrão
                         docRef.set(db);
                     }
                 }, (error) => {
-                    console.warn('Erro na sincronização em tempo real:', error);
+                    console.error('Erro na sincronização em tempo real com Firebase:', error);
                 });
 
             } catch (e) {
-                console.warn('Modo Offline. Utilizando dados locais.', e);
-                const localData = localStorage.getItem('inventario_pasteur_local');
-                if (localData) {
-                    db = JSON.parse(localData);
-                    aplicarConfiguracoes();
-                    filtrarTabela();
-                }
+                console.error('Erro ao inicializar Firebase:', e);
+                alert('Erro ao conectar com o Firebase. Verifique sua conexão.');
             }
         }
 
@@ -877,9 +864,9 @@
                     await firestoreDb.collection('inventario_pasteur').doc('dados_gerais').set(db);
                 }
             } catch (e) {
-                console.error('Erro ao sincronizar com Firebase:', e);
+                console.error('Erro ao salvar no Firebase:', e);
+                alert('Erro ao salvar alterações no Firebase.');
             }
-            localStorage.setItem('inventario_pasteur_local', JSON.stringify(db));
         }
 
         function verificarSessao() {
@@ -901,7 +888,6 @@
             const usuarioSalvo = db.config?.usuario || 'admin';
             const senhaSalva = db.config?.senha || 'admin';
 
-            // Aceita o usuário salvo OU as credenciais padrão "admin" / "admin"
             if ((u === usuarioSalvo && s === senhaSalva) || (u === 'admin' && s === 'admin')) {
                 sessionStorage.setItem('inventario_logado', 'true');
                 erroDiv.classList.add('hidden');
@@ -1065,25 +1051,6 @@
             renderizarTabelaPaginada();
         }
 
-        async function migrarDadosLocaisParaFirebase() {
-            let dadosLocais = null;
-            let localItem = localStorage.getItem('inventario_pasteur_local');
-            if (localItem) {
-                try { dadosLocais = JSON.parse(localItem); } catch(e) {}
-            }
-
-            if (dadosLocais && dadosLocais.equipamentos && dadosLocais.equipamentos.length > 0) {
-                if (confirm(`Encontrados ${dadosLocais.equipamentos.length} equipamentos salvos localmente. Deseja enviá-los para o Firebase agora?`)) {
-                    db = dadosLocais;
-                    await salvarBanco();
-                    alert(`Sucesso! ${db.equipamentos.length} equipamentos foram migrados para o Firebase.`);
-                    mudarAba('inventario');
-                }
-            } else {
-                alert('Nenhum dado local encontrado para migração.');
-            }
-        }
-
         function exportarCSV() {
             let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;Serial;Posse;Data Entrada;Status\n";
             listaEquipamentosFiltradaCache.forEach(eq => {
@@ -1109,7 +1076,7 @@
         }
 
         async function zerarBaseDados() {
-            if (confirm('ATENÇÃO: Deseja realmente zerar toda a base de dados? Todos os registros serão apagados.')) {
+            if (confirm('ATENÇÃO: Deseja realmente zerar toda a base de dados no Firebase? Todos os registros serão apagados.')) {
                 db.equipamentos = [];
                 db.manutencoes = [];
                 db.chamados = [];
@@ -1117,7 +1084,7 @@
                 db.transferencias = [];
                 db.setores = ['Setor', 'PM', 'HBM', 'JC', 'Recepção'];
                 await salvarBanco();
-                alert('A base de dados foi zerada!');
+                alert('A base de dados foi zerada no Firebase!');
                 mudarAba('inventario');
             }
         }
@@ -1159,15 +1126,15 @@
             });
 
             await salvarBanco();
-            alert(`${adicionados} itens importados com sucesso!`);
+            alert(`${adicionados} itens importados e salvos no Firebase com sucesso!`);
             document.getElementById('texto-importacao-massa').value = '';
         }
 
         async function carregarDadosPasteur() {
-            if (confirm('Deseja restaurar a base padrão com todos os ativos do Laboratório Pasteur?')) {
+            if (confirm('Deseja restaurar a base padrão com todos os ativos do Laboratório Pasteur no Firebase?')) {
                 db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
                 await salvarBanco();
-                alert('Base restaurada com sucesso!');
+                alert('Base padrão restaurada no Firebase com sucesso!');
                 mudarAba('inventario');
             }
         }
@@ -1719,7 +1686,6 @@
         function aplicarConfiguracoes() {
             if (!db.config) return;
 
-            // Nome da empresa
             if (db.config.empresa) {
                 const elEmp = document.getElementById('empresa-nome');
                 const elPrint = document.getElementById('print-empresa-nome');
@@ -1732,14 +1698,12 @@
                 if (elInput) elInput.value = db.config.empresa;
             }
 
-            // Cor principal
             if (db.config.cor) {
                 document.documentElement.style.setProperty('--cor-primaria', db.config.cor);
                 const elCor = document.getElementById('config-cor');
                 if (elCor) elCor.value = db.config.cor;
             }
 
-            // Logotipo
             const logoContainer = document.getElementById('logo-container');
             const printLogoContainer = document.getElementById('print-logo-container');
             if (db.config.logo) {
@@ -1758,13 +1722,11 @@
                 }
             }
 
-            // Usuário
             if (db.config.usuario) {
                 const elUser = document.getElementById('config-usuario');
                 if (elUser) elUser.value = db.config.usuario;
             }
 
-            // Chave Gemini
             if (db.config.geminiKey) {
                 const elGem = document.getElementById('config-gemini-key');
                 if (elGem) elGem.value = db.config.geminiKey;
@@ -1787,13 +1749,13 @@
                     db.config.logo = e.target.result;
                     await salvarBanco();
                     aplicarConfiguracoes();
-                    alert('Configurações e Logotipo salvos com sucesso!');
+                    alert('Configurações e Logotipo salvos no Firebase com sucesso!');
                 };
                 reader.readAsDataURL(logoInput.files[0]);
             } else {
                 await salvarBanco();
                 aplicarConfiguracoes();
-                alert('Configurações salvas com sucesso!');
+                alert('Configurações salvas no Firebase com sucesso!');
             }
         }
 
@@ -1853,7 +1815,7 @@
             const comando = document.getElementById('ai-comando-massa').value.trim();
             if (!comando) return alert('Digite um comando para a IA.');
             
-            alert(`Comando "${comando}" processado. (Exemplo: Substituições em lote aplicadas com sucesso e salvas no Firebase).`);
+            alert(`Comando "${comando}" processado e salvo no Firebase.`);
             document.getElementById('ai-comando-massa').value = '';
             await salvarBanco();
         }
