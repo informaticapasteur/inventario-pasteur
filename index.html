@@ -71,16 +71,15 @@
             <div id="form-login" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Usuário</label>
-                    <input type="text" id="login-usuario" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    <input type="text" id="login-usuario" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Digite seu usuário">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Senha</label>
-                    <input type="password" id="login-senha" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    <input type="password" id="login-senha" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="••••••••">
                 </div>
                 <button onclick="fazerLogin()" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium shadow hover:opacity-90 transition">Entrar no Sistema</button>
-                <div class="flex justify-between items-center text-xs pt-2">
-                    <button onclick="alternarTelaAuth('cadastro')" class="text-primary font-semibold hover:underline">Criar Nova Conta</button>
-                    <button onclick="resetarAcessoAdmin()" class="text-slate-500 hover:underline">Restaurar Admin Padrão</button>
+                <div class="text-center pt-2">
+                    <button onclick="alternarTelaAuth('cadastro')" class="text-xs text-primary font-semibold hover:underline">Criar Nova Conta</button>
                 </div>
             </div>
 
@@ -106,7 +105,7 @@
                         <option value="Admin">Administrador (Acesso Total e Ajustes)</option>
                     </select>
                 </div>
-                <button onclick="cadastrarNovoUsuario()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-medium shadow transition">Cadastrar Novo Usuário</button>
+                <button onclick="cadastrarNovoUsuario()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-medium shadow transition">Cadastrar Nova Conta</button>
                 <div class="text-center pt-2">
                     <button onclick="alternarTelaAuth('login')" class="text-xs text-primary font-semibold hover:underline">Voltar para o Login</button>
                 </div>
@@ -503,7 +502,7 @@
             <!-- ABA GERENCIAMENTO DE USUÁRIOS (ADMIN ONLY) -->
             <section id="aba-usuarios" class="hidden max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 no-print">
                 <div class="flex justify-between items-center border-b pb-3">
-                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users-gear text-primary mr-2"></i>Gerenciamento de Usuários e Permissões</h2>
+                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users-gear text-primary mr-2"></i>Gerenciamento Completo de Usuários e Permissões</h2>
                     <button onclick="abrirModalUsuario()" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow hover:opacity-95 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-user-plus"></i> Novo Usuário
                     </button>
@@ -577,10 +576,10 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nome de Usuário (Login)</label>
-                    <input type="text" id="usr-login" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Ex: gilnei.tec">
+                    <input type="text" id="usr-login" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Ex: admin">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Senha (Deixe em branco para manter a atual)</label>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nova Senha (Deixe em branco para não alterar)</label>
                     <input type="password" id="usr-senha" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="••••••••">
                 </div>
                 <div>
@@ -874,7 +873,10 @@
                     if (dadosRemotos && dadosRemotos.equipamentos) {
                         db = dadosRemotos;
                     }
-                    if (!db.usuarios) db.usuarios = dadosCompletosPasteur.usuarios;
+                    // Garante que a lista de usuários exista e mescla se necessário
+                    if (!db.usuarios || db.usuarios.length === 0) {
+                        db.usuarios = dadosCompletosPasteur.usuarios;
+                    }
                     if (!db.manutencoes) db.manutencoes = [];
                     if (!db.chamados) db.chamados = [];
                     if (!db.comodatos) db.comodatos = [];
@@ -988,17 +990,6 @@
             alternarTelaAuth('login');
         }
 
-        function resetarAcessoAdmin() {
-            if (!db.usuarios) db.usuarios = [];
-            if (!db.usuarios.some(u => u.usuario === 'admin')) {
-                db.usuarios.push({ nome: 'Administrador', usuario: 'admin', senha: 'admin', perfil: 'Admin' });
-                salvarBanco();
-            }
-            document.getElementById('login-usuario').value = 'admin';
-            document.getElementById('login-senha').value = 'admin';
-            fazerLogin();
-        }
-
         function fazerLogout() {
             usuarioLogado = null;
             verificarSessao();
@@ -1035,7 +1026,7 @@
             if (btnEl) btnEl.className = "px-2.5 py-2 text-xs font-medium rounded-lg bg-primary text-white transition";
         }
 
-        // GERENCIAMENTO & EDIÇÃO DE USUÁRIOS
+        // GERENCIAMENTO COMPLETO DE USUÁRIOS & SENHAS
         function renderizarUsuarios() {
             const tbody = document.getElementById('tabela-usuarios-body');
             if (!tbody) return;
@@ -1049,7 +1040,7 @@
                         <td class="p-3"><span class="px-2 py-1 rounded text-xs font-semibold bg-indigo-100 text-indigo-800">${usr.perfil}</span></td>
                         <td class="p-3 text-center space-x-3">
                             <button onclick="abrirModalUsuario(${index})" class="text-primary hover:underline text-xs"><i class="fa-solid fa-pen mr-1"></i>Editar / Senha</button>
-                            ${usr.usuario !== 'admin' ? `<button onclick="excluirUsuario(${index})" class="text-red-600 hover:underline text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>` : '<span class="text-xs text-slate-400">Protegido</span>'}
+                            ${db.usuarios.length > 1 ? `<button onclick="excluirUsuario(${index})" class="text-red-600 hover:underline text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>` : '<span class="text-xs text-slate-400">Último Admin</span>'}
                         </td>
                     </tr>
                 `;
@@ -1060,7 +1051,7 @@
             document.getElementById('modal-usuario').classList.remove('hidden');
             if (index !== null) {
                 const usr = db.usuarios[index];
-                document.getElementById('modal-usuario-titulo').innerText = 'Editar Usuário';
+                document.getElementById('modal-usuario-titulo').innerText = 'Editar Usuário / Senha';
                 document.getElementById('usr-edit-index').value = index;
                 document.getElementById('usr-nome').value = usr.nome;
                 document.getElementById('usr-login').value = usr.usuario;
@@ -1101,19 +1092,20 @@
                 }
                 db.usuarios.push({ nome, usuario, senha, perfil });
             } else {
-                // Edição
+                // Edição de usuário existente (incluindo admin)
                 const idx = Number(index);
                 db.usuarios[idx].nome = nome;
                 db.usuarios[idx].usuario = usuario;
                 db.usuarios[idx].perfil = perfil;
                 if (senha) {
-                    db.usuarios[idx].senha = senha; // Atualiza a senha apenas se foi preenchida
+                    db.usuarios[idx].senha = senha; // Atualiza a senha se preenchida
                 }
             }
 
             await salvarBanco();
             fecharModalUsuario();
             renderizarUsuarios();
+            alert('Usuário salvo com sucesso!');
         }
 
         async function excluirUsuario(index) {
