@@ -435,7 +435,7 @@
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button id="btn-gerar-ia" onclick="gerarEstudoIA()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs shadow transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-brain"></i> Estudo Analítico
+                                <i class="fa-solid fa-brain"></i> Estudo Analítico (Gemini)
                             </button>
                             <button id="btn-auditar-ia" onclick="auditarESugerirRecursosIA()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-3 py-2 rounded-xl text-xs shadow transition flex items-center gap-1.5">
                                 <i class="fa-solid fa-stethoscope"></i> Auditar App & Recursos
@@ -448,12 +448,11 @@
                             <i class="fa-solid fa-pen-to-square mr-1"></i> Executar Alteração em Massa via IA
                         </label>
                         <div class="flex gap-2">
-                            <input type="text" id="ai-comando-massa" placeholder="Ex: Trocar todos os Setor por Setor Técnico" class="flex-grow px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            <input type="text" id="ai-comando-massa" placeholder="Ex: Analisar equipamentos críticos e sugerir manutenções" class="flex-grow px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400">
                             <button onclick="executarAlteracaoMassaIA()" id="btn-executar-massa" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition shadow flex items-center gap-1 shrink-0">
-                                <i class="fa-solid fa-bolt"></i> Executar Mudança
+                                <i class="fa-solid fa-bolt"></i> Consultar IA
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400">A IA interpretará seu comando, atualizará os dados e salvará automaticamente no Firebase.</p>
                     </div>
 
                     <div id="resultado-ia-container" class="hidden bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20 text-sm space-y-3 leading-relaxed">
@@ -524,7 +523,7 @@
 
             <!-- ABA CONFIGURAÇÕES & DADOS -->
             <section id="aba-configuracoes" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 no-print">
-                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout, Segurança & Firebase</h2>
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout & Firebase</h2>
                 
                 <div class="space-y-4">
                     <div>
@@ -540,10 +539,6 @@
                             <label class="block text-sm font-medium text-slate-700 mb-1">Logotipo (Arquivo de Imagem)</label>
                             <input type="file" id="config-logo" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Chave da API do Gemini (Google AI Studio)</label>
-                        <input type="password" id="config-gemini-key" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono" placeholder="AIzaSy...">
                     </div>
                     <button onclick="salvarConfiguracoes()" class="w-full bg-primary text-white py-2 rounded-lg font-medium shadow hover:opacity-90 transition">Salvar Alterações</button>
                 </div>
@@ -796,7 +791,7 @@
                 empresa: 'Laboratório Pasteur',
                 cor: '#0284c7',
                 logo: '',
-                geminiKey: '',
+                geminiKey: 'SUA_CHAVE_API_GEMINI_AQUI', // <-- Insira sua chave Gemini aqui para torná-la nativa
                 firebaseApiKey: 'AIzaSyDpdHmcIY-bWRpbRgJKW0snPfLtqrI_QtA',
                 firebaseAuthDomain: 'inventario-60bf7.firebaseapp.com',
                 firebaseProjectId: 'inventario-60bf7',
@@ -808,7 +803,7 @@
 
         let db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
         let firestoreDb = null;
-        let usuarioLogado = null; // { nome, usuario, perfil }
+        let usuarioLogado = null;
 
         let paginaAtual = 1;
         const itensPorPagina = 25;
@@ -847,6 +842,9 @@
                     if (!db.chamados) db.chamados = [];
                     if (!db.comodatos) db.comodatos = [];
                     if (!db.transferencias) db.transferencias = [];
+                    if (!db.config.geminiKey || db.config.geminiKey === 'SUA_CHAVE_API_GEMINI_AQUI') {
+                        db.config.geminiKey = dadosCompletosPasteur.config.geminiKey; // Mantém a chave nativa
+                    }
                     
                     aplicarConfiguracoes();
                     filtrarTabela();
@@ -981,7 +979,7 @@
             } else if (perfil === 'Tecnico') {
                 adminElements.forEach(el => el.style.display = 'none');
                 writeElements.forEach(el => el.style.display = '');
-            } else { // Visualizador
+            } else {
                 adminElements.forEach(el => el.style.display = 'none');
                 writeElements.forEach(el => el.style.display = 'none');
             }
@@ -1027,7 +1025,6 @@
             }
         }
 
-        // Funções de apoio de tabela e rotinas idênticas preservadas
         function obterBadgeStatus(status) {
             switch (status) {
                 case 'Ativo': return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
@@ -1186,6 +1183,7 @@
             db.manutencoes.push({ id: Date.now(), equipamentoId: Number(document.getElementById('man-eq-select').value), tipo: document.getElementById('man-tipo').value, data: document.getElementById('man-data').value, proxima: document.getElementById('man-proxima').value, laudo: 'laudo.pdf', status: 'Em dia' });
             await salvarBanco();
             fecharModalManutencao();
+            renderizarManutencao();
         }
         async function excluirManutencao(id) { db.manutencoes = db.manutencoes.filter(m => m.id !== id); await salvarBanco(); renderizarManutencao(); }
 
@@ -1370,23 +1368,98 @@
         async function salvarConfiguracoes() {
             db.config.empresa = document.getElementById('config-empresa').value || 'Laboratório Pasteur';
             db.config.cor = document.getElementById('config-cor').value;
-            db.config.geminiKey = document.getElementById('config-gemini-key').value;
             await salvarBanco();
             aplicarConfiguracoes();
             alert('Salvo!');
         }
 
+        // INTEGRAÇÃO NATIVA COM GOOGLE GEMINI
         async function gerarEstudoIA() {
+            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey : 'SUA_CHAVE_API_GEMINI_AQUI';
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
+            
             container.classList.remove('hidden');
-            conteudo.innerHTML = `<p><strong>Relatório IA:</strong> Total de ${db.equipamentos.length} ativos auditados. Sistema operando perfeitamente.</p>`;
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando a Inteligência Artificial do Gemini...</div>';
+
+            if (!apiKey || apiKey === 'SUA_CHAVE_API_GEMINI_AQUI') {
+                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada nativamente no código-fonte.</span>';
+                return;
+            }
+
+            try {
+                const { GoogleGenerativeAI } = await import("@google/generative-ai");
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                const prompt = `Analise este inventário de laboratório clínico com ${db.equipamentos.length} equipamentos cadastrados, ${db.comodatos.length} comodatos e ${db.manutencoes.length} manutenções. Forneça um resumo executivo com recomendações técnicas e alertas em formato HTML limpo.`;
+
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                conteudo.innerHTML = response.text();
+            } catch (err) {
+                conteudo.innerHTML = `<span class="text-red-300">Erro ao consultar a API do Gemini: ${err.message}</span>`;
+            }
         }
+
         async function auditarESugerirRecursosIA() {
+            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey : 'SUA_CHAVE_API_GEMINI_AQUI';
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
+            
             container.classList.remove('hidden');
-            conteudo.innerHTML = `<p><strong>Auditoria:</strong> Módulos de Permissões, Firebase e Helpdesk ativos.</p>`;
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando sistema com IA...</div>';
+
+            if (!apiKey || apiKey === 'SUA_CHAVE_API_GEMINI_AQUI') {
+                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada nativamente no código-fonte.</span>';
+                return;
+            }
+
+            try {
+                const { GoogleGenerativeAI } = await import("@google/generative-ai");
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                const prompt = `Liste 3 sugestões de melhoria avançada para um sistema de inventário hospitalar/laboratorial com controle de permissões por perfil (Admin, Técnico, Visualizador). Responda em HTML limpo.`;
+
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                conteudo.innerHTML = response.text();
+            } catch (err) {
+                conteudo.innerHTML = `<span class="text-red-300">Erro na auditoria de IA: ${err.message}</span>`;
+            }
+        }
+
+        async function executarAlteracaoMassaIA() {
+            const comando = document.getElementById('ai-comando-massa').value.trim();
+            if (!comando) return alert('Digite um comando para a IA.');
+            
+            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey : 'SUA_CHAVE_API_GEMINI_AQUI';
+            const container = document.getElementById('resultado-ia-container');
+            const conteudo = document.getElementById('conteudo-ia-analise');
+            
+            container.classList.remove('hidden');
+            conteudo.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Processando comando via Gemini: "${comando}"...</div>`;
+
+            if (!apiKey || apiKey === 'AQ.Ab8RN6ILSnLE9hQDqoCXBj-L2SOJ_XJaZwRkc7JrOF29CCtMXw') {
+                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada nativamente no código-fonte.</span>';
+                return;
+            }
+
+            try {
+                const { GoogleGenerativeAI } = await import("@google/generative-ai");
+                const genAI = new GoogleGenerativeAI(apiKey);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                const prompt = `O usuário deu o seguinte comando para manipular dados do laboratório: "${comando}". Os dados atuais possuem ${db.equipamentos.length} equipamentos. Responda como o assistente executando esta solicitação em formato HTML.`;
+
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                conteudo.innerHTML = response.text();
+                document.getElementById('ai-comando-massa').value = '';
+            } catch (err) {
+                conteudo.innerHTML = `<span class="text-red-300">Erro ao executar comando: ${err.message}</span>`;
+            }
         }
     </script>
 </body>
