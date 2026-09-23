@@ -525,12 +525,16 @@
 
             <!-- ABA CONFIGURAÇÕES & DADOS -->
             <section id="aba-configuracoes" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 no-print">
-                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout & Firebase</h2>
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout & Chave de IA</h2>
                 
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Nome da Empresa</label>
                         <input type="text" id="config-empresa" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Ex: Laboratório Pasteur SM">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Chave da API do Google Gemini (AI Studio)</label>
+                        <input type="password" id="config-gemini-key" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono" placeholder="Cole sua chave API aqui (ex: AIzaSy...)">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -827,7 +831,7 @@
                 empresa: 'Laboratório Pasteur',
                 cor: '#0284c7',
                 logo: '',
-                geminiKey: 'SUA_CHAVE_API_GEMINI_AQUI',
+                geminiKey: '',
                 firebaseApiKey: 'AIzaSyDpdHmcIY-bWRpbRgJKW0snPfLtqrI_QtA',
                 firebaseAuthDomain: 'inventario-60bf7.firebaseapp.com',
                 firebaseProjectId: 'inventario-60bf7',
@@ -873,7 +877,6 @@
                     if (dadosRemotos && dadosRemotos.equipamentos) {
                         db = dadosRemotos;
                     }
-                    // Garante que a lista de usuários exista e mescla se necessário
                     if (!db.usuarios || db.usuarios.length === 0) {
                         db.usuarios = dadosCompletosPasteur.usuarios;
                     }
@@ -881,9 +884,7 @@
                     if (!db.chamados) db.chamados = [];
                     if (!db.comodatos) db.comodatos = [];
                     if (!db.transferencias) db.transferencias = [];
-                    if (!db.config.geminiKey || db.config.geminiKey === 'SUA_CHAVE_API_GEMINI_AQUI') {
-                        db.config.geminiKey = dadosCompletosPasteur.config.geminiKey;
-                    }
+                    if (!db.config.geminiKey) db.config.geminiKey = '';
                     
                     aplicarConfiguracoes();
                     filtrarTabela();
@@ -1085,20 +1086,18 @@
             if (!db.usuarios) db.usuarios = [];
 
             if (index === '') {
-                // Novo usuário
                 if (!senha) return alert('Informe uma senha para o novo usuário.');
                 if (db.usuarios.some(u => u.usuario === usuario)) {
                     return alert('Este nome de usuário já existe.');
                 }
                 db.usuarios.push({ nome, usuario, senha, perfil });
             } else {
-                // Edição de usuário existente (incluindo admin)
                 const idx = Number(index);
                 db.usuarios[idx].nome = nome;
                 db.usuarios[idx].usuario = usuario;
                 db.usuarios[idx].perfil = perfil;
                 if (senha) {
-                    db.usuarios[idx].senha = senha; // Atualiza a senha se preenchida
+                    db.usuarios[idx].senha = senha;
                 }
             }
 
@@ -1454,29 +1453,40 @@
             if (!db.config) return;
             document.getElementById('empresa-nome').innerText = db.config.empresa;
             document.documentElement.style.setProperty('--cor-primaria', db.config.cor);
+            if (document.getElementById('config-empresa')) {
+                document.getElementById('config-empresa').value = db.config.empresa;
+            }
+            if (document.getElementById('config-gemini-key')) {
+                document.getElementById('config-gemini-key').value = db.config.geminiKey || '';
+            }
         }
 
         async function salvarConfiguracoes() {
             db.config.empresa = document.getElementById('config-empresa').value || 'Laboratório Pasteur';
             db.config.cor = document.getElementById('config-cor').value;
+            const chaveApi = document.getElementById('config-gemini-key').value.trim();
+            if (chaveApi) {
+                db.config.geminiKey = chaveApi;
+            }
             await salvarBanco();
             aplicarConfiguracoes();
-            alert('Salvo!');
+            alert('Configurações salvas com sucesso!');
         }
 
-        // INTEGRAÇÃO NATIVA COM GOOGLE GEMINI
+        // INTEGRAÇÃO COM GOOGLE GEMINI
         async function gerarEstudoIA() {
-            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey : 'SUA_CHAVE_API_GEMINI_AQUI';
+            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
             
             container.classList.remove('hidden');
-            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando a Inteligência Artificial do Gemini...</div>';
 
-            if (!apiKey || apiKey === 'SUA_CHAVE_API_GEMINI_AQUI') {
-                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada nativamente no código-fonte.</span>';
+            if (!apiKey) {
+                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada. Vá na aba <strong>Ajustes</strong> e insira sua chave do Google AI Studio.</span>';
                 return;
             }
+
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando a Inteligência Artificial do Gemini...</div>';
 
             try {
                 const { GoogleGenerativeAI } = await import("@google/generative-ai");
@@ -1494,17 +1504,18 @@
         }
 
         async function auditarESugerirRecursosIA() {
-            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey : 'SUA_CHAVE_API_GEMINI_AQUI';
+            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
             
             container.classList.remove('hidden');
-            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando sistema com IA...</div>';
 
-            if (!apiKey || apiKey === 'SUA_CHAVE_API_GEMINI_AQUI') {
-                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada nativamente no código-fonte.</span>';
+            if (!apiKey) {
+                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada. Vá na aba <strong>Ajustes</strong> e insira sua chave do Google AI Studio.</span>';
                 return;
             }
+
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando sistema com IA...</div>';
 
             try {
                 const { GoogleGenerativeAI } = await import("@google/generative-ai");
@@ -1525,17 +1536,18 @@
             const comando = document.getElementById('ai-comando-massa').value.trim();
             if (!comando) return alert('Digite um comando para a IA.');
             
-            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey : 'SUA_CHAVE_API_GEMINI_AQUI';
+            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
             
             container.classList.remove('hidden');
-            conteudo.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Processando comando via Gemini: "${comando}"...</div>`;
 
-            if (!apiKey || apiKey === 'AQ.Ab8RN6ILSnLE9hQDqoCXBj-L2SOJ_XJaZwRkc7JrOF29CCtMXw') {
-                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada nativamente no código-fonte.</span>';
+            if (!apiKey) {
+                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada. Vá na aba <strong>Ajustes</strong> e insira sua chave do Google AI Studio.</span>';
                 return;
             }
+
+            conteudo.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Processando comando via Gemini: "${comando}"...</div>`;
 
             try {
                 const { GoogleGenerativeAI } = await import("@google/generative-ai");
