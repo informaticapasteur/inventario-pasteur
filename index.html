@@ -1473,62 +1473,64 @@
             alert('Configurações salvas com sucesso!');
         }
 
-        // INTEGRAÇÃO COM GOOGLE GEMINI (Modelo: gemini-3.6-flash)
-        async function gerarEstudoIA() {
+        // FUNÇÃO AUXILIAR RESILIENTE COM TENTATIVA AUTOMÁTICA (RETRY) PARA ERROS 503
+        async function chamarGeminiComRetry(promptText, maxTentativas = 3) {
             const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
-            const container = document.getElementById('resultado-ia-container');
-            const conteudo = document.getElementById('conteudo-ia-analise');
-            
-            container.classList.remove('hidden');
-
             if (!apiKey) {
-                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada. Vá na aba <strong>Ajustes</strong> e insira sua chave do Google AI Studio.</span>';
-                return;
+                throw new Error('Chave da API do Gemini não configurada. Vá na aba <strong>Ajustes</strong> e insira sua chave do Google AI Studio.');
             }
 
-            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando a Inteligência Artificial do Gemini...</div>';
+            const { GoogleGenerativeAI } = await import("@google/generative-ai");
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+
+            let tentativa = 0;
+            while (tentativa < maxTentativas) {
+                try {
+                    const result = await model.generateContent(promptText);
+                    const response = await result.response;
+                    return response.text();
+                } catch (err) {
+                    tentativa++;
+                    const mensagemErro = err.message || '';
+                    // Se for erro 503 (alta demanda) e ainda houver tentativas, aguarda antes de tentar novamente
+                    if ((mensagemErro.includes('503') || mensagemErro.includes('high demand')) && tentativa < maxTentativas) {
+                        await new Promise(resolve => setTimeout(resolve, 2000 * tentativa)); // espera 2s, depois 4s...
+                        continue;
+                    }
+                    throw err;
+                }
+            }
+        }
+
+        // INTEGRAÇÃO COM GOOGLE GEMINI
+        async function gerarEstudoIA() {
+            const container = document.getElementById('resultado-ia-container');
+            const conteudo = document.getElementById('conteudo-ia-analise');
+            container.classList.remove('hidden');
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando a Inteligência Artificial do Gemini (aguarde)...</div>';
 
             try {
-                const { GoogleGenerativeAI } = await import("@google/generative-ai");
-                const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
-
                 const prompt = `Analise este inventário de laboratório clínico com ${db.equipamentos.length} equipamentos cadastrados, ${db.comodatos.length} comodatos e ${db.manutencoes.length} manutenções. Forneça um resumo executivo com recomendações técnicas e alertas em formato HTML limpo.`;
-
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                conteudo.innerHTML = response.text();
+                const respostaTexto = await chamarGeminiComRetry(prompt);
+                conteudo.innerHTML = respostaTexto;
             } catch (err) {
-                conteudo.innerHTML = `<span class="text-red-300">Erro ao consultar a API do Gemini: ${err.message}</span>`;
+                conteudo.innerHTML = `<span class="text-red-300">Erro ao consultar a API do Gemini: ${err.message}<br><br><em>Dica: Como o erro 503 é um pico temporário de tráfego, clique no botão novamente após alguns segundos.</em></span>`;
             }
         }
 
         async function auditarESugerirRecursosIA() {
-            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
-            
             container.classList.remove('hidden');
-
-            if (!apiKey) {
-                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada. Vá na aba <strong>Ajustes</strong> e insira sua chave do Google AI Studio.</span>';
-                return;
-            }
-
-            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando sistema com IA...</div>';
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando sistema com IA (aguarde)...</div>';
 
             try {
-                const { GoogleGenerativeAI } = await import("@google/generative-ai");
-                const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
-
                 const prompt = `Liste 3 sugestões de melhoria avançada para um sistema de inventário hospitalar/laboratorial com controle de permissões por perfil (Admin, Técnico, Visualizador). Responda em HTML limpo.`;
-
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                conteudo.innerHTML = response.text();
+                const respostaTexto = await chamarGeminiComRetry(prompt);
+                conteudo.innerHTML = respostaTexto;
             } catch (err) {
-                conteudo.innerHTML = `<span class="text-red-300">Erro na auditoria de IA: ${err.message}</span>`;
+                conteudo.innerHTML = `<span class="text-red-300">Erro na auditoria de IA: ${err.message}<br><br><em>Dica: O serviço pode estar com alta demanda temporária. Tente novamente em instantes.</em></span>`;
             }
         }
 
@@ -1536,32 +1538,18 @@
             const comando = document.getElementById('ai-comando-massa').value.trim();
             if (!comando) return alert('Digite um comando para a IA.');
             
-            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
-            
             container.classList.remove('hidden');
-
-            if (!apiKey) {
-                conteudo.innerHTML = '<span class="text-red-300">Erro: Chave da API do Gemini não configurada. Vá na aba <strong>Ajustes</strong> e insira sua chave do Google AI Studio.</span>';
-                return;
-            }
-
             conteudo.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Processando comando via Gemini: "${comando}"...</div>`;
 
             try {
-                const { GoogleGenerativeAI } = await import("@google/generative-ai");
-                const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
-
                 const prompt = `O usuário deu o seguinte comando para manipular dados do laboratório: "${comando}". Os dados atuais possuem ${db.equipamentos.length} equipamentos. Responda como o assistente executando esta solicitação em formato HTML.`;
-
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                conteudo.innerHTML = response.text();
+                const respostaTexto = await chamarGeminiComRetry(prompt);
+                conteudo.innerHTML = respostaTexto;
                 document.getElementById('ai-comando-massa').value = '';
             } catch (err) {
-                conteudo.innerHTML = `<span class="text-red-300">Erro ao executar comando: ${err.message}</span>`;
+                conteudo.innerHTML = `<span class="text-red-300">Erro ao executar comando: ${err.message}<br><br><em>Dica: Pico temporário de tráfego (503). Tente novamente em instantes.</em></span>`;
             }
         }
     </script>
