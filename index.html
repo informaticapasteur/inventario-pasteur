@@ -1473,7 +1473,7 @@
             alert('Configurações salvas com sucesso!');
         }
 
-        // INTEGRAÇÃO COM GOOGLE GEMINI
+        // INTEGRAÇÃO COM GOOGLE GEMINI (Modelo: gemini-2.5-flash)
         async function gerarEstudoIA() {
             const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
             const container = document.getElementById('resultado-ia-container');
@@ -1491,7 +1491,7 @@
             try {
                 const { GoogleGenerativeAI } = await import("@google/generative-ai");
                 const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
                 const prompt = `Analise este inventário de laboratório clínico com ${db.equipamentos.length} equipamentos cadastrados, ${db.comodatos.length} comodatos e ${db.manutencoes.length} manutenções. Forneça um resumo executivo com recomendações técnicas e alertas em formato HTML limpo.`;
 
@@ -1520,7 +1520,7 @@
             try {
                 const { GoogleGenerativeAI } = await import("@google/generative-ai");
                 const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
                 const prompt = `Liste 3 sugestões de melhoria avançada para um sistema de inventário hospitalar/laboratorial com controle de permissões por perfil (Admin, Técnico, Visualizador). Responda em HTML limpo.`;
 
@@ -1552,7 +1552,7 @@
             try {
                 const { GoogleGenerativeAI } = await import("@google/generative-ai");
                 const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
                 const prompt = `O usuário deu o seguinte comando para manipular dados do laboratório: "${comando}". Os dados atuais possuem ${db.equipamentos.length} equipamentos. Responda como o assistente executando esta solicitação em formato HTML.`;
 
