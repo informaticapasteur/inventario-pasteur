@@ -204,7 +204,7 @@
                                     <th class="p-3 font-semibold">Posse</th>
                                     <th class="p-3 font-semibold">Status</th>
                                     <th class="p-3 font-semibold">Ciclo / Alerta</th>
-                                    <th class="p-3 font-semibold text-center no-print">Ações</th>
+                                    <th class="p-3 font-semibold text-center no-print">Ações (QR / Editar / Excluir)</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-equipamentos-body" class="divide-y divide-slate-200">
@@ -1164,13 +1164,20 @@
                     const ciclo = calcularCiclo(eq.dataEntrada);
                     const badgeStatus = obterBadgeStatus(eq.status || 'Ativo');
                     const badgePosse = obterBadgePosse(eq.posse || 'Próprio');
-                    const podeEditar = usuarioLogado && usuarioLogado.perfil !== 'Visualizador';
-                    const acoesHtml = podeEditar ? `
-                        <button onclick="abrirModalQR(${eq.id})" class="text-slate-500 hover:text-indigo-600 transition" title="Gerar QR Code"><i class="fa-solid fa-qrcode"></i></button>
-                        <button onclick="editarEquipamento(${eq.id})" class="text-slate-500 hover:text-primary transition" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="excluirEquipamento(${eq.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                    ` : `
-                        <button onclick="abrirModalQR(${eq.id})" class="text-slate-500 hover:text-indigo-600 transition" title="Gerar QR Code"><i class="fa-solid fa-qrcode"></i></button>
+                    
+                    // Botões de Ação explícitos e destacados ao lado de cada equipamento
+                    const acoesHtml = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="abrirModalQR(${eq.id})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded text-xs font-medium transition inline-flex items-center gap-1" title="Gerar QR Code">
+                                <i class="fa-solid fa-qrcode"></i> QR
+                            </button>
+                            <button onclick="editarEquipamento(${eq.id})" class="bg-sky-50 text-sky-600 hover:bg-sky-100 px-2.5 py-1 rounded text-xs font-semibold transition inline-flex items-center gap-1" title="Editar Equipamento">
+                                <i class="fa-solid fa-pen"></i> Editar
+                            </button>
+                            <button onclick="excluirEquipamento(${eq.id})" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1 rounded text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir Equipamento">
+                                <i class="fa-solid fa-trash"></i> Excluir
+                            </button>
+                        </div>
                     `;
 
                     const tr = document.createElement('tr');
@@ -1184,7 +1191,7 @@
                         <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${badgePosse}">${eq.posse || 'Próprio'}</span></td>
                         <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeStatus}">${eq.status || 'Ativo'}</span></td>
                         <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${ciclo.classe}">${ciclo.texto}</span></td>
-                        <td class="p-3 text-center space-x-2 no-print">${acoesHtml}</td>
+                        <td class="p-3 text-center no-print">${acoesHtml}</td>
                     `;
                     tbody.appendChild(tr);
                 });
