@@ -1397,21 +1397,33 @@
         function abrirModalEquipamento(id = null) {
             document.getElementById('modal-equipamento').classList.remove('hidden');
             popularSelects();
-            if (id) {
+            if (id !== null && id !== undefined) {
                 const eq = db.equipamentos.find(e => e.id === id);
-                document.getElementById('eq-id').value = eq.id;
-                document.getElementById('eq-codigo').value = eq.codigo || '';
-                document.getElementById('eq-nome').value = eq.nome;
-                document.getElementById('eq-tipo').value = eq.tipo;
-                document.getElementById('eq-setor').value = eq.setor;
-                document.getElementById('eq-serial').value = eq.serial || '';
+                if (eq) {
+                    document.getElementById('modal-titulo').innerText = 'Editar Equipamento';
+                    document.getElementById('eq-id').value = eq.id;
+                    document.getElementById('eq-codigo').value = eq.codigo || '';
+                    document.getElementById('eq-nome').value = eq.nome || '';
+                    document.getElementById('eq-tipo').value = eq.tipo || db.tipos[0];
+                    document.getElementById('eq-setor').value = eq.setor || db.setores[0];
+                    document.getElementById('eq-serial').value = eq.serial || '';
+                    document.getElementById('eq-posse').value = eq.posse || 'Próprio';
+                    document.getElementById('eq-status').value = eq.status || 'Ativo';
+                    document.getElementById('eq-data').value = eq.dataEntrada || new Date().toISOString().slice(0,10);
+                }
             } else {
+                document.getElementById('modal-titulo').innerText = 'Novo Equipamento';
                 document.getElementById('eq-id').value = '';
                 document.getElementById('eq-codigo').value = '';
                 document.getElementById('eq-nome').value = '';
+                document.getElementById('eq-serial').value = '';
+                document.getElementById('eq-posse').value = 'Próprio';
+                document.getElementById('eq-status').value = 'Ativo';
+                document.getElementById('eq-data').value = new Date().toISOString().slice(0,10);
             }
         }
         function fecharModalEquipamento() { document.getElementById('modal-equipamento').classList.add('hidden'); }
+        
         async function salvarEquipamento() {
             const id = document.getElementById('eq-id').value;
             const dados = {
@@ -1427,7 +1439,9 @@
             };
             if (id) {
                 const idx = db.equipamentos.findIndex(e => e.id == id);
-                db.equipamentos[idx] = dados;
+                if (idx !== -1) {
+                    db.equipamentos[idx] = dados;
+                }
             } else {
                 db.equipamentos.push(dados);
             }
@@ -1435,13 +1449,15 @@
             fecharModalEquipamento();
             filtrarTabela();
         }
+
         async function excluirEquipamento(id) {
-            if (confirm('Excluir equipamento?')) {
+            if (confirm('Tem certeza que deseja excluir este equipamento?')) {
                 db.equipamentos = db.equipamentos.filter(e => e.id !== id);
                 await salvarBanco();
                 filtrarTabela();
             }
         }
+
         function editarEquipamento(id) { abrirModalEquipamento(id); }
 
         function atualizarRelatorios() {
@@ -1482,7 +1498,7 @@
 
             const { GoogleGenerativeAI } = await import("@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
             let tentativa = 0;
             while (tentativa < maxTentativas) {
@@ -1493,9 +1509,8 @@
                 } catch (err) {
                     tentativa++;
                     const mensagemErro = err.message || '';
-                    // Se for erro 503 (alta demanda) e ainda houver tentativas, aguarda antes de tentar novamente
                     if ((mensagemErro.includes('503') || mensagemErro.includes('high demand')) && tentativa < maxTentativas) {
-                        await new Promise(resolve => setTimeout(resolve, 2000 * tentativa)); // espera 2s, depois 4s...
+                        await new Promise(resolve => setTimeout(resolve, 2000 * tentativa));
                         continue;
                     }
                     throw err;
@@ -1515,7 +1530,7 @@
                 const respostaTexto = await chamarGeminiComRetry(prompt);
                 conteudo.innerHTML = respostaTexto;
             } catch (err) {
-                conteudo.innerHTML = `<span class="text-red-300">Erro ao consultar a API do Gemini: ${err.message}<br><br><em>Dica: Como o erro 503 é um pico temporário de tráfego, clique no botão novamente após alguns segundos.</em></span>`;
+                conteudo.innerHTML = `<span class="text-red-300">Erro ao consultar a API do Gemini: ${err.message}<br><br><em>Dica: O servidor está sob alta demanda temporária (503). Tente novamente em alguns instantes.</em></span>`;
             }
         }
 
@@ -1530,7 +1545,7 @@
                 const respostaTexto = await chamarGeminiComRetry(prompt);
                 conteudo.innerHTML = respostaTexto;
             } catch (err) {
-                conteudo.innerHTML = `<span class="text-red-300">Erro na auditoria de IA: ${err.message}<br><br><em>Dica: O serviço pode estar com alta demanda temporária. Tente novamente em instantes.</em></span>`;
+                conteudo.innerHTML = `<span class="text-red-300">Erro na auditoria de IA: ${err.message}<br><br><em>Dica: Pico temporário de tráfego. Clique no botão novamente.</em></span>`;
             }
         }
 
@@ -1549,7 +1564,7 @@
                 conteudo.innerHTML = respostaTexto;
                 document.getElementById('ai-comando-massa').value = '';
             } catch (err) {
-                conteudo.innerHTML = `<span class="text-red-300">Erro ao executar comando: ${err.message}<br><br><em>Dica: Pico temporário de tráfego (503). Tente novamente em instantes.</em></span>`;
+                conteudo.innerHTML = `<span class="text-red-300">Erro ao executar comando: ${err.message}<br><br><em>Dica: O serviço está ocupado. Tente novamente em instantes.</em></span>`;
             }
         }
     </script>
