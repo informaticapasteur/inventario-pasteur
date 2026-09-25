@@ -548,7 +548,7 @@
 
             <!-- ABA CONFIGURAÇÕES & DADOS -->
             <section id="aba-configuracoes" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 no-print">
-                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout & Chave de IA</h2>
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout, Backup & IA</h2>
                 
                 <div class="space-y-4">
                     <div>
@@ -572,8 +572,24 @@
                     <button onclick="salvarConfiguracoes()" class="w-full bg-primary text-white py-2 rounded-lg font-medium shadow hover:opacity-90 transition">Salvar Alterações</button>
                 </div>
 
+                <!-- BOTÃO DE BACKUP COMPLETO -->
+                <div class="border-t pt-6 space-y-3">
+                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-cloud-arrow-down mr-2 text-primary"></i>Backup Completo do Sistema</h3>
+                    <p class="text-xs text-slate-500">Baixe um arquivo de backup em formato JSON com todos os dados salvos no Firebase.</p>
+                    <button onclick="fazerBackup()" class="w-full bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-lg text-sm font-medium shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Baixar Backup Completo (JSON)
+                    </button>
+                </div>
+
+                <!-- IMPORTADOR DE ARQUIVO .TXT -->
+                <div class="border-t pt-6 space-y-3">
+                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-up mr-2 text-primary"></i>Importar Equipamentos via Arquivo .TXT</h3>
+                    <p class="text-xs text-slate-500">Selecione um arquivo `.txt` com os equipamentos (Formato por linha: <code>CÓDIGO; NOME; TIPO; SETOR; SÉRIE; POSSE; DATA; STATUS</code>).</p>
+                    <input type="file" id="input-arquivo-txt" accept=".txt" onchange="importarArquivoTxt(event)" class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                </div>
+
                 <div class="border-t pt-6 space-y-4">
-                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-down mr-2 text-primary"></i>Importador em Massa por Texto</h3>
+                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-down mr-2 text-primary"></i>Importador em Massa por Texto (Colado)</h3>
                     <textarea id="texto-importacao-massa" rows="4" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="Exemplo: CENTRI-05/ 00147-CENTRIFUGA PROCESSAMENTO PM UNI 1,0 CENTRIFUGA"></textarea>
                     <div class="flex gap-2">
                         <button onclick="importarTextoEmMassa()" class="flex-grow bg-indigo-600 text-white py-2 px-4 rounded-lg text-xs font-medium shadow hover:bg-indigo-700 transition">Processar e Adicionar no Firebase</button>
@@ -1253,6 +1269,53 @@
             a.href = url;
             a.download = `inventario_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
+        }
+
+        // BACKUP COMPLETO DO SISTEMA
+        function fazerBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `backup_laboratorio_pasteur_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // IMPORTAR ARQUIVO .TXT
+        async function importarArquivoTxt(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const conteudo = e.target.result;
+                const linhas = conteudo.split('\n');
+                let importados = 0;
+                linhas.forEach(linha => {
+                    const l = linha.trim();
+                    if (!l || l.startsWith('#')) return; // Ignora linhas vazias ou comentários
+                    const partes = l.split(/[;|	]/).map(p => p.trim());
+                    if (partes.length >= 2) {
+                        db.equipamentos.push({
+                            id: Date.now() + Math.random(),
+                            codigo: partes[0] || 'REF-00',
+                            nome: partes[1].toUpperCase() || 'EQUIPAMENTO',
+                            tipo: partes[2] || (db.tipos ? db.tipos[0] : 'Geral'),
+                            setor: partes[3] || (db.setores ? db.setores[0] : 'Geral'),
+                            serial: partes[4] || '0000',
+                            posse: partes[5] || 'Próprio',
+                            dataEntrada: partes[6] || new Date().toISOString().slice(0,10),
+                            status: partes[7] || 'Ativo'
+                        });
+                        importados++;
+                    }
+                });
+                await salvarBanco();
+                alert(`${importados} equipamentos importados com sucesso do arquivo .TXT!`);
+                document.getElementById('input-arquivo-txt').value = '';
+                filtrarTabela();
+            };
+            reader.readAsText(file);
         }
 
         async function zerarBaseDados() {
