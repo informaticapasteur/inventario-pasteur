@@ -134,7 +134,7 @@
                     <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-headset mr-1"></i> Helpdesk QR</button>
                     <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Comodatos</button>
                     <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-right-left mr-1"></i> Rastreio</button>
-                    <button onclick="mudarAba('setores')" id="btn-setores" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-layer-group mr-1"></i> Setores & Tipos</button>
+                    <button onclick="mudarAba('setores')" id="btn-setores" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-building mr-1"></i> Setores</button>
                     <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-chart-pie mr-1"></i> Relatórios & IA</button>
                     <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition admin-only"><i class="fa-solid fa-users-gear mr-1"></i> Usuários</button>
                     <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition admin-only"><i class="fa-solid fa-gear mr-1"></i> Ajustes</button>
@@ -204,7 +204,7 @@
                                     <th class="p-3 font-semibold">Posse</th>
                                     <th class="p-3 font-semibold">Status</th>
                                     <th class="p-3 font-semibold">Ciclo / Alerta</th>
-                                    <th class="p-3 font-semibold text-center no-print">Ações</th>
+                                    <th class="p-3 font-semibold text-center no-print">Ações (QR / Editar / Excluir)</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-equipamentos-body" class="divide-y divide-slate-200">
@@ -239,12 +239,12 @@
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
-                                    <th class="p-3 font-semibold">Equipamento (Cód. Ref & Nome)</th>
+                                    <th class="p-3 font-semibold">Equipamento / ID</th>
                                     <th class="p-3 font-semibold">Tipo de Intervenção</th>
                                     <th class="p-3 font-semibold">Data Realizada</th>
                                     <th class="p-3 font-semibold">Próxima Calibração</th>
-                                    <th class="p-3 font-semibold">Laudo Técnico</th>
-                                    <th class="p-3 font-semibold">Status</th>
+                                    <th class="p-3 font-semibold">Laudo Técnico (PDF)</th>
+                                    <th class="p-3 font-semibold">Status Metrológico</th>
                                     <th class="p-3 font-semibold text-center">Ações</th>
                                 </tr>
                             </thead>
@@ -274,7 +274,7 @@
                                 <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
                                     <th class="p-3 font-semibold">ID / Protocolo</th>
                                     <th class="p-3 font-semibold">Equipamento Vinculado</th>
-                                    <th class="p-3 font-semibold">Setor / Unidade Solicitante</th>
+                                    <th class="p-3 font-semibold">Unidade / Solicitante</th>
                                     <th class="p-3 font-semibold">Problema Relatado</th>
                                     <th class="p-3 font-semibold">Prioridade</th>
                                     <th class="p-3 font-semibold">Status</th>
@@ -367,49 +367,26 @@
                 </div>
             </section>
 
-            <!-- ABA SETORES E TIPOS -->
-            <section id="aba-setores" class="hidden space-y-6 max-w-4xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Gerenciar Setores -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                        <h2 class="text-lg font-bold text-slate-800 border-b pb-2"><i class="fa-solid fa-building text-primary mr-2"></i>Gerenciar Setores</h2>
-                        <div class="flex gap-2 write-allowed">
-                            <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                            <button onclick="salvarSetor()" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow hover:opacity-90 transition">Adicionar</button>
-                        </div>
-                        <div class="overflow-x-auto pt-2 max-h-72 overflow-y-auto">
-                            <table class="w-full text-left border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
-                                        <th class="p-2.5 font-semibold">Setor</th>
-                                        <th class="p-2.5 font-semibold text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-setores-body" class="divide-y divide-slate-100">
-                                </tbody>
-                            </table>
-                        </div>
+            <!-- ABA SETORES -->
+            <section id="aba-setores" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto space-y-4">
+                    <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Gerenciar Setores</h2>
+                    <div class="flex gap-2 write-allowed">
+                        <input type="hidden" id="setor-index-edit" value="">
+                        <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <button onclick="salvarSetor()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:opacity-90 transition">Salvar Setor</button>
                     </div>
-
-                    <!-- Gerenciar Tipos de Equipamento -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                        <h2 class="text-lg font-bold text-slate-800 border-b pb-2"><i class="fa-solid fa-laptop text-primary mr-2"></i>Tipos de Equipamento</h2>
-                        <div class="flex gap-2 write-allowed">
-                            <input type="text" id="novo-tipo-nome" placeholder="Ex: Analisador Bioquímico" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                            <button onclick="salvarTipo()" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow hover:opacity-90 transition">Adicionar</button>
-                        </div>
-                        <div class="overflow-x-auto pt-2 max-h-72 overflow-y-auto">
-                            <table class="w-full text-left border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
-                                        <th class="p-2.5 font-semibold">Tipo de Equipamento</th>
-                                        <th class="p-2.5 font-semibold text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-tipos-body" class="divide-y divide-slate-100">
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="overflow-x-auto pt-2">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                    <th class="p-3 font-semibold">Nome do Setor</th>
+                                    <th class="p-3 font-semibold text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-setores-body" class="divide-y divide-slate-200">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -548,7 +525,7 @@
 
             <!-- ABA CONFIGURAÇÕES & DADOS -->
             <section id="aba-configuracoes" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 no-print">
-                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout, Backup & IA</h2>
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Configurações de Layout & Chave de IA</h2>
                 
                 <div class="space-y-4">
                     <div>
@@ -572,24 +549,8 @@
                     <button onclick="salvarConfiguracoes()" class="w-full bg-primary text-white py-2 rounded-lg font-medium shadow hover:opacity-90 transition">Salvar Alterações</button>
                 </div>
 
-                <!-- BOTÃO DE BACKUP COMPLETO -->
-                <div class="border-t pt-6 space-y-3">
-                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-cloud-arrow-down mr-2 text-primary"></i>Backup Completo do Sistema</h3>
-                    <p class="text-xs text-slate-500">Baixe um arquivo de backup em formato JSON com todos os dados salvos no Firebase.</p>
-                    <button onclick="fazerBackup()" class="w-full bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-lg text-sm font-medium shadow transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> Baixar Backup Completo (JSON)
-                    </button>
-                </div>
-
-                <!-- IMPORTADOR DE ARQUIVO .TXT -->
-                <div class="border-t pt-6 space-y-3">
-                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-up mr-2 text-primary"></i>Importar Equipamentos via Arquivo .TXT</h3>
-                    <p class="text-xs text-slate-500">Selecione um arquivo `.txt` com os equipamentos (Formato por linha: <code>CÓDIGO; NOME; TIPO; SETOR; SÉRIE; POSSE; DATA; STATUS</code>).</p>
-                    <input type="file" id="input-arquivo-txt" accept=".txt" onchange="importarArquivoTxt(event)" class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
-                </div>
-
                 <div class="border-t pt-6 space-y-4">
-                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-down mr-2 text-primary"></i>Importador em Massa por Texto (Colado)</h3>
+                    <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-down mr-2 text-primary"></i>Importador em Massa por Texto</h3>
                     <textarea id="texto-importacao-massa" rows="4" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="Exemplo: CENTRI-05/ 00147-CENTRIFUGA PROCESSAMENTO PM UNI 1,0 CENTRIFUGA"></textarea>
                     <div class="flex gap-2">
                         <button onclick="importarTextoEmMassa()" class="flex-grow bg-indigo-600 text-white py-2 px-4 rounded-lg text-xs font-medium shadow hover:bg-indigo-700 transition">Processar e Adicionar no Firebase</button>
@@ -698,8 +659,7 @@
     <!-- MODAL DE MANUTENÇÃO -->
     <div id="modal-manutencao" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 id="modal-manutencao-titulo" class="text-lg font-bold text-slate-800">Registar Calibração / Manutenção</h3>
-            <input type="hidden" id="man-id" value="">
+            <h3 class="text-lg font-bold text-slate-800">Registar Calibração / Manutenção</h3>
             <div class="space-y-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Equipamento Crítico</label>
@@ -738,35 +698,28 @@
     <!-- MODAL DE CHAMADO HELPDESK -->
     <div id="modal-chamado" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h3 id="modal-chamado-titulo" class="text-lg font-bold text-slate-800">Abrir Chamado Técnico (QR Code)</h3>
-            <input type="hidden" id="chamado-id" value="">
+            <h3 class="text-lg font-bold text-slate-800">Abrir Chamado Técnico (QR Code)</h3>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Equipamento Vinculado</label>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Equipamento (ID / Nome)</label>
                     <select id="chamado-eq-select" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Setor / Unidade Solicitante</label>
-                    <select id="chamado-unidade" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"></select>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Unidade Solicitante</label>
+                    <select id="chamado-unidade" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                        <option value="Matriz Santa Maria">Matriz Santa Maria</option>
+                        <option value="Unidade Agudo">Unidade Agudo</option>
+                        <option value="Unidade São Sepé">Unidade São Sepé</option>
+                        <option value="Unidade Camobi">Unidade Camobi</option>
+                    </select>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Prioridade</label>
-                        <select id="chamado-prioridade" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
-                            <option value="Normal">Normal</option>
-                            <option value="Urgente">Urgente</option>
-                            <option value="Crítica (Parado)">Crítica (Equipamento Parado)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Status do Chamado</label>
-                        <select id="chamado-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
-                            <option value="Aberto">Aberto</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Resolvido">Resolvido</option>
-                            <option value="Fechado">Fechado</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Prioridade</label>
+                    <select id="chamado-prioridade" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                        <option value="Normal">Normal</option>
+                        <option value="Urgente">Urgente</option>
+                        <option value="Crítica (Parado)">Crítica (Equipamento Parado)</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição do Problema</label>
@@ -775,7 +728,7 @@
             </div>
             <div class="flex justify-end space-x-2 pt-2 border-t">
                 <button onclick="fecharModalChamado()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
-                <button onclick="salvarChamado()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:opacity-90">Salvar Chamado</button>
+                <button onclick="salvarChamado()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:opacity-90">Enviar Chamado</button>
             </div>
         </div>
     </div>
@@ -822,8 +775,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Setor Origem (Editável)</label>
-                        <select id="tr-origem" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"></select>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Setor Origem</label>
+                        <input type="text" id="tr-origem" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Setor / Unidade Destino</label>
@@ -927,8 +880,6 @@
                     if (!db.usuarios || db.usuarios.length === 0) {
                         db.usuarios = dadosCompletosPasteur.usuarios;
                     }
-                    if (!db.setores) db.setores = dadosCompletosPasteur.setores;
-                    if (!db.tipos) db.tipos = dadosCompletosPasteur.tipos;
                     if (!db.manutencoes) db.manutencoes = [];
                     if (!db.chamados) db.chamados = [];
                     if (!db.comodatos) db.comodatos = [];
@@ -942,7 +893,6 @@
                     renderizarFinanceiro();
                     renderizarRastreabilidade();
                     renderizarSetores();
-                    renderizarTipos();
                     renderizarUsuarios();
                     atualizarRelatorios();
                     popularSelects();
@@ -1215,6 +1165,7 @@
                     const badgeStatus = obterBadgeStatus(eq.status || 'Ativo');
                     const badgePosse = obterBadgePosse(eq.posse || 'Próprio');
                     
+                    // Botões de Ação explícitos e destacados ao lado de cada equipamento
                     const acoesHtml = `
                         <div class="flex items-center justify-center gap-1.5">
                             <button onclick="abrirModalQR(${eq.id})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded text-xs font-medium transition inline-flex items-center gap-1" title="Gerar QR Code">
@@ -1279,53 +1230,6 @@
             a.click();
         }
 
-        // BACKUP COMPLETO DO SISTEMA
-        function fazerBackup() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `backup_laboratorio_pasteur_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        // IMPORTAR ARQUIVO .TXT
-        async function importarArquivoTxt(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const conteudo = e.target.result;
-                const linhas = conteudo.split('\n');
-                let importados = 0;
-                linhas.forEach(linha => {
-                    const l = linha.trim();
-                    if (!l || l.startsWith('#')) return;
-                    const partes = l.split(/[;|	]/).map(p => p.trim());
-                    if (partes.length >= 2) {
-                        db.equipamentos.push({
-                            id: Date.now() + Math.random(),
-                            codigo: partes[0] || 'REF-00',
-                            nome: partes[1].toUpperCase() || 'EQUIPAMENTO',
-                            tipo: partes[2] || (db.tipos ? db.tipos[0] : 'Geral'),
-                            setor: partes[3] || (db.setores ? db.setores[0] : 'Geral'),
-                            serial: partes[4] || '0000',
-                            posse: partes[5] || 'Próprio',
-                            dataEntrada: partes[6] || new Date().toISOString().slice(0,10),
-                            status: partes[7] || 'Ativo'
-                        });
-                        importados++;
-                    }
-                });
-                await salvarBanco();
-                alert(`${importados} equipamentos importados com sucesso do arquivo .TXT!`);
-                document.getElementById('input-arquivo-txt').value = '';
-                filtrarTabela();
-            };
-            reader.readAsText(file);
-        }
-
         async function zerarBaseDados() {
             if (usuarioLogado && usuarioLogado.perfil !== 'Admin') return alert('Acesso negado.');
             if (confirm('Deseja zerar toda a base?')) {
@@ -1355,239 +1259,53 @@
             alert('Base restaurada!');
         }
 
-        // MÓDULO DE MANUTENÇÃO
         function renderizarManutencao() {
             const tbody = document.getElementById('tabela-manutencao-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
-            if (!db.manutencoes) db.manutencoes = [];
-            
-            if (db.manutencoes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhum registro de calibração ou manutenção.</td></tr>`;
-            } else {
-                db.manutencoes.forEach(m => {
-                    const eq = db.equipamentos.find(e => e.id == m.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-slate-50 transition">
-                            <td class="p-3 font-medium text-slate-900"><span class="font-mono font-semibold text-xs text-primary">[${eq.codigo}]</span> ${eq.nome}</td>
-                            <td class="p-3 text-slate-600">${m.tipo}</td>
-                            <td class="p-3 text-slate-600">${m.data}</td>
-                            <td class="p-3 text-slate-600">${m.proxima || '-'}</td>
-                            <td class="p-3 text-slate-500 font-mono text-xs">${m.laudo || '-'}</td>
-                            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">${m.status}</span></td>
-                            <td class="p-3 text-center space-x-2">
-                                <button onclick="editarManutencao(${m.id})" class="bg-sky-50 text-sky-600 hover:bg-sky-100 px-2.5 py-1 rounded text-xs font-semibold transition inline-flex items-center gap-1" title="Editar Registro">
-                                    <i class="fa-solid fa-pen"></i> Editar
-                                </button>
-                                <button onclick="excluirManutencao(${m.id})" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1 rounded text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir Registro">
-                                    <i class="fa-solid fa-trash"></i> Excluir
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
+            tbody.innerHTML = db.manutencoes.length === 0 ? `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhum registro.</td></tr>` : '';
+            db.manutencoes.forEach(m => {
+                const eq = db.equipamentos.find(e => e.id == m.equipamentoId) || { nome: 'N/A' };
+                tbody.innerHTML += `<tr class="border-b"><td class="p-3">${eq.nome}</td><td class="p-3">${m.tipo}</td><td class="p-3">${m.data}</td><td class="p-3">${m.proxima}</td><td class="p-3">${m.laudo}</td><td class="p-3">${m.status}</td><td class="p-3 text-center"><button onclick="excluirManutencao(${m.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
         }
 
-        function abrirModalManutencao(id = null) {
+        function abrirModalManutencao() {
             const select = document.getElementById('man-eq-select');
             select.innerHTML = '';
-            db.equipamentos.forEach(e => {
-                select.innerHTML += `<option value="${e.id}">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`;
-            });
-
+            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}">${e.nome}</option>`);
             document.getElementById('modal-manutencao').classList.remove('hidden');
-
-            if (id !== null && id !== undefined) {
-                const m = db.manutencoes.find(item => item.id === id);
-                if (m) {
-                    document.getElementById('modal-manutencao-titulo').innerText = 'Editar Calibração / Manutenção';
-                    document.getElementById('man-id').value = m.id;
-                    document.getElementById('man-eq-select').value = m.equipamentoId;
-                    document.getElementById('man-tipo').value = m.tipo;
-                    document.getElementById('man-data').value = m.data;
-                    document.getElementById('man-proxima').value = m.proxima || '';
-                    document.getElementById('man-laudo').value = m.laudo || '';
-                }
-            } else {
-                document.getElementById('modal-manutencao-titulo').innerText = 'Registar Calibração / Manutenção';
-                document.getElementById('man-id').value = '';
-                document.getElementById('man-data').value = new Date().toISOString().slice(0,10);
-                document.getElementById('man-proxima').value = '';
-                document.getElementById('man-laudo').value = '';
-            }
         }
-
         function fecharModalManutencao() { document.getElementById('modal-manutencao').classList.add('hidden'); }
-
         async function salvarManutencao() {
-            const id = document.getElementById('man-id').value;
-            const dados = {
-                id: id ? Number(id) : Date.now(),
-                equipamentoId: Number(document.getElementById('man-eq-select').value),
-                tipo: document.getElementById('man-tipo').value,
-                data: document.getElementById('man-data').value,
-                proxima: document.getElementById('man-proxima').value,
-                laudo: document.getElementById('man-laudo').value || 'laudo.pdf',
-                status: 'Em dia'
-            };
-
-            if (!db.manutencoes) db.manutencoes = [];
-
-            if (id) {
-                const idx = db.manutencoes.findIndex(m => m.id == id);
-                if (idx !== -1) {
-                    db.manutencoes[idx] = dados;
-                }
-            } else {
-                db.manutencoes.push(dados);
-            }
-
+            db.manutencoes.push({ id: Date.now(), equipamentoId: Number(document.getElementById('man-eq-select').value), tipo: document.getElementById('man-tipo').value, data: document.getElementById('man-data').value, proxima: document.getElementById('man-proxima').value, laudo: 'laudo.pdf', status: 'Em dia' });
             await salvarBanco();
             fecharModalManutencao();
             renderizarManutencao();
         }
-
-        function editarManutencao(id) { abrirModalManutencao(id); }
-
-        async function excluirManutencao(id) {
-            if (confirm('Deseja excluir este registro de manutenção?')) {
-                db.manutencoes = db.manutencoes.filter(m => m.id !== id);
-                await salvarBanco();
-                renderizarManutencao();
-            }
-        }
-
-        // MÓDULO DE HELPDESK / CHAMADOS (COM EDIÇÃO DE STATUS)
-        function obterBadgeChamadoStatus(status) {
-            switch(status) {
-                case 'Aberto': return 'bg-amber-100 text-amber-800 border border-amber-200';
-                case 'Em Andamento': return 'bg-blue-100 text-blue-800 border border-blue-200';
-                case 'Resolvido': return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-                case 'Fechado': return 'bg-slate-100 text-slate-600 border border-slate-200';
-                default: return 'bg-slate-100 text-slate-600';
-            }
-        }
+        async function excluirManutencao(id) { db.manutencoes = db.manutencoes.filter(m => m.id !== id); await salvarBanco(); renderizarManutencao(); }
 
         function renderizarChamados() {
             const tbody = document.getElementById('tabela-chamados-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
-            if (!db.chamados) db.chamados = [];
-
-            if (db.chamados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhum chamado registrado.</td></tr>`;
-            } else {
-                db.chamados.forEach(c => {
-                    const eq = db.equipamentos.find(e => e.id == c.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
-                    const badgeStatus = obterBadgeChamadoStatus(c.status || 'Aberto');
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-slate-50 transition">
-                            <td class="p-3 font-mono text-xs font-semibold">#${c.id}</td>
-                            <td class="p-3 font-medium text-slate-900"><span class="font-mono text-xs text-primary">[${eq.codigo}]</span> ${eq.nome}</td>
-                            <td class="p-3 text-slate-600 font-semibold">${c.unidade}</td>
-                            <td class="p-3 text-slate-600">${c.descricao}</td>
-                            <td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">${c.prioridade}</span></td>
-                            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeStatus}">${c.status || 'Aberto'}</span></td>
-                            <td class="p-3 text-center space-x-1.5">
-                                <button onclick="abrirModalChamado('${c.id}')" class="bg-sky-50 text-sky-600 hover:bg-sky-100 px-2.5 py-1 rounded text-xs font-semibold transition inline-flex items-center gap-1" title="Editar Chamado / Status">
-                                    <i class="fa-solid fa-pen"></i> Editar
-                                </button>
-                                <button onclick="excluirChamado('${c.id}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1 rounded text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir Chamado">
-                                    <i class="fa-solid fa-trash"></i> Excluir
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
+            tbody.innerHTML = db.chamados.length === 0 ? `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhum chamado.</td></tr>` : '';
+            db.chamados.forEach(c => {
+                tbody.innerHTML += `<tr class="border-b"><td class="p-3">#${c.id}</td><td class="p-3">${c.unidade}</td><td class="p-3">${c.descricao}</td><td class="p-3">${c.prioridade}</td><td class="p-3">${c.status}</td><td class="p-3 text-center"><button onclick="excluirChamado(${c.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
         }
-
-        function abrirModalChamado(id = null) {
-            const selectEq = document.getElementById('chamado-eq-select');
-            selectEq.innerHTML = '';
-            db.equipamentos.forEach(e => {
-                selectEq.innerHTML += `<option value="${e.id}">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`;
-            });
-
-            const selectUnidade = document.getElementById('chamado-unidade');
-            selectUnidade.innerHTML = '';
-            if (!db.setores) db.setores = [];
-            const setoresOrdenados = [...db.setores].sort((a, b) => a.localeCompare(b));
-            setoresOrdenados.forEach(s => {
-                selectUnidade.innerHTML += `<option value="${s}">${s}</option>`;
-            });
-
+        function abrirModalChamado() {
+            const select = document.getElementById('chamado-eq-select');
+            select.innerHTML = '';
+            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}">${e.nome}</option>`);
             document.getElementById('modal-chamado').classList.remove('hidden');
-
-            if (id !== null && id !== undefined) {
-                const c = db.chamados.find(item => item.id == id);
-                if (c) {
-                    document.getElementById('modal-chamado-titulo').innerText = 'Editar Chamado / Status';
-                    document.getElementById('chamado-id').value = c.id;
-                    document.getElementById('chamado-eq-select').value = c.equipamentoId;
-                    document.getElementById('chamado-unidade').value = c.unidade;
-                    document.getElementById('chamado-prioridade').value = c.prioridade;
-                    document.getElementById('chamado-status').value = c.status || 'Aberto';
-                    document.getElementById('chamado-descricao').value = c.descricao;
-                }
-            } else {
-                document.getElementById('modal-chamado-titulo').innerText = 'Abrir Chamado Técnico';
-                document.getElementById('chamado-id').value = '';
-                document.getElementById('chamado-status').value = 'Aberto';
-                document.getElementById('chamado-descricao').value = '';
-            }
         }
-
         function fecharModalChamado() { document.getElementById('modal-chamado').classList.add('hidden'); }
-
         async function salvarChamado() {
-            const id = document.getElementById('chamado-id').value;
-            const eqId = Number(document.getElementById('chamado-eq-select').value);
-            const unidade = document.getElementById('chamado-unidade').value;
-            const prioridade = document.getElementById('chamado-prioridade').value;
-            const status = document.getElementById('chamado-status').value;
-            const descricao = document.getElementById('chamado-descricao').value.trim();
-
-            if (!descricao) return alert('Digite a descrição do problema.');
-
-            if (!db.chamados) db.chamados = [];
-
-            if (id) {
-                const idx = db.chamados.findIndex(c => c.id == id);
-                if (idx !== -1) {
-                    db.chamados[idx] = {
-                        ...db.chamados[idx],
-                        equipamentoId: eqId,
-                        unidade: unidade,
-                        prioridade: prioridade,
-                        status: status,
-                        descricao: descricao
-                    };
-                }
-            } else {
-                db.chamados.push({
-                    id: Date.now().toString().slice(-6),
-                    equipamentoId: eqId,
-                    unidade: unidade,
-                    prioridade: prioridade,
-                    descricao: descricao,
-                    status: status
-                });
-            }
-
+            db.chamados.push({ id: Date.now(), equipamentoId: Number(document.getElementById('chamado-eq-select').value), unidade: document.getElementById('chamado-unidade').value, prioridade: document.getElementById('chamado-prioridade').value, descricao: document.getElementById('chamado-descricao').value, status: 'Aberto' });
             await salvarBanco();
             fecharModalChamado();
             renderizarChamados();
         }
-
-        async function excluirChamado(id) {
-            if (confirm('Deseja excluir este chamado técnico?')) {
-                db.chamados = db.chamados.filter(c => c.id != id);
-                await salvarBanco();
-                renderizarChamados();
-            }
-        }
+        async function excluirChamado(id) { db.chamados = db.chamados.filter(c => c.id !== id); await salvarBanco(); renderizarChamados(); }
 
         function renderizarFinanceiro() {
             const tbody = document.getElementById('tabela-financeiro-body');
@@ -1604,7 +1322,7 @@
         function abrirModalComodato() {
             const select = document.getElementById('com-eq-select');
             select.innerHTML = '';
-            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}">[${e.codigo || 'S/C'}] ${e.nome}</option>`);
+            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}">${e.nome}</option>`);
             document.getElementById('modal-comodato').classList.remove('hidden');
         }
         function fecharModalComodato() { document.getElementById('modal-comodato').classList.add('hidden'); }
@@ -1620,28 +1338,17 @@
             if (!tbody) return;
             tbody.innerHTML = db.transferencias.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhum registro.</td></tr>` : '';
             db.transferencias.forEach(t => {
-                tbody.innerHTML += `<tr class="border-b"><td class="p-3">${t.data}</td><td class="p-3">${t.equipamento}</td><td class="p-3 font-semibold text-slate-700">${t.origem}</td><td class="p-3 font-semibold text-primary">${t.destino}</td><td class="p-3">${t.motivo}</td></tr>`;
+                tbody.innerHTML += `<tr class="border-b"><td class="p-3">${t.data}</td><td class="p-3">${t.equipamento}</td><td class="p-3">${t.origem}</td><td class="p-3">${t.destino}</td><td class="p-3">${t.motivo}</td></tr>`;
             });
         }
         function abrirModalTransferencia() {
             const select = document.getElementById('tr-eq-select');
             select.innerHTML = '';
-            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}" data-setor="${e.setor}">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
-            
-            const selectOrig = document.getElementById('tr-origem');
-            selectOrig.innerHTML = '';
-            if (!db.setores) db.setores = [];
-            const setoresOrdenados = [...db.setores].sort((a, b) => a.localeCompare(b));
-            setoresOrdenados.forEach(s => selectOrig.innerHTML += `<option value="${s}">${s}</option>`);
-
+            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}" data-setor="${e.setor}">${e.nome} (${e.setor})</option>`);
             const selectDest = document.getElementById('tr-destino');
             selectDest.innerHTML = '';
-            setoresOrdenados.forEach(s => selectDest.innerHTML += `<option value="${s}">${s}</option>`);
-
-            select.onchange = () => {
-                const setorAtual = select.options[select.selectedIndex].getAttribute('data-setor');
-                if (setorAtual) selectOrig.value = setorAtual;
-            };
+            db.setores.forEach(s => selectDest.innerHTML += `<option value="${s}">${s}</option>`);
+            select.onchange = () => document.getElementById('tr-origem').value = select.options[select.selectedIndex].getAttribute('data-setor');
             if (select.options.length > 0) select.onchange();
             document.getElementById('modal-transferencia').classList.remove('hidden');
         }
@@ -1649,9 +1356,8 @@
         async function salvarTransferencia() {
             const eqId = Number(document.getElementById('tr-eq-select').value);
             const eq = db.equipamentos.find(e => e.id === eqId);
-            const origem = document.getElementById('tr-origem').value;
             const destino = document.getElementById('tr-destino').value;
-            db.transferencias.push({ id: Date.now(), data: new Date().toLocaleString(), equipamento: `[${eq.codigo}] ${eq.nome}`, origem: origem, destino: destino, motivo: document.getElementById('tr-motivo').value });
+            db.transferencias.push({ id: Date.now(), data: new Date().toLocaleString(), equipamento: eq.nome, origem: eq.setor, destino, motivo: document.getElementById('tr-motivo').value });
             eq.setor = destino;
             await salvarBanco();
             fecharModalTransferencia();
@@ -1663,8 +1369,8 @@
             document.getElementById('modal-qr').classList.remove('hidden');
             const container = document.getElementById('qr-code-container');
             container.innerHTML = '';
-            new QRCode(container, { text: `Ativo: [${eq.codigo}] ${eq.nome} | Setor: ${eq.setor}`, width: 150, height: 150 });
-            document.getElementById('qr-info-detalhe').innerHTML = `<strong>Cód:</strong> ${eq.codigo}<br><strong>Ativo:</strong> ${eq.nome}<br><strong>Setor:</strong> ${eq.setor}`;
+            new QRCode(container, { text: `Ativo: ${eq.nome} | Setor: ${eq.setor}`, width: 150, height: 150 });
+            document.getElementById('qr-info-detalhe').innerHTML = `<strong>Ativo:</strong> ${eq.nome}<br><strong>Setor:</strong> ${eq.setor}`;
         }
         function fecharModalQR() { document.getElementById('modal-qr').classList.add('hidden'); }
 
@@ -1674,98 +1380,26 @@
             if (sf && sm) {
                 sf.innerHTML = '<option value="">Todos os Setores</option>';
                 sm.innerHTML = '';
-                if (!db.setores) db.setores = [];
-                const setoresOrdenados = [...db.setores].sort((a, b) => a.localeCompare(b));
-                setoresOrdenados.forEach(s => { sf.innerHTML += `<option value="${s}">${s}</option>`; sm.innerHTML += `<option value="${s}">${s}</option>`; });
+                db.setores.forEach(s => { sf.innerHTML += `<option value="${s}">${s}</option>`; sm.innerHTML += `<option value="${s}">${s}</option>`; });
             }
             const st = document.getElementById('eq-tipo');
             if (st) {
                 st.innerHTML = '';
-                if (!db.tipos) db.tipos = [];
-                const tiposOrdenados = [...db.tipos].sort((a, b) => a.localeCompare(b));
-                tiposOrdenados.forEach(t => st.innerHTML += `<option value="${t}">${t}</option>`);
+                db.tipos.forEach(t => st.innerHTML += `<option value="${t}">${t}</option>`);
             }
         }
 
-        // GERENCIAMENTO DE SETORES
         function renderizarSetores() {
             const tbody = document.getElementById('tabela-setores-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (!db.setores) db.setores = [];
-            db.setores.sort((a, b) => a.localeCompare(b));
-            db.setores.forEach((s, i) => {
-                tbody.innerHTML += `
-                    <tr class="border-b border-slate-100">
-                        <td class="p-3 text-sm">${s}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="excluirSetor(${i})" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>
-                        </td>
-                    </tr>
-                `;
-            });
+            db.setores.forEach((s, i) => tbody.innerHTML += `<tr class="border-b"><td class="p-3">${s}</td><td class="p-3 text-center"><button onclick="excluirSetor(${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`);
         }
         async function salvarSetor() {
             const val = document.getElementById('novo-setor-nome').value.trim().toUpperCase();
-            if (!db.setores) db.setores = [];
-            if (val && !db.setores.includes(val)) {
-                db.setores.push(val);
-                db.setores.sort((a, b) => a.localeCompare(b));
-                document.getElementById('novo-setor-nome').value = '';
-                await salvarBanco();
-                renderizarSetores();
-                popularSelects();
-            } else if (db.setores.includes(val)) {
-                alert('Este setor já existe.');
-            }
+            if (val && !db.setores.includes(val)) { db.setores.push(val); await salvarBanco(); renderizarSetores(); popularSelects(); }
         }
-        async function excluirSetor(i) {
-            if (db.setores.length <= 1) return alert('Mantenha pelo menos um setor.');
-            db.setores.splice(i, 1);
-            await salvarBanco();
-            renderizarSetores();
-            popularSelects();
-        }
-
-        // GERENCIAMENTO DE TIPOS DE EQUIPAMENTO
-        function renderizarTipos() {
-            const tbody = document.getElementById('tabela-tipos-body');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            if (!db.tipos) db.tipos = [];
-            db.tipos.sort((a, b) => a.localeCompare(b));
-            db.tipos.forEach((t, i) => {
-                tbody.innerHTML += `
-                    <tr class="border-b border-slate-100">
-                        <td class="p-3 text-sm">${t}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="excluirTipo(${i})" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-        async function salvarTipo() {
-            const val = document.getElementById('novo-tipo-nome').value.trim();
-            if (!db.tipos) db.tipos = [];
-            if (val && !db.tipos.includes(val)) {
-                db.tipos.push(val);
-                db.tipos.sort((a, b) => a.localeCompare(b));
-                document.getElementById('novo-tipo-nome').value = '';
-                await salvarBanco();
-                renderizarTipos();
-                popularSelects();
-            } else if (db.tipos.includes(val)) {
-                alert('Este tipo de equipamento já existe.');
-            }
-        }
-        async function excluirTipo(i) {
-            if (db.tipos.length <= 1) return alert('Mantenha pelo menos um tipo de equipamento.');
-            db.tipos.splice(i, 1);
-            await salvarBanco();
-            renderizarTipos();
-            popularSelects();
-        }
+        async function excluirSetor(i) { db.setores.splice(i, 1); await salvarBanco(); renderizarSetores(); popularSelects(); }
 
         function abrirModalEquipamento(id = null) {
             document.getElementById('modal-equipamento').classList.remove('hidden');
@@ -1777,8 +1411,8 @@
                     document.getElementById('eq-id').value = eq.id;
                     document.getElementById('eq-codigo').value = eq.codigo || '';
                     document.getElementById('eq-nome').value = eq.nome || '';
-                    document.getElementById('eq-tipo').value = eq.tipo || (db.tipos ? db.tipos[0] : '');
-                    document.getElementById('eq-setor').value = eq.setor || (db.setores ? db.setores[0] : '');
+                    document.getElementById('eq-tipo').value = eq.tipo || db.tipos[0];
+                    document.getElementById('eq-setor').value = eq.setor || db.setores[0];
                     document.getElementById('eq-serial').value = eq.serial || '';
                     document.getElementById('eq-posse').value = eq.posse || 'Próprio';
                     document.getElementById('eq-status').value = eq.status || 'Ativo';
