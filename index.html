@@ -40,8 +40,46 @@
             header, nav, button, .no-print, input, select { display: none !important; }
             section { display: none !important; }
             #aba-relatorios:not(.hidden) { display: block !important; }
-            #modal-qr:not(.hidden) { display: flex !important; position: static !important; background: white !important; }
-            #modal-qr > div { box-shadow: none !important; border: 1px solid #ccc !important; width: 100% !important; max-width: none !important; }
+            
+            /* Impressão limpa exclusiva para o QR Code */
+            #modal-qr:not(.hidden) {
+                position: absolute !important;
+                inset: 0 !important;
+                background: white !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 9999 !important;
+            }
+            #modal-qr > div {
+                box-shadow: none !important;
+                border: none !important;
+                background: white !important;
+                width: auto !important;
+                max-width: none !important;
+                padding: 0 !important;
+            }
+            #modal-qr h3, #modal-qr .no-print {
+                display: none !important;
+            }
+            #qr-code-container {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                margin-bottom: 10px !important;
+                display: flex !important;
+                justify-content: center !important;
+            }
+            #qr-info-detalhe {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                font-size: 11pt !important;
+                font-weight: bold !important;
+                color: black !important;
+                text-align: left !important;
+            }
+
             .shadow-sm, .border { border: none !important; box-shadow: none !important; }
             .print-only-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
             .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -557,6 +595,11 @@
                         <input type="text" id="config-empresa" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Ex: Laboratório Pasteur SM">
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">URL Pública do Sistema (Obrigatório para QR Code no celular)</label>
+                        <input type="text" id="config-url-publica" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono" placeholder="Ex: https://inventario-60bf7.web.app">
+                        <p class="text-xs text-slate-500 mt-1">Cole aqui o endereço web público onde sua aplicação está hospedada (Firebase, Vercel, etc).</p>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Texto de Direitos Autorais (Rodapé)</label>
                         <input type="text" id="config-copyright" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Ex: © 2026 Laboratório Pasteur - Todos os direitos reservados.">
                     </div>
@@ -865,6 +908,32 @@
         </div>
     </div>
 
+    <!-- MODAL DE VISUALIZAÇÃO COMPLETA VIA LEITURA DE QR CODE NO CELULAR -->
+    <div id="modal-detalhes-celular" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-100">
+            <div class="flex items-center space-x-3 border-b pb-4">
+                <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-laptop-medical"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 leading-tight">Ficha Técnica do Equipamento</h3>
+                    <p class="text-xs text-slate-500">Consulta instantânea via QR Code (Helpdesk)</p>
+                </div>
+            </div>
+            
+            <div id="ficha-tecnica-conteudo" class="space-y-1.5 text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <!-- Preenchido dinamicamente via JS -->
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t">
+                <button onclick="abrirHelpdeskDireto()" class="flex-grow bg-primary text-white py-2.5 rounded-lg text-sm font-medium shadow hover:opacity-90 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-headset"></i> Abrir Chamado Técnico
+                </button>
+                <button onclick="fecharModalDetalhesCelular()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT DE LÓGICA -->
     <script>
         const dadosCompletosPasteur = {
@@ -888,6 +957,7 @@
                 empresa: 'Laboratório Pasteur',
                 cor: '#0284c7',
                 logo: '',
+                urlPublica: 'https://inventario-60bf7.web.app',
                 copyright: '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.',
                 geminiKey: '',
                 firebaseApiKey: 'AIzaSyDpdHmcIY-bWRpbRgJKW0snPfLtqrI_QtA',
@@ -902,6 +972,7 @@
         let db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
         let firestoreDb = null;
         let usuarioLogado = null;
+        let equipamentoAtualQR = null;
 
         let paginaAtual = 1;
         const itensPorPagina = 25;
@@ -912,6 +983,18 @@
             verificarSessao();
             inicializarFirebase().catch(err => console.log('Firebase offline:', err));
             document.getElementById('print-data-atual').innerText = new Date().toLocaleDateString('pt-BR');
+            
+            // Verifica se a página foi aberta via QR Code do celular (?eq=ID)
+            const urlParams = new URLSearchParams(window.location.search);
+            const eqIdParam = urlParams.get('eq');
+            if (eqIdParam) {
+                setTimeout(() => {
+                    const eqEncontrado = db.equipamentos.find(e => e.id == eqIdParam);
+                    if (eqEncontrado) {
+                        exibirModalDetalhesCelular(eqEncontrado);
+                    }
+                }, 800);
+            }
         });
 
         async function inicializarFirebase() {
@@ -945,6 +1028,7 @@
                     if (!db.comodatos) db.comodatos = [];
                     if (!db.transferencias) db.transferencias = [];
                     if (!db.config.geminiKey) db.config.geminiKey = '';
+                    if (!db.config.urlPublica) db.config.urlPublica = dadosCompletosPasteur.config.urlPublica;
                     if (!db.config.copyright) db.config.copyright = dadosCompletosPasteur.config.copyright;
                     
                     aplicarConfiguracoes();
@@ -958,6 +1042,16 @@
                     renderizarUsuarios();
                     atualizarRelatorios();
                     popularSelects();
+
+                    // Revalida o parâmetro de QR Code caso os dados tenham chegado agora do Firebase
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const eqIdParam = urlParams.get('eq');
+                    if (eqIdParam) {
+                        const eqEncontrado = db.equipamentos.find(e => e.id == eqIdParam);
+                        if (eqEncontrado && document.getElementById('modal-detalhes-celular').classList.contains('hidden')) {
+                            exibirModalDetalhesCelular(eqEncontrado);
+                        }
+                    }
                 } else {
                     docRef.set(db);
                 }
@@ -977,6 +1071,14 @@
         function verificarSessao() {
             const telaLogin = document.getElementById('tela-login');
             const appPrincipal = document.getElementById('app-principal');
+
+            // Se o usuário abriu via QR Code do celular, liberamos a tela de detalhes sem obrigar login imediato
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('eq')) {
+                if (telaLogin) { telaLogin.classList.add('hidden'); telaLogin.style.display = 'none'; }
+                if (appPrincipal) { appPrincipal.classList.remove('hidden'); appPrincipal.style.display = 'flex'; }
+                return;
+            }
 
             if (usuarioLogado) {
                 if (telaLogin) { telaLogin.classList.add('hidden'); telaLogin.style.display = 'none'; }
@@ -1055,7 +1157,7 @@
 
         function fazerLogout() {
             usuarioLogado = null;
-            verificarSessao();
+            window.location.href = window.location.pathname; // Limpa parâmetro de QR Code se houver
         }
 
         function aplicarPermissoesPerfil() {
@@ -1515,12 +1617,16 @@
             }
         }
 
-        function abrirModalChamado(id = null) {
+        function abrirModalChamado(id = null, preSelecionarEqId = null) {
             const selectEq = document.getElementById('chamado-eq-select');
             selectEq.innerHTML = '';
             db.equipamentos.forEach(e => {
                 selectEq.innerHTML += `<option value="${e.id}">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`;
             });
+
+            if (preSelecionarEqId) {
+                selectEq.value = preSelecionarEqId;
+            }
 
             const selectUnidade = document.getElementById('chamado-unidade');
             selectUnidade.innerHTML = '';
@@ -1532,7 +1638,7 @@
 
             document.getElementById('modal-chamado').classList.remove('hidden');
 
-            if (id !== null && id !== undefined) {
+            if (id !== null && id !== undefined && typeof id === 'string' && id.length > 0) {
                 const c = db.chamados.find(item => item.id == id);
                 if (c) {
                     document.getElementById('modal-chamado-titulo').innerText = 'Editar Chamado / Status';
@@ -1548,6 +1654,12 @@
                 document.getElementById('chamado-id').value = '';
                 document.getElementById('chamado-status').value = 'Aberto';
                 document.getElementById('chamado-descricao').value = '';
+                if (preSelecionarEqId) {
+                    const eqObj = db.equipamentos.find(e => e.id == preSelecionarEqId);
+                    if (eqObj && eqObj.setor) {
+                        selectUnidade.value = eqObj.setor;
+                    }
+                }
             }
         }
 
@@ -1591,6 +1703,7 @@
             await salvarBanco();
             fecharModalChamado();
             renderizarChamados();
+            alert('Chamado salvo com sucesso!');
         }
 
         async function excluirChamado(id) {
@@ -1675,10 +1788,51 @@
             document.getElementById('modal-qr').classList.remove('hidden');
             const container = document.getElementById('qr-code-container');
             container.innerHTML = '';
-            new QRCode(container, { text: `Ativo: [${eq.codigo}] ${eq.nome} | Setor: ${eq.setor}`, width: 150, height: 150 });
-            document.getElementById('qr-info-detalhe').innerHTML = `<strong>Cód:</strong> ${eq.codigo}<br><strong>Ativo:</strong> ${eq.nome}<br><strong>Setor:</strong> ${eq.setor}`;
+            
+            // Usa a URL pública configurada nas Ajustes ou o fallback atual
+            const urlBase = (db.config && db.config.urlPublica && db.config.urlPublica.trim() !== '') 
+                ? db.config.urlPublica.trim() 
+                : window.location.href.split('?')[0];
+            
+            const linkQr = `${urlBase.endsWith('/') ? urlBase.slice(0, -1) : urlBase}?eq=${eq.id}`;
+            
+            new QRCode(container, { text: linkQr, width: 150, height: 150 });
+            document.getElementById('qr-info-detalhe').innerHTML = `Cód: ${eq.codigo || '-'}<br>Ativo: ${eq.nome || '-'}<br>Setor: ${eq.setor || '-'}`;
         }
         function fecharModalQR() { document.getElementById('modal-qr').classList.add('hidden'); }
+
+        // EXIBIR DETALHES COMPLETOS QUANDO O CELULAR LÊ O QR CODE
+        function exibirModalDetalhesCelular(eq) {
+            equipamentoAtualQR = eq;
+            const ciclo = calcularCiclo(eq.dataEntrada);
+            const conteudo = document.getElementById('ficha-tecnica-conteudo');
+            conteudo.innerHTML = `
+                <div class="space-y-1.5 font-mono text-xs">
+                    <p><strong>Cód. Ref:</strong> <span class="text-primary font-bold">${eq.codigo || '-'}</span></p>
+                    <p><strong>Ativo:</strong> <span class="font-bold text-slate-900">${eq.nome || '-'}</span></p>
+                    <p><strong>Tipo:</strong> ${eq.tipo || '-'}</p>
+                    <p><strong>Setor:</strong> <span class="font-bold">${eq.setor || '-'}</span></p>
+                    <p><strong>Nº de Série:</strong> ${eq.serial || '-'}</p>
+                    <p><strong>Posse:</strong> ${eq.posse || 'Próprio'}</p>
+                    <p><strong>Status:</strong> ${eq.status || 'Ativo'}</p>
+                    <p><strong>Data de Entrada:</strong> ${eq.dataEntrada || '-'}</p>
+                    <p><strong>Ciclo de Vida:</strong> ${ciclo.texto}</p>
+                </div>
+            `;
+            document.getElementById('modal-detalhes-celular').classList.remove('hidden');
+        }
+
+        function fecharModalDetalhesCelular() {
+            document.getElementById('modal-detalhes-celular').classList.add('hidden');
+            window.location.href = window.location.pathname; // Limpa os parâmetros da URL
+        }
+
+        function abrirHelpdeskDireto() {
+            if (!equipamentoAtualQR) return;
+            fecharModalDetalhesCelular();
+            mudarAba('helpdesk');
+            abrirModalChamado(null, equipamentoAtualQR.id);
+        }
 
         function popularSelects() {
             const sf = document.getElementById('filtro-setor');
@@ -1859,6 +2013,9 @@
             if (document.getElementById('config-empresa')) {
                 document.getElementById('config-empresa').value = db.config.empresa;
             }
+            if (document.getElementById('config-url-publica')) {
+                document.getElementById('config-url-publica').value = db.config.urlPublica || '';
+            }
             if (document.getElementById('config-gemini-key')) {
                 document.getElementById('config-gemini-key').value = db.config.geminiKey || '';
             }
@@ -1888,6 +2045,7 @@
         async function salvarConfiguracoes() {
             db.config.empresa = document.getElementById('config-empresa').value || 'Laboratório Pasteur';
             db.config.cor = document.getElementById('config-cor').value;
+            db.config.urlPublica = document.getElementById('config-url-publica').value.trim();
             db.config.copyright = document.getElementById('config-copyright').value.trim() || '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.';
             
             const chaveApi = document.getElementById('config-gemini-key').value.trim();
@@ -1911,7 +2069,7 @@
         async function finalizarSalvamentoConfig() {
             await salvarBanco();
             aplicarConfiguracoes();
-            alert('Configurações, logotipos e rodapé atualizados com sucesso!');
+            alert('Configurações e URL Pública atualizadas com sucesso!');
         }
 
         // FUNÇÃO AUXILIAR COM RETRY PARA ERROS 503
