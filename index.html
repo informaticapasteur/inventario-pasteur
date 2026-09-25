@@ -134,7 +134,7 @@
                     <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-headset mr-1"></i> Helpdesk QR</button>
                     <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Comodatos</button>
                     <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-right-left mr-1"></i> Rastreio</button>
-                    <button onclick="mudarAba('setores')" id="btn-setores" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-building mr-1"></i> Setores</button>
+                    <button onclick="mudarAba('setores')" id="btn-setores" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-layer-group mr-1"></i> Setores & Tipos</button>
                     <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-chart-pie mr-1"></i> Relatórios & IA</button>
                     <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition admin-only"><i class="fa-solid fa-users-gear mr-1"></i> Usuários</button>
                     <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-2.5 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition admin-only"><i class="fa-solid fa-gear mr-1"></i> Ajustes</button>
@@ -204,7 +204,7 @@
                                     <th class="p-3 font-semibold">Posse</th>
                                     <th class="p-3 font-semibold">Status</th>
                                     <th class="p-3 font-semibold">Ciclo / Alerta</th>
-                                    <th class="p-3 font-semibold text-center no-print">Ações (QR / Editar / Excluir)</th>
+                                    <th class="p-3 font-semibold text-center no-print">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-equipamentos-body" class="divide-y divide-slate-200">
@@ -367,26 +367,49 @@
                 </div>
             </section>
 
-            <!-- ABA SETORES -->
-            <section id="aba-setores" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto space-y-4">
-                    <h2 class="text-lg font-bold text-slate-800 border-b pb-2">Gerenciar Setores</h2>
-                    <div class="flex gap-2 write-allowed">
-                        <input type="hidden" id="setor-index-edit" value="">
-                        <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                        <button onclick="salvarSetor()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium shadow hover:opacity-90 transition">Salvar Setor</button>
+            <!-- ABA SETORES E TIPOS -->
+            <section id="aba-setores" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Gerenciar Setores -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                        <h2 class="text-lg font-bold text-slate-800 border-b pb-2"><i class="fa-solid fa-building text-primary mr-2"></i>Gerenciar Setores</h2>
+                        <div class="flex gap-2 write-allowed">
+                            <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                            <button onclick="salvarSetor()" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow hover:opacity-90 transition">Adicionar</button>
+                        </div>
+                        <div class="overflow-x-auto pt-2 max-h-72 overflow-y-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                        <th class="p-2.5 font-semibold">Setor</th>
+                                        <th class="p-2.5 font-semibold text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-setores-body" class="divide-y divide-slate-100">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto pt-2">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
-                                    <th class="p-3 font-semibold">Nome do Setor</th>
-                                    <th class="p-3 font-semibold text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-setores-body" class="divide-y divide-slate-200">
-                            </tbody>
-                        </table>
+
+                    <!-- Gerenciar Tipos de Equipamento -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                        <h2 class="text-lg font-bold text-slate-800 border-b pb-2"><i class="fa-solid fa-laptop text-primary mr-2"></i>Tipos de Equipamento</h2>
+                        <div class="flex gap-2 write-allowed">
+                            <input type="text" id="novo-tipo-nome" placeholder="Ex: Analisador Bioquímico" class="flex-grow px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                            <button onclick="salvarTipo()" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow hover:opacity-90 transition">Adicionar</button>
+                        </div>
+                        <div class="overflow-x-auto pt-2 max-h-72 overflow-y-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                        <th class="p-2.5 font-semibold">Tipo de Equipamento</th>
+                                        <th class="p-2.5 font-semibold text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-tipos-body" class="divide-y divide-slate-100">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -880,6 +903,8 @@
                     if (!db.usuarios || db.usuarios.length === 0) {
                         db.usuarios = dadosCompletosPasteur.usuarios;
                     }
+                    if (!db.setores) db.setores = dadosCompletosPasteur.setores;
+                    if (!db.tipos) db.tipos = dadosCompletosPasteur.tipos;
                     if (!db.manutencoes) db.manutencoes = [];
                     if (!db.chamados) db.chamados = [];
                     if (!db.comodatos) db.comodatos = [];
@@ -893,6 +918,7 @@
                     renderizarFinanceiro();
                     renderizarRastreabilidade();
                     renderizarSetores();
+                    renderizarTipos();
                     renderizarUsuarios();
                     atualizarRelatorios();
                     popularSelects();
@@ -1165,7 +1191,6 @@
                     const badgeStatus = obterBadgeStatus(eq.status || 'Ativo');
                     const badgePosse = obterBadgePosse(eq.posse || 'Próprio');
                     
-                    // Botões de Ação explícitos e destacados ao lado de cada equipamento
                     const acoesHtml = `
                         <div class="flex items-center justify-center gap-1.5">
                             <button onclick="abrirModalQR(${eq.id})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded text-xs font-medium transition inline-flex items-center gap-1" title="Gerar QR Code">
@@ -1380,26 +1405,92 @@
             if (sf && sm) {
                 sf.innerHTML = '<option value="">Todos os Setores</option>';
                 sm.innerHTML = '';
+                if (!db.setores) db.setores = [];
                 db.setores.forEach(s => { sf.innerHTML += `<option value="${s}">${s}</option>`; sm.innerHTML += `<option value="${s}">${s}</option>`; });
             }
             const st = document.getElementById('eq-tipo');
             if (st) {
                 st.innerHTML = '';
+                if (!db.tipos) db.tipos = [];
                 db.tipos.forEach(t => st.innerHTML += `<option value="${t}">${t}</option>`);
             }
         }
 
+        // GERENCIAMENTO DE SETORES
         function renderizarSetores() {
             const tbody = document.getElementById('tabela-setores-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            db.setores.forEach((s, i) => tbody.innerHTML += `<tr class="border-b"><td class="p-3">${s}</td><td class="p-3 text-center"><button onclick="excluirSetor(${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`);
+            if (!db.setores) db.setores = [];
+            db.setores.forEach((s, i) => {
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100">
+                        <td class="p-3 text-sm">${s}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="excluirSetor(${i})" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
         async function salvarSetor() {
             const val = document.getElementById('novo-setor-nome').value.trim().toUpperCase();
-            if (val && !db.setores.includes(val)) { db.setores.push(val); await salvarBanco(); renderizarSetores(); popularSelects(); }
+            if (!db.setores) db.setores = [];
+            if (val && !db.setores.includes(val)) {
+                db.setores.push(val);
+                document.getElementById('novo-setor-nome').value = '';
+                await salvarBanco();
+                renderizarSetores();
+                popularSelects();
+            } else if (db.setores.includes(val)) {
+                alert('Este setor já existe.');
+            }
         }
-        async function excluirSetor(i) { db.setores.splice(i, 1); await salvarBanco(); renderizarSetores(); popularSelects(); }
+        async function excluirSetor(i) {
+            if (db.setores.length <= 1) return alert('Mantenha pelo menos um setor.');
+            db.setores.splice(i, 1);
+            await salvarBanco();
+            renderizarSetores();
+            popularSelects();
+        }
+
+        // GERENCIAMENTO DE TIPOS DE EQUIPAMENTO
+        function renderizarTipos() {
+            const tbody = document.getElementById('tabela-tipos-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (!db.tipos) db.tipos = [];
+            db.tipos.forEach((t, i) => {
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100">
+                        <td class="p-3 text-sm">${t}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="excluirTipo(${i})" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        async function salvarTipo() {
+            const val = document.getElementById('novo-tipo-nome').value.trim();
+            if (!db.tipos) db.tipos = [];
+            if (val && !db.tipos.includes(val)) {
+                db.tipos.push(val);
+                document.getElementById('novo-tipo-nome').value = '';
+                await salvarBanco();
+                renderizarTipos();
+                popularSelects();
+            } else if (db.tipos.includes(val)) {
+                alert('Este tipo de equipamento já existe.');
+            }
+        }
+        async function excluirTipo(i) {
+            if (db.tipos.length <= 1) return alert('Mantenha pelo menos um tipo de equipamento.');
+            db.tipos.splice(i, 1);
+            await salvarBanco();
+            renderizarTipos();
+            popularSelects();
+        }
 
         function abrirModalEquipamento(id = null) {
             document.getElementById('modal-equipamento').classList.remove('hidden');
@@ -1411,8 +1502,8 @@
                     document.getElementById('eq-id').value = eq.id;
                     document.getElementById('eq-codigo').value = eq.codigo || '';
                     document.getElementById('eq-nome').value = eq.nome || '';
-                    document.getElementById('eq-tipo').value = eq.tipo || db.tipos[0];
-                    document.getElementById('eq-setor').value = eq.setor || db.setores[0];
+                    document.getElementById('eq-tipo').value = eq.tipo || (db.tipos ? db.tipos[0] : '');
+                    document.getElementById('eq-setor').value = eq.setor || (db.setores ? db.setores[0] : '');
                     document.getElementById('eq-serial').value = eq.serial || '';
                     document.getElementById('eq-posse').value = eq.posse || 'Próprio';
                     document.getElementById('eq-status').value = eq.status || 'Ativo';
