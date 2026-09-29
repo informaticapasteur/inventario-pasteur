@@ -1030,6 +1030,11 @@
                     if (!db.config.geminiKey) db.config.geminiKey = '';
                     if (!db.config.urlPublica) db.config.urlPublica = dadosCompletosPasteur.config.urlPublica;
                     if (!db.config.copyright) db.config.copyright = dadosCompletosPasteur.config.copyright;
+
+                    // Ordena sempre alfabeticamente ao carregar do Firebase
+                    if (db.equipamentos) {
+                        db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+                    }
                     
                     aplicarConfiguracoes();
                     filtrarTabela();
@@ -1432,6 +1437,10 @@
                         importados++;
                     }
                 });
+                
+                // Ordena alfabeticamente após importar
+                db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
                 await salvarBanco();
                 alert(`${importados} equipamentos importados com sucesso do arquivo .TXT!`);
                 document.getElementById('input-arquivo-txt').value = '';
@@ -1459,12 +1468,17 @@
                     db.equipamentos.push({ id: Date.now() + Math.random(), codigo: 'IMP', nome: l.trim().substring(0,40), tipo: db.tipos[0], setor: db.setores[0], serial: '0000', posse: 'Próprio', dataEntrada: new Date().toISOString().slice(0,10), status: 'Ativo' });
                 }
             });
+            
+            // Ordena alfabeticamente após importação em massa
+            db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
             await salvarBanco();
             alert('Importado com sucesso!');
         }
 
         async function carregarDadosPasteur() {
             db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
+            db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
             await salvarBanco();
             alert('Base restaurada!');
         }
@@ -1984,6 +1998,10 @@
             } else {
                 db.equipamentos.push(dados);
             }
+
+            // ORDENA ALFABETICAMENTE PELO NOME DO EQUIPAMENTO
+            db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
             await salvarBanco();
             fecharModalEquipamento();
             filtrarTabela();
