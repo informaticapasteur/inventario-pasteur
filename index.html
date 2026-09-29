@@ -218,6 +218,7 @@
                             <option value="Manutenção">Manutenção</option>
                             <option value="Inativo">Inativo</option>
                             <option value="Descartado">Descartado</option>
+                            <option value="Devolvido">Devolvido</option>
                         </select>
                     </div>
                     <div class="flex gap-2">
@@ -550,6 +551,7 @@
                                     <th class="p-2 font-semibold">Série</th>
                                     <th class="p-2 font-semibold">Posse</th>
                                     <th class="p-2 font-semibold">Data Entrada</th>
+                                    <th class="p-2 font-semibold">Data Saída</th>
                                     <th class="p-2 font-semibold">Status</th>
                                     <th class="p-2 font-semibold">Ciclo / Alerta</th>
                                 </tr>
@@ -632,7 +634,7 @@
                 <!-- IMPORTADOR DE ARQUIVO .TXT -->
                 <div class="border-t pt-6 space-y-3">
                     <h3 class="font-bold text-slate-800 text-md"><i class="fa-solid fa-file-arrow-up mr-2 text-primary"></i>Importar Equipamentos via Arquivo .TXT</h3>
-                    <p class="text-xs text-slate-500">Selecione um arquivo `.txt` com os equipamentos (Formato por linha: <code>CÓDIGO; NOME; TIPO; SETOR; SÉRIE; POSSE; DATA; STATUS</code>).</p>
+                    <p class="text-xs text-slate-500">Selecione um arquivo `.txt` com os equipamentos (Formato por linha: <code>CÓDIGO; NOME; TIPO; SETOR; SÉRIE; POSSE; DATA; SAÍDA; STATUS</code>).</p>
                     <input type="file" id="input-arquivo-txt" accept=".txt" onchange="importarArquivoTxt(event)" class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
                 </div>
 
@@ -734,11 +736,16 @@
                         <option value="Manutenção">Manutenção</option>
                         <option value="Inativo">Inativo</option>
                         <option value="Descartado">Descartado</option>
+                        <option value="Devolvido">Devolvido</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Entrada</label>
                     <input type="date" id="eq-data" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Saída (Opcional)</label>
+                    <input type="date" id="eq-data-saida" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
                 </div>
             </div>
             <div class="flex justify-end space-x-2 pt-2 border-t">
@@ -938,11 +945,11 @@
     <script>
         const dadosCompletosPasteur = {
             equipamentos: [
-                { id: 1, codigo: 'ESTERI-04', nome: 'ESTERILIZAÇÃO AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', serial: '00210', posse: 'Próprio', dataEntrada: '2026-06-23', status: 'Inativo' },
-                { id: 2, codigo: 'ESTERI-05', nome: 'ESTERILIZAÇÃO SOLIDSTEEL AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', serial: '00211', posse: 'Próprio', dataEntrada: '2026-06-23', status: 'Ativo' },
-                { id: 3, codigo: 'MMICRO-06', nome: 'BACTEC FX40 SETOR MICROBIOLOGIA', tipo: 'Diagnóstico', setor: 'MICROBIOLOGIA', serial: '00063', posse: 'Próprio', dataEntrada: '2026-06-23', status: 'Ativo' },
-                { id: 14, codigo: 'CENTRI-05', nome: 'CENTRIFUGA PROCESSAMENTO PM', tipo: 'Centrífuga', setor: 'PM', serial: '00147', posse: 'Próprio', dataEntrada: '2026-06-23', status: 'Ativo' },
-                { id: 18, codigo: 'CENTRI-13', nome: 'CENTRIFUGA KACIL DUQUE', tipo: 'Centrífuga', setor: 'DUQUE DE CAXIAS', serial: '00116', posse: 'Próprio', dataEntrada: '2026-06-23', status: 'Ativo' }
+                { id: 1, codigo: 'ESTERI-04', nome: 'ESTERILIZAÇÃO AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', serial: '00210', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Inativo' },
+                { id: 2, codigo: 'ESTERI-05', nome: 'ESTERILIZAÇÃO SOLIDSTEEL AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', serial: '00211', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
+                { id: 3, codigo: 'MMICRO-06', nome: 'BACTEC FX40 SETOR MICROBIOLOGIA', tipo: 'Diagnóstico', setor: 'MICROBIOLOGIA', serial: '00063', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
+                { id: 14, codigo: 'CENTRI-05', nome: 'CENTRIFUGA PROCESSAMENTO PM', tipo: 'Centrífuga', setor: 'PM', serial: '00147', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
+                { id: 18, codigo: 'CENTRI-13', nome: 'CENTRIFUGA KACIL DUQUE', tipo: 'Centrífuga', setor: 'DUQUE DE CAXIAS', serial: '00116', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' }
             ],
             setores: ['PM', 'HBM', 'CAMOBI', 'JC', 'Setor', 'AGUDO', 'SÃO SEPÉ', 'MICROBIOLOGIA', 'ESTERILIZAÇÃO', 'DUQUE DE CAXIAS'],
             tipos: ['Autoclave', 'Balança Digital', 'Banho Maria', 'Cabine de Segurança', 'Centrífuga', 'Computador', 'Diagnóstico', 'Microscópio'],
@@ -1290,6 +1297,7 @@
                 case 'Manutenção': return 'bg-amber-100 text-amber-800 border border-amber-200';
                 case 'Inativo': return 'bg-slate-100 text-slate-600 border border-slate-200';
                 case 'Descartado': return 'bg-red-100 text-red-700 border border-red-200';
+                case 'Devolvido': return 'bg-purple-100 text-purple-800 border border-purple-200';
                 default: return 'bg-slate-100 text-slate-600';
             }
         }
@@ -1386,9 +1394,9 @@
         }
 
         function exportarCSV() {
-            let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;Serial;Posse;Data Entrada;Status\n";
+            let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;Serial;Posse;Data Entrada;Data Saida;Status\n";
             listaEquipamentosFiltradaCache.forEach(eq => {
-                csvContent += `"${eq.codigo || ''}";"${eq.nome || ''}";"${eq.tipo || ''}";"${eq.setor || ''}";"${eq.serial || ''}";"${eq.posse || 'Próprio'}";"${eq.dataEntrada || ''}";"${eq.status || 'Ativo'}"\n`;
+                csvContent += `"${eq.codigo || ''}";"${eq.nome || ''}";"${eq.tipo || ''}";"${eq.setor || ''}";"${eq.serial || ''}";"${eq.posse || 'Próprio'}";"${eq.dataEntrada || ''}";"${eq.dataSaida || ''}";"${eq.status || 'Ativo'}"\n`;
             });
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -1432,7 +1440,8 @@
                             serial: partes[4] || '0000',
                             posse: partes[5] || 'Próprio',
                             dataEntrada: partes[6] || new Date().toISOString().slice(0,10),
-                            status: partes[7] || 'Ativo'
+                            dataSaida: partes[7] || '',
+                            status: partes[8] || 'Ativo'
                         });
                         importados++;
                     }
@@ -1465,7 +1474,7 @@
             if (!texto) return;
             texto.split('\n').forEach(l => {
                 if (l.trim()) {
-                    db.equipamentos.push({ id: Date.now() + Math.random(), codigo: 'IMP', nome: l.trim().substring(0,40), tipo: db.tipos[0], setor: db.setores[0], serial: '0000', posse: 'Próprio', dataEntrada: new Date().toISOString().slice(0,10), status: 'Ativo' });
+                    db.equipamentos.push({ id: Date.now() + Math.random(), codigo: 'IMP', nome: l.trim().substring(0,40), tipo: db.tipos[0], setor: db.setores[0], serial: '0000', posse: 'Próprio', dataEntrada: new Date().toISOString().slice(0,10), dataSaida: '', status: 'Ativo' });
                 }
             });
             
@@ -1830,6 +1839,7 @@
                     <p><strong>Posse:</strong> ${eq.posse || 'Próprio'}</p>
                     <p><strong>Status:</strong> ${eq.status || 'Ativo'}</p>
                     <p><strong>Data de Entrada:</strong> ${eq.dataEntrada || '-'}</p>
+                    <p><strong>Data de Saída:</strong> ${eq.dataSaida || '-'}</p>
                     <p><strong>Ciclo de Vida:</strong> ${ciclo.texto}</p>
                 </div>
             `;
@@ -1963,6 +1973,7 @@
                     document.getElementById('eq-posse').value = eq.posse || 'Próprio';
                     document.getElementById('eq-status').value = eq.status || 'Ativo';
                     document.getElementById('eq-data').value = eq.dataEntrada || new Date().toISOString().slice(0,10);
+                    document.getElementById('eq-data-saida').value = eq.dataSaida || '';
                 }
             } else {
                 document.getElementById('modal-titulo').innerText = 'Novo Equipamento';
@@ -1973,6 +1984,7 @@
                 document.getElementById('eq-posse').value = 'Próprio';
                 document.getElementById('eq-status').value = 'Ativo';
                 document.getElementById('eq-data').value = new Date().toISOString().slice(0,10);
+                document.getElementById('eq-data-saida').value = '';
             }
         }
         function fecharModalEquipamento() { document.getElementById('modal-equipamento').classList.add('hidden'); }
@@ -1988,7 +2000,8 @@
                 serial: document.getElementById('eq-serial').value,
                 posse: document.getElementById('eq-posse').value,
                 status: document.getElementById('eq-status').value,
-                dataEntrada: document.getElementById('eq-data').value || new Date().toISOString().slice(0,10)
+                dataEntrada: document.getElementById('eq-data').value || new Date().toISOString().slice(0,10),
+                dataSaida: document.getElementById('eq-data-saida').value || ''
             };
             if (id) {
                 const idx = db.equipamentos.findIndex(e => e.id == id);
