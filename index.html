@@ -566,7 +566,7 @@
             <!-- ABA GERENCIAMENTO DE USUÁRIOS (ADMIN ONLY) -->
             <section id="aba-usuarios" class="hidden max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 no-print">
                 <div class="flex justify-between items-center border-b pb-3">
-                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users-gear text-primary mr-2"></i>Gerenciamento Completo de Usuários e Permissões</h2>
+                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users-gear text-primary mr-2"></i>Gerenciamento de Clientes, Usuários & Status de Assinatura</h2>
                     <button onclick="abrirModalUsuario()" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-medium shadow hover:opacity-95 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-user-plus"></i> Novo Usuário
                     </button>
@@ -577,7 +577,8 @@
                             <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
                                 <th class="p-3 font-semibold">Nome</th>
                                 <th class="p-3 font-semibold">Usuário (Login)</th>
-                                <th class="p-3 font-semibold">Perfil / Permissão</th>
+                                <th class="p-3 font-semibold">Perfil</th>
+                                <th class="p-3 font-semibold">Status Pagamento</th>
                                 <th class="p-3 font-semibold text-center">Ações</th>
                             </tr>
                         </thead>
@@ -686,6 +687,13 @@
                         <option value="Tecnico">Técnico (Operações, Manutenção e Helpdesk)</option>
                         <option value="Visualizador">Visualizador (Apenas Leitura e Relatórios)</option>
                         <option value="Admin">Administrador (Acesso Total e Ajustes)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Status de Pagamento / Acesso</label>
+                    <select id="usr-status-pagamento" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                        <option value="Ativo">Ativo (Acesso Liberado)</option>
+                        <option value="Inadimplente">Inadimplente (Acesso Bloqueado)</option>
                     </select>
                 </div>
             </div>
@@ -958,7 +966,7 @@
             comodatos: [],
             transferencias: [],
             usuarios: [
-                { nome: 'Administrador Geral', usuario: 'admin', senha: 'admin', perfil: 'Admin' }
+                { nome: 'Administrador Geral', usuario: 'admin', senha: 'admin', perfil: 'Admin', statusPagamento: 'Ativo' }
             ],
             config: {
                 empresa: 'Laboratório Pasteur',
@@ -1126,6 +1134,13 @@
             const userFound = db.usuarios.find(usr => usr.usuario === u && usr.senha === s);
 
             if (userFound) {
+                // VERIFICAÇÃO DE INADIMPLÊNCIA / BLOQUEIO DE ACESSO
+                if (userFound.statusPagamento === 'Inadimplente') {
+                    erroDiv.innerHTML = `Acesso suspenso por inadimplência. Regularize sua assinatura para continuar.`;
+                    erroDiv.classList.remove('hidden');
+                    return;
+                }
+
                 usuarioLogado = userFound;
                 erroDiv.classList.add('hidden');
                 document.getElementById('info-usuario-logado').innerText = userFound.nome;
@@ -1158,7 +1173,7 @@
                 return;
             }
 
-            db.usuarios.push({ nome, usuario, senha, perfil });
+            db.usuarios.push({ nome, usuario, senha, perfil, statusPagamento: 'Ativo' });
             await salvarBanco();
 
             sucessoDiv.innerText = 'Conta criada com sucesso! Faça login.';
@@ -1210,13 +1225,17 @@
             tbody.innerHTML = '';
             if (!db.usuarios) db.usuarios = [];
             db.usuarios.forEach((usr, index) => {
+                const statusPag = usr.statusPagamento || 'Ativo';
+                const badgePag = statusPag === 'Inadimplente' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+                
                 tbody.innerHTML += `
                     <tr class="border-b border-slate-100">
                         <td class="p-3 font-medium">${usr.nome}</td>
                         <td class="p-3 font-mono text-xs">${usr.usuario}</td>
                         <td class="p-3"><span class="px-2 py-1 rounded text-xs font-semibold bg-indigo-100 text-indigo-800">${usr.perfil}</span></td>
+                        <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgePag}">${statusPag}</span></td>
                         <td class="p-3 text-center space-x-3">
-                            <button onclick="abrirModalUsuario(${index})" class="text-primary hover:underline text-xs"><i class="fa-solid fa-pen mr-1"></i>Editar / Senha</button>
+                            <button onclick="abrirModalUsuario(${index})" class="text-primary hover:underline text-xs"><i class="fa-solid fa-pen mr-1"></i>Editar / Status</button>
                             ${db.usuarios.length > 1 ? `<button onclick="excluirUsuario(${index})" class="text-red-600 hover:underline text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>` : '<span class="text-xs text-slate-400">Último Admin</span>'}
                         </td>
                     </tr>
@@ -1228,12 +1247,13 @@
             document.getElementById('modal-usuario').classList.remove('hidden');
             if (index !== null) {
                 const usr = db.usuarios[index];
-                document.getElementById('modal-usuario-titulo').innerText = 'Editar Usuário / Senha';
+                document.getElementById('modal-usuario-titulo').innerText = 'Editar Usuário / Status';
                 document.getElementById('usr-edit-index').value = index;
                 document.getElementById('usr-nome').value = usr.nome;
                 document.getElementById('usr-login').value = usr.usuario;
                 document.getElementById('usr-senha').value = '';
                 document.getElementById('usr-perfil').value = usr.perfil;
+                document.getElementById('usr-status-pagamento').value = usr.statusPagamento || 'Ativo';
             } else {
                 document.getElementById('modal-usuario-titulo').innerText = 'Novo Usuário';
                 document.getElementById('usr-edit-index').value = '';
@@ -1241,6 +1261,7 @@
                 document.getElementById('usr-login').value = '';
                 document.getElementById('usr-senha').value = '';
                 document.getElementById('usr-perfil').value = 'Tecnico';
+                document.getElementById('usr-status-pagamento').value = 'Ativo';
             }
         }
 
@@ -1254,6 +1275,7 @@
             const usuario = document.getElementById('usr-login').value.trim();
             const senha = document.getElementById('usr-senha').value.trim();
             const perfil = document.getElementById('usr-perfil').value;
+            const statusPagamento = document.getElementById('usr-status-pagamento').value;
 
             if (!nome || !usuario) {
                 return alert('Preencha o nome e o nome de usuário.');
@@ -1266,12 +1288,13 @@
                 if (db.usuarios.some(u => u.usuario === usuario)) {
                     return alert('Este nome de usuário já existe.');
                 }
-                db.usuarios.push({ nome, usuario, senha, perfil });
+                db.usuarios.push({ nome, usuario, senha, perfil, statusPagamento });
             } else {
                 const idx = Number(index);
                 db.usuarios[idx].nome = nome;
                 db.usuarios[idx].usuario = usuario;
                 db.usuarios[idx].perfil = perfil;
+                db.usuarios[idx].statusPagamento = statusPagamento;
                 if (senha) {
                     db.usuarios[idx].senha = senha;
                 }
