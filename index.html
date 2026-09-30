@@ -39,6 +39,14 @@
         .border-primary { border-color: var(--cor-primaria); }
         .ring-primary:focus { --tw-ring-color: var(--cor-primaria); }
 
+        /* Estilização e alinhamento do QR Code e Textos da Etiqueta */
+        #qr-code-container canvas, #qr-code-container img {
+            display: block !important;
+            margin: 0 auto !important;
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
         @media print {
             body { background: white !important; color: black !important; }
             header, nav, button, .no-print, input, select { display: none !important; }
@@ -902,9 +910,9 @@
 
             <!-- CAIXA DE PREVIEW DA ETIQUETA -->
             <div class="flex justify-center p-4 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-                <div id="preview-etiqueta-caixa" class="bg-white text-slate-900 p-3 rounded-xl shadow-md flex flex-col items-center justify-center text-center transition-all duration-300" style="width: 260px; height: 160px;">
-                    <div id="qr-code-container" class="flex justify-center mb-1.5"></div>
-                    <div id="qr-info-detalhe" class="text-[10px] font-bold leading-tight font-mono text-slate-900 w-full px-1"></div>
+                <div id="preview-etiqueta-caixa" class="bg-white text-black p-2 rounded-xl shadow-md flex flex-col items-center justify-center text-center transition-all duration-300 overflow-hidden" style="width: 210px; height: 130px; color: #000000 !important;">
+                    <div id="qr-code-container" class="flex justify-center items-center overflow-hidden mb-1"></div>
+                    <div id="qr-info-detalhe" class="text-[9px] font-bold leading-tight font-mono w-full px-1" style="color: #000000 !important;"></div>
                 </div>
             </div>
 
@@ -1736,7 +1744,7 @@
             atualizarRelatorios();
         }
 
-        // GERENCIADOR DE ETIQUETAS
+        // GERENCIADOR DE ETIQUETAS (COM SUPORTE TOTAL A IMPRESSÃO NO WINDOWS E TEXTO PRETO)
         let equipamentoGerenciadorQR = null;
 
         function abrirModalQR(id) {
@@ -1757,35 +1765,42 @@
             const container = document.getElementById('qr-code-container');
             container.innerHTML = '';
 
-            let largura = '260px';
-            let altura = '160px';
-            let qrSize = 90;
+            let largura = '210px';
+            let altura = '130px';
+            let tamanhoQR = 75; 
 
             if (tamanho === '50x30') {
-                largura = '200px'; altura = '130px'; qrSize = 65;
+                largura = '190px'; altura = '114px'; tamanhoQR = 65;
             } else if (tamanho === '40x25') {
-                largura = '170px'; altura = '110px'; qrSize = 55;
+                largura = '151px'; altura = '94px'; tamanhoQR = 50;
             } else if (tamanho === '100x50') {
-                largura = '340px'; altura = '180px'; qrSize = 110;
+                largura = '320px'; altura = '160px'; tamanhoQR = 105;
             } else if (tamanho === 'a4') {
-                largura = '280px'; altura = '190px'; qrSize = 95;
+                largura = '260px'; altura = '180px'; tamanhoQR = 90;
             }
 
             caixa.style.width = largura;
             caixa.style.height = altura;
 
-            const urlBase = (db.config && db.config.urlPublica && db.config.urlPublica.trim() !== '') ? db.config.urlPublica.trim() : window.location.href.split('?')[0];
+            const urlBase = (db.config && db.config.urlPublica && db.config.urlPublica.trim() !== '') ? db.config.urlPublica.trim() : window.location.origin;
             const linkQr = `${urlBase.endsWith('/') ? urlBase.slice(0, -1) : urlBase}?eq=${equipamentoGerenciadorQR.id}`;
             
-            new QRCode(container, { text: linkQr, width: qrSize, height: qrSize });
+            new QRCode(container, {
+                text: linkQr,
+                width: tamanhoQR,
+                height: tamanhoQR,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+
             document.getElementById('qr-info-detalhe').innerHTML = `
-                <div style="font-size: 9px; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">[${equipamentoGerenciadorQR.codigo || '-'}] ${equipamentoGerenciadorQR.nome || '-'}</div>
-                <div style="font-size: 8px; color: #475569;">Setor: ${equipamentoGerenciadorQR.setor || '-'}</div>
+                <div style="font-size: 8px; font-weight: bold; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #000000 !important;">[${equipamentoGerenciadorQR.codigo || '-'}] ${equipamentoGerenciadorQR.nome || '-'}</div>
+                <div style="font-size: 7px; line-height: 1.1; color: #000000 !important;">Setor: ${equipamentoGerenciadorQR.setor || '-'}</div>
             `;
         }
 
         function imprimirEtiquetaPersonalizada() {
-            const tipoImpressora = document.getElementById('sel-tipo-impressora').value;
             const tamanho = document.getElementById('sel-tamanho-etiqueta').value;
             
             let estiloDinamico = document.getElementById('estilo-impressao-dinamico');
@@ -1801,7 +1816,6 @@
             else if (tamanho === '100x50') { larguraMm = '100mm'; alturaMm = '50mm'; }
             else if (tamanho === 'a4') { larguraMm = '210mm'; alturaMm = '297mm'; }
 
-            // CSS de impressão otimizado para centralização absoluta na etiqueta
             estiloDinamico.innerHTML = `
                 @media print {
                     @page {
@@ -1813,13 +1827,21 @@
                         height: ${alturaMm} !important;
                         margin: 0 !important;
                         padding: 0 !important;
-                        background: #fff !important;
-                        overflow: hidden !important;
+                        background: #ffffff !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     body * {
+                        display: none !important;
                         visibility: hidden !important;
                     }
                     #preview-etiqueta-caixa, #preview-etiqueta-caixa * {
+                        display: flex !important;
+                        visibility: visible !important;
+                        color: #000000 !important;
+                    }
+                    #preview-etiqueta-caixa canvas, #preview-etiqueta-caixa img {
+                        display: block !important;
                         visibility: visible !important;
                     }
                     #preview-etiqueta-caixa {
@@ -1829,20 +1851,22 @@
                         width: ${larguraMm} !important;
                         height: ${alturaMm} !important;
                         margin: 0 !important;
-                        padding: 1mm !important;
-                        display: flex !important;
+                        padding: 0.5mm !important;
                         flex-direction: column !important;
                         align-items: center !important;
                         justify-content: center !important;
-                        background: #fff !important;
+                        background: #ffffff !important;
                         box-sizing: border-box !important;
                         border: none !important;
                         box-shadow: none !important;
+                        z-index: 999999 !important;
                     }
                 }
             `;
 
-            window.print();
+            setTimeout(() => {
+                window.print();
+            }, 250);
         }
 
         function exibirModalDetalhesCelular(eq) {
@@ -2134,10 +2158,16 @@
             document.getElementById('empresa-nome').innerText = db.config.empresa;
             document.getElementById('login-empresa-titulo').innerText = db.config.empresa;
             document.documentElement.style.setProperty('--cor-primaria', db.config.cor);
+            
             if (document.getElementById('config-empresa')) document.getElementById('config-empresa').value = db.config.empresa;
             if (document.getElementById('config-url-publica')) document.getElementById('config-url-publica').value = db.config.urlPublica || '';
             if (document.getElementById('config-gemini-key')) document.getElementById('config-gemini-key').value = db.config.geminiKey || '';
             if (document.getElementById('config-copyright')) document.getElementById('config-copyright').value = db.config.copyright || '';
+            
+            if (document.getElementById('config-cor') && db.config.cor) {
+                document.getElementById('config-cor').value = db.config.cor;
+            }
+
             document.getElementById('texto-copyright').innerText = db.config.copyright || '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.';
 
             const logoContainer = document.getElementById('logo-container');
