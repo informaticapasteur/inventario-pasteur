@@ -975,46 +975,26 @@
         </div>
     </div>
 
-    <!-- GERENCIADOR AVANÇADO DE ETIQUETAS QR CODE -->
+    <!-- GERENCIADOR DE ETIQUETAS QR CODE (ZEBRA 50x30 mm) -->
     <div id="modal-qr" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-800">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3 no-print">
-                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-qrcode text-sky-400 mr-2"></i>Gerenciador de Impressão de Etiquetas</h3>
+                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-qrcode text-sky-400 mr-2"></i>Etiqueta Zebra (50x30 mm)</h3>
                 <button onclick="fecharModalQR()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <!-- PAINEL DE CONTROLES DA ETIQUETA -->
-            <div id="painel-controles-etiqueta" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/50 p-4 rounded-2xl border border-slate-800 no-print">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Tamanho da Etiqueta</label>
-                    <select id="sel-tamanho-etiqueta" onchange="atualizarPreviewEtiqueta()" class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white">
-                        <option value="50x30">50 x 30 mm (Padrão Térmica Bobina)</option>
-                        <option value="40x25">40 x 25 mm (Pequena)</option>
-                        <option value="100x50">100 x 50 mm (Grande / Caixa)</option>
-                        <option value="a4">Folha A4 Convencional</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Perfil de Impressora</label>
-                    <select id="sel-tipo-impressora" class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white">
-                        <option value="termica">Impressora Térmica (Zebra/Elgin/Argox)</option>
-                        <option value="convencional">Impressora Jato de Tinta / Laser (A4)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- CAIXA DE PREVIEW DA ETIQUETA -->
-            <div class="flex justify-center p-4 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-                <div id="preview-etiqueta-caixa" class="bg-white text-black p-2 rounded-xl shadow-md flex flex-col items-center justify-center text-center transition-all duration-300 overflow-hidden" style="width: 210px; height: 130px; color: #000000 !important;">
+            <!-- CAIXA DE PREVIEW DA ETIQUETA (VERTICAL: QR EM CIMA, TEXTO EMBAIXO) -->
+            <div class="flex justify-center p-6 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
+                <div id="preview-etiqueta-caixa" class="bg-white text-black p-1.5 rounded-sm shadow-md flex flex-col items-center justify-center text-center transition-all duration-300 overflow-hidden" style="width: 189px; height: 113px; color: #000000 !important;">
                     <div id="qr-code-container" class="flex justify-center items-center overflow-hidden mb-1"></div>
-                    <div id="qr-info-detalhe" class="text-[9px] font-bold leading-tight font-mono w-full px-1" style="color: #000000 !important;"></div>
+                    <div id="qr-info-detalhe" class="text-[7.5px] font-bold leading-tight font-mono w-full px-0.5 text-left" style="color: #000000 !important;"></div>
                 </div>
             </div>
 
             <!-- BOTÕES DE AÇÃO -->
             <div class="flex gap-2.5 pt-2 no-print border-t border-slate-800">
                 <button onclick="imprimirEtiquetaPersonalizada()" class="flex-grow bg-primary text-white py-2.5 rounded-xl text-xs font-bold shadow hover:opacity-95 transition flex items-center justify-center gap-1.5 active:scale-[0.98]">
-                    <i class="fa-solid fa-print"></i> Imprimir Etiqueta
+                    <i class="fa-solid fa-print"></i> Imprimir Etiqueta (50x30 mm)
                 </button>
                 <button onclick="fecharModalQR()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-slate-300">Fechar</button>
             </div>
@@ -1432,7 +1412,7 @@
                     
                     const acoesHtml = `
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick="abrirModalQR(${eq.id})" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1" title="Gerenciar e Imprimir QR Code">
+                            <button onclick="abrirModalQR(${eq.id})" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1" title="Gerenciar e Imprimir Etiqueta Zebra">
                                 <i class="fa-solid fa-qrcode"></i> QR
                             </button>
                             <button onclick="editarEquipamento(${eq.id})" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
@@ -2010,24 +1990,14 @@
 
         function atualizarPreviewEtiqueta() {
             if (!equipamentoGerenciadorQR) return;
-            const tamanho = document.getElementById('sel-tamanho-etiqueta').value;
             const caixa = document.getElementById('preview-etiqueta-caixa');
             const container = document.getElementById('qr-code-container');
             container.innerHTML = '';
 
-            let largura = '210px';
-            let altura = '130px';
-            let tamanhoQR = 75; 
-
-            if (tamanho === '50x30') {
-                largura = '190px'; altura = '114px'; tamanhoQR = 65;
-            } else if (tamanho === '40x25') {
-                largura = '151px'; altura = '94px'; tamanhoQR = 50;
-            } else if (tamanho === '100x50') {
-                largura = '320px'; altura = '160px'; tamanhoQR = 105;
-            } else if (tamanho === 'a4') {
-                largura = '260px'; altura = '180px'; tamanhoQR = 90;
-            }
+            // Dimensões exatas para etiqueta térmica 50x30 mm (3x5 cm)
+            const largura = '189px'; // ~50mm
+            const altura = '113px';  // ~30mm
+            const tamanhoQR = 45;    // Tamanho ideal para o QR Code ficar no topo
 
             caixa.style.width = largura;
             caixa.style.height = altura;
@@ -2044,15 +2014,15 @@
                 correctLevel : QRCode.CorrectLevel.M
             });
 
+            // Layout vertical exatamente igual ao modelo da foto enviada
             document.getElementById('qr-info-detalhe').innerHTML = `
-                <div style="font-size: 8px; font-weight: bold; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #000000 !important;">[${equipamentoGerenciadorQR.codigo || '-'}] ${equipamentoGerenciadorQR.nome || '-'}</div>
-                <div style="font-size: 7px; line-height: 1.1; color: #000000 !important;">Setor: ${equipamentoGerenciadorQR.setor || '-'}</div>
+                <div style="font-size: 7.5px; font-weight: bold; line-height: 1.1; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-top: 2px;">Cód: ${equipamentoGerenciadorQR.codigo || '-'}</div>
+                <div style="font-size: 7.5px; font-weight: bold; line-height: 1.1; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Ativo: ${equipamentoGerenciadorQR.nome || '-'}</div>
+                <div style="font-size: 7.5px; font-weight: bold; line-height: 1.1; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Setor: ${equipamentoGerenciadorQR.setor || '-'}</div>
             `;
         }
 
         function imprimirEtiquetaPersonalizada() {
-            const tamanho = document.getElementById('sel-tamanho-etiqueta').value;
-            
             let estiloDinamico = document.getElementById('estilo-impressao-dinamico');
             if (!estiloDinamico) {
                 estiloDinamico = document.createElement('style');
@@ -2060,16 +2030,10 @@
                 document.head.appendChild(estiloDinamico);
             }
 
-            let larguraMm = '50mm';
-            let alturaMm = '30mm';
-            if (tamanho === '40x25') { larguraMm = '40mm'; alturaMm = '25mm'; }
-            else if (tamanho === '100x50') { larguraMm = '100mm'; alturaMm = '50mm'; }
-            else if (tamanho === 'a4') { larguraMm = '210mm'; alturaMm = '297mm'; }
-
             estiloDinamico.innerHTML = `
                 @media print {
                     @page {
-                        size: ${larguraMm} ${alturaMm};
+                        size: 50mm 30mm;
                         margin: 0 !important;
                     }
                     body {
@@ -2100,7 +2064,6 @@
                         box-shadow: none !important;
                         border: none !important;
                     }
-                    #painel-controles-etiqueta,
                     #modal-qr h3,
                     #modal-qr button,
                     #modal-qr .border-t {
@@ -2112,10 +2075,10 @@
                         position: absolute !important;
                         left: 0 !important;
                         top: 0 !important;
-                        width: 100% !important;
-                        height: 100% !important;
+                        width: 50mm !important;
+                        height: 30mm !important;
                         margin: 0 !important;
-                        padding: 1mm !important;
+                        padding: 1.5mm !important;
                         background: #ffffff !important;
                         color: #000000 !important;
                         border: none !important;
