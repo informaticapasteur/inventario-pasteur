@@ -1744,7 +1744,7 @@
             atualizarRelatorios();
         }
 
-        // GERENCIADOR DE ETIQUETAS (COM SUPORTE TOTAL A IMPRESSÃO NO WINDOWS E TEXTO PRETO)
+        // GERENCIADOR DE ETIQUETAS (COM SUPORTE BLINDADO PARA SPOOLER DO WINDOWS E TEXTO PRETO)
         let equipamentoGerenciadorQR = null;
 
         function abrirModalQR(id) {
@@ -1822,51 +1822,74 @@
                         size: ${larguraMm} ${alturaMm};
                         margin: 0 !important;
                     }
-                    body, html {
-                        width: ${larguraMm} !important;
-                        height: ${alturaMm} !important;
+                    body {
+                        background: #ffffff !important;
                         margin: 0 !important;
                         padding: 0 !important;
-                        background: #ffffff !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
-                    body * {
+                    body > * {
                         display: none !important;
-                        visibility: hidden !important;
                     }
-                    #preview-etiqueta-caixa, #preview-etiqueta-caixa * {
+                    #modal-qr {
+                        display: block !important;
+                        position: static !important;
+                        background: white !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                    }
+                    #modal-qr > div {
+                        max-width: 100% !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                    }
+                    #painel-controles-etiqueta,
+                    #modal-qr h3,
+                    #modal-qr button,
+                    #modal-qr .border-t {
+                        display: none !important;
+                    }
+                    #preview-etiqueta-caixa {
                         display: flex !important;
+                        visibility: visible !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        height: 100% !important;
+                        margin: 0 !important;
+                        padding: 1mm !important;
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        flex-direction: column !important;
+                    }
+                    #preview-etiqueta-caixa * {
                         visibility: visible !important;
                         color: #000000 !important;
                     }
-                    #preview-etiqueta-caixa canvas, #preview-etiqueta-caixa img {
+                    #qr-code-container canvas, 
+                    #qr-code-container img {
                         display: block !important;
                         visibility: visible !important;
-                    }
-                    #preview-etiqueta-caixa {
-                        position: fixed !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: ${larguraMm} !important;
-                        height: ${alturaMm} !important;
-                        margin: 0 !important;
-                        padding: 0.5mm !important;
-                        flex-direction: column !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        background: #ffffff !important;
-                        box-sizing: border-box !important;
-                        border: none !important;
-                        box-shadow: none !important;
-                        z-index: 999999 !important;
+                        margin: 0 auto !important;
                     }
                 }
             `;
 
             setTimeout(() => {
                 window.print();
-            }, 250);
+            }, 200);
         }
 
         function exibirModalDetalhesCelular(eq) {
