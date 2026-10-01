@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,11 +39,20 @@
         .border-primary { border-color: var(--cor-primaria); }
         .ring-primary:focus { --tw-ring-color: var(--cor-primaria); }
 
+        /* CORREÇÃO DEFINITIVA: QR CODE ESTRITAMENTE QUADRADO */
+        #qr-code-container {
+            aspect-ratio: 1 / 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            flex-shrink: 0 !important;
+        }
+
         #qr-code-container canvas, #qr-code-container img {
             display: block !important;
-            margin: 0 auto !important;
-            max-width: 100% !important;
-            height: auto !important;
+            aspect-ratio: 1 / 1 !important;
+            object-fit: fill !important;
         }
 
         @media print {
@@ -63,7 +72,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
 
-    <!-- TELA DE LOGIN & CADASTRO DE USUÁRIOS -->
+    <!-- TELA DE LOGIN & CADASTRO DE UTILIZADORES -->
     <div id="tela-login" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4" style="display: flex;">
         <div class="bg-slate-900 rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-800">
             <div class="text-center space-y-3">
@@ -80,11 +89,11 @@
             <!-- FORMULÁRIO DE LOGIN -->
             <div id="form-login" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Usuário</label>
-                    <input type="text" id="login-usuario" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition" placeholder="Digite seu usuário">
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Utilizador</label>
+                    <input type="text" id="login-usuario" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition" placeholder="Digite o seu utilizador">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Senha</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Palavra-passe</label>
                     <input type="password" id="login-senha" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition" placeholder="••••••••">
                 </div>
                 <button onclick="fazerLogin()" class="w-full bg-primary hover:opacity-95 text-white py-2.5 rounded-xl font-medium shadow-lg shadow-sky-500/20 transition active:scale-[0.98]">Entrar no Sistema</button>
@@ -93,18 +102,18 @@
                 </div>
             </div>
 
-            <!-- FORMULÁRIO DE CADASTRO DE NOVO USUÁRIO -->
+            <!-- FORMULÁRIO DE CADASTRO DE NOVO UTILIZADOR -->
             <div id="form-cadastro" class="space-y-4 hidden">
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome Completo</label>
                     <input type="text" id="cad-nome" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="Ex: Nome do Colaborador">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome de Usuário (Login)</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome de Utilizador (Login)</label>
                     <input type="text" id="cad-usuario" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="Ex: gilnei.tec">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Senha</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Palavra-passe</label>
                     <input type="password" id="cad-senha" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="••••••••">
                 </div>
                 <div>
@@ -135,7 +144,7 @@
                     </div>
                     <div>
                         <h1 id="empresa-nome" class="font-bold text-base text-white tracking-tight">Laboratório Pasteur SM</h1>
-                        <p class="text-xs text-slate-400">Logado como: <strong id="info-usuario-logado" class="text-sky-400">Admin</strong> (<span id="info-perfil-logado">Administrador</span>)</p>
+                        <p class="text-xs text-slate-400">Sessão iniciada como: <strong id="info-usuario-logado" class="text-sky-400">Admin</strong> (<span id="info-perfil-logado">Administrador</span>)</p>
                     </div>
                 </div>
                 <nav class="flex flex-wrap items-center gap-1.5">
@@ -147,7 +156,7 @@
                     <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-right-left mr-1.5"></i> Rastreio</button>
                     <button onclick="mudarAba('setores')" id="btn-setores" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-layer-group mr-1.5"></i> Setores</button>
                     <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-chart-pie mr-1.5"></i> Relatórios & IA</button>
-                    <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only"><i class="fa-solid fa-users-gear mr-1.5"></i> Usuários</button>
+                    <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only"><i class="fa-solid fa-users-gear mr-1.5"></i> Utilizadores</button>
                     <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only"><i class="fa-solid fa-gear mr-1.5"></i> Ajustes</button>
                     <button onclick="fazerLogout()" class="px-2.5 py-2 text-xs font-medium rounded-xl text-red-400 hover:bg-red-950/50 transition ml-1 border border-red-900/50" title="Sair do Sistema"><i class="fa-solid fa-right-from-bracket"></i></button>
                 </nav>
@@ -185,7 +194,7 @@
                             <option value="Comodato">Comodato</option>
                         </select>
                         <select id="filtro-status" class="px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" onchange="filtrarTabela()">
-                            <option value="">Todos os Status</option>
+                            <option value="">Todos os Estados</option>
                             <option value="Ativo">Ativo</option>
                             <option value="Manutenção">Manutenção</option>
                             <option value="Inativo">Inativo</option>
@@ -208,13 +217,13 @@
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
                                 <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Cód. Ref / Patrimônio</th>
+                                    <th class="p-3.5 font-semibold">Cód. Ref / Património</th>
                                     <th class="p-3.5 font-semibold">Equipamento</th>
                                     <th class="p-3.5 font-semibold">Tipo</th>
                                     <th class="p-3.5 font-semibold">Setor</th>
                                     <th class="p-3.5 font-semibold">Série</th>
                                     <th class="p-3.5 font-semibold">Posse</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
+                                    <th class="p-3.5 font-semibold">Estado</th>
                                     <th class="p-3.5 font-semibold min-w-[180px]">Ciclo / Alerta</th>
                                     <th class="p-3.5 font-semibold text-center no-print">Ações</th>
                                 </tr>
@@ -224,11 +233,11 @@
                         </table>
                     </div>
                     <div class="p-4 bg-slate-900/40 border-t border-slate-700/80 flex flex-col sm:flex-row justify-between items-center gap-3 no-print">
-                        <div id="paginacao-info" class="text-xs text-slate-400">Mostrando página 1</div>
+                        <div id="paginacao-info" class="text-xs text-slate-400">A mostrar página 1</div>
                         <div class="flex items-center space-x-2">
                             <button onclick="mudarPagina(-1)" id="btn-prev-pagina" class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-700 transition disabled:opacity-40">Anterior</button>
                             <span id="paginacao-numeracao" class="text-xs font-bold text-white px-2">1 / 1</span>
-                            <button onclick="mudarPagina(1)" id="btn-next-pagina" class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-700 transition disabled:opacity-40">Próxima</button>
+                            <button onclick="mudarPagina(1)" id="btn-next-pagina" class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-700 transition disabled:opacity-40">Seguinte</button>
                         </div>
                     </div>
                 </div>
@@ -239,7 +248,7 @@
                 <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
                     <div>
                         <h2 class="text-base font-bold text-white"><i class="fa-solid fa-screwdriver-wrench text-sky-400 mr-2"></i>Módulo de Calibração e Manutenção Preventiva (RBC)</h2>
-                        <p class="text-xs text-slate-400">Controle metrológico para centrífugas, autoclaves, balanças e banhos-maria com alertas WhatsApp.</p>
+                        <p class="text-xs text-slate-400">Controlo metrológico para centrífugas, autoclaves, balanças e banhos-maria com alertas WhatsApp.</p>
                     </div>
                     <button onclick="abrirModalManutencao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
                         <i class="fa-solid fa-plus"></i> Nova Calibração / Manutenção
@@ -256,7 +265,7 @@
                                     <th class="p-3.5 font-semibold">Data Realizada</th>
                                     <th class="p-3.5 font-semibold">Próxima Calibração</th>
                                     <th class="p-3.5 font-semibold">Laudo Técnico</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
+                                    <th class="p-3.5 font-semibold">Estado</th>
                                     <th class="p-3.5 font-semibold text-center">Ações & WhatsApp</th>
                                 </tr>
                             </thead>
@@ -290,8 +299,8 @@
                                     <th class="p-3.5 font-semibold">Responsável</th>
                                     <th class="p-3.5 font-semibold">Data Execução</th>
                                     <th class="p-3.5 font-semibold">Próxima Revalidação</th>
-                                    <th class="p-3.5 font-semibold text-center">Arquivo Anexo</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
+                                    <th class="p-3.5 font-semibold text-center">Ficheiro Anexo</th>
+                                    <th class="p-3.5 font-semibold">Estado</th>
                                     <th class="p-3.5 font-semibold text-center">Ações & WhatsApp</th>
                                 </tr>
                             </thead>
@@ -324,7 +333,7 @@
                                     <th class="p-3.5 font-semibold">Setor / Unidade Solicitante</th>
                                     <th class="p-3.5 font-semibold">Problema Relatado</th>
                                     <th class="p-3.5 font-semibold">Prioridade</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
+                                    <th class="p-3.5 font-semibold">Estado</th>
                                     <th class="p-3.5 font-semibold text-center">Ações</th>
                                 </tr>
                             </thead>
@@ -341,7 +350,7 @@
                     <div class="flex justify-between items-center border-b border-slate-700/80 pb-4">
                         <div>
                             <h2 class="text-base font-bold text-white"><i class="fa-solid fa-file-invoice-dollar text-sky-400 mr-2"></i>Dashboard Financeiro de Comodatos vs. Ativos Próprios</h2>
-                            <p class="text-xs text-slate-400">Controle de contratos, analisadores de diagnóstico e taxas de amortização.</p>
+                            <p class="text-xs text-slate-400">Controlo de contratos, analisadores de diagnóstico e taxas de amortização.</p>
                         </div>
                         <button onclick="abrirModalComodato()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
                             <i class="fa-solid fa-plus"></i> Novo Contrato / Comodato
@@ -371,7 +380,7 @@
                                     <th class="p-3.5 font-semibold">Fornecedor / Parceiro</th>
                                     <th class="p-3.5 font-semibold">Vigência do Contrato</th>
                                     <th class="p-3.5 font-semibold">Custo Mensal / Amortização</th>
-                                    <th class="p-3.5 font-semibold">Status de Renovação</th>
+                                    <th class="p-3.5 font-semibold">Estado de Renovação</th>
                                     <th class="p-3.5 font-semibold text-center">Ações</th>
                                 </tr>
                             </thead>
@@ -390,7 +399,7 @@
                         <p class="text-xs text-slate-400">Histórico rigoroso de movimentação de ativos entre setores.</p>
                     </div>
                     <button onclick="abrirModalTransferencia()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
-                        <i class="fa-solid fa-truck-moving"></i> Registrar Transferência
+                        <i class="fa-solid fa-truck-moving"></i> Registar Transferência
                     </button>
                 </div>
 
@@ -419,7 +428,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Gerenciar Setores -->
                     <div class="bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-4">
-                        <h2 class="text-base font-bold text-white border-b border-slate-700/80 pb-3"><i class="fa-solid fa-building text-sky-400 mr-2"></i>Gerenciar Setores</h2>
+                        <h2 class="text-base font-bold text-white border-b border-slate-700/80 pb-3"><i class="fa-solid fa-building text-sky-400 mr-2"></i>Gerir Setores</h2>
                         <div class="flex gap-2 write-allowed">
                             <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor" class="flex-grow px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <button onclick="salvarSetor()" class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-medium shadow hover:opacity-95 transition">Adicionar</button>
@@ -489,7 +498,7 @@
                     <div class="bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-700/80">
                         <h3 class="font-medium text-slate-400 text-xs uppercase tracking-wider mb-2"><i class="fa-solid fa-boxes-stacked text-primary mr-2"></i>Total de Ativos</h3>
                         <p id="relatorio-total" class="text-3xl font-bold text-white">0</p>
-                        <p class="text-xs text-slate-400 mt-1.5">Equipamentos cadastrados.</p>
+                        <p class="text-xs text-slate-400 mt-1.5">Equipamentos registados.</p>
                     </div>
                 </div>
 
@@ -560,7 +569,7 @@
                                     <th class="p-3.5 font-semibold">Posse</th>
                                     <th class="p-3.5 font-semibold">Data Entrada</th>
                                     <th class="p-3.5 font-semibold">Data Saída</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
+                                    <th class="p-3.5 font-semibold">Estado</th>
                                     <th class="p-3.5 font-semibold">Ciclo / Alerta</th>
                                 </tr>
                             </thead>
@@ -574,9 +583,9 @@
             <!-- ABA GERENCIAMENTO DE USUÁRIOS (ADMIN ONLY) -->
             <section id="aba-usuarios" class="hidden max-w-4xl mx-auto bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-6 no-print">
                 <div class="flex justify-between items-center border-b border-slate-700/80 pb-4">
-                    <h2 class="text-base font-bold text-white"><i class="fa-solid fa-users-gear text-sky-400 mr-2"></i>Gerenciamento de Clientes, Usuários & Status de Assinatura</h2>
+                    <h2 class="text-base font-bold text-white"><i class="fa-solid fa-users-gear text-sky-400 mr-2"></i>Gestão de Clientes, Utilizadores & Estado de Subscrição</h2>
                     <button onclick="abrirModalUsuario()" class="bg-primary text-white px-3.5 py-2 rounded-xl text-xs font-medium shadow hover:opacity-95 transition flex items-center gap-1.5 active:scale-[0.98]">
-                        <i class="fa-solid fa-user-plus"></i> Novo Usuário
+                        <i class="fa-solid fa-user-plus"></i> Novo Utilizador
                     </button>
                 </div>
                 <div class="overflow-x-auto">
@@ -584,9 +593,9 @@
                         <thead>
                             <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
                                 <th class="p-3.5 font-semibold">Nome</th>
-                                <th class="p-3.5 font-semibold">Usuário (Login)</th>
+                                <th class="p-3.5 font-semibold">Utilizador (Login)</th>
                                 <th class="p-3.5 font-semibold">Perfil</th>
-                                <th class="p-3.5 font-semibold">Status Pagamento</th>
+                                <th class="p-3.5 font-semibold">Estado Pagamento</th>
                                 <th class="p-3.5 font-semibold text-center">Ações</th>
                             </tr>
                         </thead>
@@ -598,7 +607,7 @@
 
             <!-- ABA CONFIGURAÇÕES & DADOS -->
             <section id="aba-configuracoes" class="hidden max-w-2xl mx-auto bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-6 no-print">
-                <h2 class="text-base font-bold text-white border-b border-slate-700/80 pb-3">Configurações de Layout, Backup & IA</h2>
+                <h2 class="text-base font-bold text-white border-b border-slate-700/80 pb-3">Configurações de Layout, Cópia de Segurança & IA</h2>
                 
                 <div class="space-y-4">
                     <div>
@@ -606,17 +615,17 @@
                         <input type="text" id="config-empresa" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" placeholder="Ex: Laboratório Pasteur SM">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1.5">URL Pública do Sistema (Obrigatório para QR Code no celular)</label>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">URL Pública do Sistema (Obrigatório para QR Code no telemóvel)</label>
                         <input type="text" id="config-url-publica" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm font-mono text-white" placeholder="Ex: https://inventario-60bf7.web.app">
-                        <p class="text-xs text-slate-400 mt-1">Cole aqui o endereço web público onde sua aplicação está hospedada (Firebase, Vercel, etc).</p>
+                        <p class="text-xs text-slate-400 mt-1">Cole aqui o endereço web público onde a sua aplicação está alojada (Firebase, Vercel, etc).</p>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Texto de Direitos Autorais (Rodapé)</label>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Texto de Direitos de Autor (Rodapé)</label>
                         <input type="text" id="config-copyright" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" placeholder="Ex: © 2026 Laboratório Pasteur - Todos os direitos reservados.">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1.5">Chave da API do Google Gemini (AI Studio)</label>
-                        <input type="password" id="config-gemini-key" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm font-mono text-white" placeholder="Cole sua chave API aqui (ex: AIzaSy...)">
+                        <input type="password" id="config-gemini-key" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm font-mono text-white" placeholder="Cole a sua chave API aqui (ex: AIzaSy...)">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -624,7 +633,7 @@
                             <input type="color" id="config-cor" value="#0284c7" class="w-full h-10 p-1 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Logotipo (Arquivo de Imagem)</label>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Logótipo (Ficheiro de Imagem)</label>
                             <input type="file" id="config-logo" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600">
                         </div>
                     </div>
@@ -632,16 +641,16 @@
                 </div>
 
                 <div class="border-t border-slate-700/80 pt-6 space-y-3">
-                    <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-cloud-arrow-down mr-2 text-sky-400"></i>Backup Completo do Sistema</h3>
-                    <p class="text-xs text-slate-400">Baixe um arquivo de backup em formato JSON com todos os dados salvos no Firebase.</p>
+                    <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-cloud-arrow-down mr-2 text-sky-400"></i>Cópia de Segurança Completa (Backup)</h3>
+                    <p class="text-xs text-slate-400">Descarregue um ficheiro JSON com todos os dados guardados no Firebase.</p>
                     <button onclick="fazerBackup()" class="w-full bg-sky-700 hover:bg-sky-600 text-white py-2.5 rounded-xl text-sm font-medium shadow transition flex items-center justify-center gap-2 active:scale-[0.98]">
-                        <i class="fa-solid fa-download"></i> Baixar Backup Completo (JSON)
+                        <i class="fa-solid fa-download"></i> Descarregar Cópia de Segurança (JSON)
                     </button>
                 </div>
 
                 <div class="border-t border-slate-700/80 pt-6 space-y-3">
-                    <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-file-arrow-up mr-2 text-sky-400"></i>Importar Equipamentos via Arquivo .TXT</h3>
-                    <p class="text-xs text-slate-400">Selecione um arquivo `.txt` com os equipamentos.</p>
+                    <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-file-arrow-up mr-2 text-sky-400"></i>Importar Equipamentos via Ficheiro .TXT</h3>
+                    <p class="text-xs text-slate-400">Selecione um ficheiro `.txt` com os equipamentos.</p>
                     <input type="file" id="input-arquivo-txt" accept=".txt" onchange="importarArquivoTxt(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600">
                 </div>
 
@@ -657,7 +666,7 @@
                 <div class="border-t border-slate-700/80 pt-6 space-y-4">
                     <h3 class="font-bold text-red-400 text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo - Limpeza de Dados no Firebase</h3>
                     <button onclick="zerarBaseDados()" class="bg-red-600 hover:bg-red-500 text-white py-2.5 px-4 rounded-xl text-sm font-medium shadow transition w-full flex items-center justify-center gap-2 active:scale-[0.98]">
-                        <i class="fa-solid fa-trash-can"></i> Zerar Toda a Base no Firebase
+                        <i class="fa-solid fa-trash-can"></i> Limpar Toda a Base no Firebase
                     </button>
                 </div>
             </section>
@@ -668,10 +677,10 @@
         </footer>
     </div>
 
-    <!-- MODAL DE USUÁRIO -->
+    <!-- MODAL DE UTILIZADOR -->
     <div id="modal-usuario" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 id="modal-usuario-titulo" class="text-base font-bold text-white">Editar Usuário</h3>
+            <h3 id="modal-usuario-titulo" class="text-base font-bold text-white">Editar Utilizador</h3>
             <input type="hidden" id="usr-edit-index" value="">
             <div class="space-y-3.5">
                 <div>
@@ -679,11 +688,11 @@
                     <input type="text" id="usr-nome" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome de Usuário (Login)</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome de Utilizador (Login)</label>
                     <input type="text" id="usr-login" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nova Senha</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nova Palavra-passe</label>
                     <input type="password" id="usr-senha" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white" placeholder="••••••••">
                 </div>
                 <div>
@@ -695,7 +704,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Status de Pagamento / Acesso</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Estado de Pagamento / Acesso</label>
                     <select id="usr-status-pagamento" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
                         <option value="Ativo" class="bg-slate-900">Ativo</option>
                         <option value="Inadimplente" class="bg-slate-900">Inadimplente</option>
@@ -716,7 +725,7 @@
             <input type="hidden" id="eq-id">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Cód. de Referência / Patrimônio</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Cód. de Referência / Património</label>
                     <input type="text" id="eq-codigo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono">
                 </div>
                 <div>
@@ -743,7 +752,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Estado</label>
                     <select id="eq-status" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
                         <option value="Ativo" class="bg-slate-900">Ativo</option>
                         <option value="Manutenção" class="bg-slate-900">Manutenção</option>
@@ -803,12 +812,12 @@
             </div>
             <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
                 <button onclick="fecharModalManutencao()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarManutencao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar Registro</button>
+                <button onclick="salvarManutencao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar Registo</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE VALIDAÇÃO COM ANEXO DE ARQUIVO -->
+    <!-- MODAL DE VALIDAÇÃO COM ANEXO DE FICHEIRO -->
     <div id="modal-validacao" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
             <h3 id="modal-validacao-titulo" class="text-base font-bold text-white">Registar Validação / Qualificação</h3>
@@ -852,7 +861,7 @@
                     <p id="val-arquivo-atual-info" class="text-[11px] text-sky-400 mt-1"></p>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Estado</label>
                     <select id="val-status" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
                         <option value="Aprovado" class="bg-slate-900">Aprovado</option>
                         <option value="Em Andamento" class="bg-slate-900">Em Andamento</option>
@@ -892,7 +901,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Estado</label>
                         <select id="chamado-status" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
                             <option value="Aberto">Aberto</option>
                             <option value="Em Andamento">Em Andamento</option>
@@ -947,7 +956,7 @@
     <!-- MODAL DE TRANSFERÊNCIA -->
     <div id="modal-transferencia" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 class="text-base font-bold text-white">Registrar Transferência de Ativo</h3>
+            <h3 class="text-base font-bold text-white">Registar Transferência de Ativo</h3>
             <div class="space-y-3.5">
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento</label>
@@ -975,33 +984,49 @@
         </div>
     </div>
 
-    <!-- GERENCIADOR DE ETIQUETAS QR CODE (ZEBRA 50x30 mm) -->
+    <!-- GERENCIADOR DE ETIQUETAS QR CODE (ZEBRA 30x50 mm - VERTICAL / RETRATO COM QR CODE QUADRADO NO TOPO) -->
     <div id="modal-qr" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-800">
+        <div class="bg-slate-900 rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl border border-slate-800">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3 no-print">
-                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-qrcode text-sky-400 mr-2"></i>Etiqueta Zebra (50x30 mm)</h3>
+                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-qrcode text-sky-400 mr-2"></i>Gestor de Etiqueta (30x50 mm - Vertical)</h3>
                 <button onclick="fecharModalQR()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <!-- CAIXA DE PREVIEW DA ETIQUETA (VERTICAL: QR EM CIMA, TEXTO EMBAIXO) -->
+            <!-- PAINEL DE CONFIGURAÇÃO INTERNO -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800 no-print text-xs">
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Tamanho QR Code</label>
+                    <input type="range" id="config-tamanho-qr" min="60" max="110" value="85" oninput="atualizarPreviewEtiqueta()" class="w-full accent-sky-500">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Tamanho da Fonte</label>
+                    <input type="range" id="config-tamanho-fonte" min="6" max="11" value="8" oninput="atualizarPreviewEtiqueta()" class="w-full accent-sky-500">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Margem / Padding</label>
+                    <input type="range" id="config-padding" min="2" max="10" value="5" oninput="atualizarPreviewEtiqueta()" class="w-full accent-sky-500">
+                </div>
+            </div>
+
+            <!-- CAIXA DE PREVIEW DA ETIQUETA (VERTICAL: 30mm x 50mm COM QR CODE PERFEITAMENTE QUADRADO NO TOPO) -->
             <div class="flex justify-center p-6 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-                <div id="preview-etiqueta-caixa" class="bg-white text-black p-1.5 rounded-sm shadow-md flex flex-col items-center justify-center text-center transition-all duration-300 overflow-hidden" style="width: 189px; height: 113px; color: #000000 !important;">
-                    <div id="qr-code-container" class="flex justify-center items-center overflow-hidden mb-1"></div>
-                    <div id="qr-info-detalhe" class="text-[7.5px] font-bold leading-tight font-mono w-full px-0.5 text-left" style="color: #000000 !important;"></div>
+                <div id="preview-etiqueta-caixa" class="bg-white text-black rounded-sm shadow-md flex flex-col items-center justify-start overflow-hidden transition-all duration-300" style="width: 113px; height: 189px; color: #000000 !important;">
+                    <div id="qr-code-container" class="shrink-0 flex justify-center items-center"></div>
+                    <div id="qr-info-detalhe" class="font-bold leading-tight font-mono text-left w-full overflow-hidden mt-1" style="color: #000000 !important;"></div>
                 </div>
             </div>
 
             <!-- BOTÕES DE AÇÃO -->
             <div class="flex gap-2.5 pt-2 no-print border-t border-slate-800">
                 <button onclick="imprimirEtiquetaPersonalizada()" class="flex-grow bg-primary text-white py-2.5 rounded-xl text-xs font-bold shadow hover:opacity-95 transition flex items-center justify-center gap-1.5 active:scale-[0.98]">
-                    <i class="fa-solid fa-print"></i> Imprimir Etiqueta (50x30 mm)
+                    <i class="fa-solid fa-print"></i> Imprimir Etiqueta (30x50 mm)
                 </button>
                 <button onclick="fecharModalQR()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-slate-300">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL CELULAR -->
+    <!-- MODAL TELEMÓVEL -->
     <div id="modal-detalhes-celular" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-800">
             <div class="flex items-center space-x-3 border-b border-slate-800 pb-4">
@@ -1200,7 +1225,7 @@
                 document.getElementById('info-perfil-logado').innerText = userFound.perfil;
                 verificarSessao();
             } else {
-                erroDiv.innerText = 'Usuário ou senha incorretos!';
+                erroDiv.innerText = 'Utilizador ou palavra-passe incorretos!';
                 erroDiv.classList.remove('hidden');
             }
         }
@@ -1268,7 +1293,7 @@
         }
 
         function enviarWhatsAppManutencao(nomeEquip, dataProx) {
-            const mensagem = encodeURIComponent(`⚠️ *Alerta de Calibração / Manutenção - Laboratório Pasteur*\n\nO equipamento *${nomeEquip}* possui calibração programada para a data: *${dataProx || 'Pendente'}*.\nPor favor, verificar o controle metrológico.`);
+            const mensagem = encodeURIComponent(`⚠️ *Alerta de Calibração / Manutenção - Laboratório Pasteur*\n\nO equipamento *${nomeEquip}* possui calibração programada para a data: *${dataProx || 'Pendente'}*.\nPor favor, verificar o controlo metrológico.`);
             window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
         }
 
@@ -1304,7 +1329,7 @@
             document.getElementById('modal-usuario').classList.remove('hidden');
             if (index !== null) {
                 const usr = db.usuarios[index];
-                document.getElementById('modal-usuario-titulo').innerText = 'Editar Usuário';
+                document.getElementById('modal-usuario-titulo').innerText = 'Editar Utilizador';
                 document.getElementById('usr-edit-index').value = index;
                 document.getElementById('usr-nome').value = usr.nome;
                 document.getElementById('usr-login').value = usr.usuario;
@@ -1312,7 +1337,7 @@
                 document.getElementById('usr-perfil').value = usr.perfil;
                 document.getElementById('usr-status-pagamento').value = usr.statusPagamento || 'Ativo';
             } else {
-                document.getElementById('modal-usuario-titulo').innerText = 'Novo Usuário';
+                document.getElementById('modal-usuario-titulo').innerText = 'Novo Utilizador';
                 document.getElementById('usr-edit-index').value = '';
                 document.getElementById('usr-nome').value = '';
                 document.getElementById('usr-login').value = '';
@@ -1336,7 +1361,7 @@
             if (!db.usuarios) db.usuarios = [];
 
             if (index === '') {
-                if (!senha) return alert('Informe uma senha.');
+                if (!senha) return alert('Informe uma palavra-passe.');
                 db.usuarios.push({ nome, usuario, senha, perfil, statusPagamento });
             } else {
                 const idx = Number(index);
@@ -1352,7 +1377,7 @@
         }
 
         async function excluirUsuario(index) {
-            if (confirm('Deseja excluir este usuário?')) {
+            if (confirm('Deseja excluir este utilizador?')) {
                 db.usuarios.splice(index, 1);
                 await salvarBanco();
                 renderizarUsuarios();
@@ -1440,7 +1465,7 @@
                     tbody.appendChild(tr);
                 });
             }
-            document.getElementById('paginacao-info').innerText = `Mostrando página ${paginaAtual} de ${totalPaginas} (${totalItens} itens)`;
+            document.getElementById('paginacao-info').innerText = `A mostrar página ${paginaAtual} de ${totalPaginas} (${totalItens} itens)`;
             document.getElementById('paginacao-numeracao').innerText = `${paginaAtual} / ${totalPaginas}`;
             document.getElementById('btn-prev-pagina').disabled = paginaAtual <= 1;
             document.getElementById('btn-next-pagina').disabled = paginaAtual >= totalPaginas;
@@ -1466,7 +1491,7 @@
         }
 
         function exportarCSV() {
-            let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;Serial;Posse;Data Entrada;Data Saida;Status\n";
+            let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;Serial;Posse;Data Entrada;Data Saida;Estado\n";
             listaEquipamentosFiltradaCache.forEach(eq => {
                 csvContent += `"${eq.codigo || ''}";"${eq.nome || ''}";"${eq.tipo || ''}";"${eq.setor || ''}";"${eq.serial || ''}";"${eq.posse || 'Próprio'}";"${eq.dataEntrada || ''}";"${eq.dataSaida || ''}";"${eq.status || 'Ativo'}"\n`;
             });
@@ -1528,10 +1553,10 @@
 
         async function zerarBaseDados() {
             if (usuarioLogado && usuarioLogado.perfil !== 'Admin') return alert('Acesso negado.');
-            if (confirm('Deseja zerar toda a base?')) {
+            if (confirm('Deseja limpar toda a base de dados?')) {
                 db.equipamentos = []; db.manutencoes = []; db.validacoes = []; db.chamados = [];
                 await salvarBanco();
-                alert('Base zerada!');
+                alert('Base limpa com sucesso!');
                 atualizarRelatorios();
             }
         }
@@ -1565,7 +1590,7 @@
             if (!db.manutencoes) db.manutencoes = [];
             
             if (db.manutencoes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum registro de calibração ou manutenção.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum registo de calibração ou manutenção.</td></tr>`;
             } else {
                 db.manutencoes.forEach(m => {
                     const eq = db.equipamentos.find(e => e.id == m.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
@@ -1648,14 +1673,13 @@
         function editarManutencao(id) { abrirModalManutencao(id); }
 
         async function excluirManutencao(id) {
-            if (confirm('Deseja excluir este registro?')) {
+            if (confirm('Deseja excluir este registo?')) {
                 db.manutencoes = db.manutencoes.filter(m => m.id !== id);
                 await salvarBanco();
                 renderizarManutencao();
             }
         }
 
-        // MÓDULO DE VALIDAÇÃO COM SUPORTE A ANEXO DE ARQUIVOS
         function renderizarValidacoes() {
             const tbody = document.getElementById('tabela-validacao-body');
             if (!tbody) return;
@@ -1663,7 +1687,7 @@
             if (!db.validacoes) db.validacoes = [];
 
             if (db.validacoes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">Nenhum registro de validação cadastrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">Nenhum registo de validação cadastrado.</td></tr>`;
             } else {
                 db.validacoes.forEach(v => {
                     const eq = db.equipamentos.find(e => e.id == v.equipamentoId) || { codigo: 'S/C', nome: 'Ativo Removido' };
@@ -1672,9 +1696,9 @@
                     if (v.status === 'Em Andamento') badgeValStatus = 'bg-sky-950/60 text-sky-300 border border-sky-800/60';
                     if (v.status === 'Reprovado') badgeValStatus = 'bg-red-950/60 text-red-300 border border-red-800/60';
 
-                    let anexoHtml = `<span class="text-xs text-slate-500">Sem arquivo</span>`;
+                    let anexoHtml = `<span class="text-xs text-slate-500">Sem ficheiro</span>`;
                     if (v.arquivoUrl && v.arquivoNome) {
-                        anexoHtml = `<a href="${v.arquivoUrl}" download="${v.arquivoNome}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 rounded-xl text-xs font-medium transition" title="Baixar ${v.arquivoNome}">
+                        anexoHtml = `<a href="${v.arquivoUrl}" download="${v.arquivoNome}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 rounded-xl text-xs font-medium transition" title="Descarregar ${v.arquivoNome}">
                             <i class="fa-solid fa-download"></i> ${v.arquivoNome.length > 15 ? v.arquivoNome.substring(0, 15) + '...' : v.arquivoNome}
                         </a>`;
                     }
@@ -1725,7 +1749,7 @@
                     document.getElementById('val-data').value = v.data;
                     document.getElementById('val-proxima').value = v.proxima || '';
                     document.getElementById('val-status').value = v.status;
-                    document.getElementById('val-arquivo-atual-info').innerText = v.arquivoNome ? `Arquivo atual anexo: ${v.arquivoNome}` : '';
+                    document.getElementById('val-arquivo-atual-info').innerText = v.arquivoNome ? `Ficheiro atual anexo: ${v.arquivoNome}` : '';
                 }
             } else {
                 document.getElementById('modal-validacao-titulo').innerText = 'Registar Validação / Qualificação';
@@ -1796,7 +1820,7 @@
         function editarValidacao(id) { abrirModalValidacao(id); }
 
         async function excluirValidacao(id) {
-            if (confirm('Deseja excluir este registro de validação?')) {
+            if (confirm('Deseja excluir este registo de validação?')) {
                 db.validacoes = db.validacoes.filter(item => item.id !== id);
                 await salvarBanco();
                 renderizarValidacoes();
@@ -1820,7 +1844,7 @@
             if (!db.chamados) db.chamados = [];
 
             if (db.chamados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum chamado registrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum chamado registado.</td></tr>`;
             } else {
                 db.chamados.forEach(c => {
                     const eq = db.equipamentos.find(e => e.id == c.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
@@ -1936,7 +1960,7 @@
         function renderizarRastreabilidade() {
             const tbody = document.getElementById('tabela-rastreio-body');
             if (!tbody) return;
-            tbody.innerHTML = db.transferencias.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum registro.</td></tr>` : '';
+            tbody.innerHTML = db.transferencias.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum registo.</td></tr>` : '';
             db.transferencias.forEach(t => {
                 tbody.innerHTML += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${t.data}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td></tr>`;
             });
@@ -1992,15 +2016,26 @@
             if (!equipamentoGerenciadorQR) return;
             const caixa = document.getElementById('preview-etiqueta-caixa');
             const container = document.getElementById('qr-code-container');
+            const detalhe = document.getElementById('qr-info-detalhe');
             container.innerHTML = '';
 
-            // Dimensões exatas para etiqueta térmica 50x30 mm (3x5 cm)
-            const largura = '189px'; // ~50mm
-            const altura = '113px';  // ~30mm
-            const tamanhoQR = 45;    // Tamanho ideal para o QR Code ficar no topo
+            const tamanhoQR = Number(document.getElementById('config-tamanho-qr').value);
+            const tamanhoFonte = Number(document.getElementById('config-tamanho-fonte').value);
+            const paddingEtiqueta = Number(document.getElementById('config-padding').value);
 
-            caixa.style.width = largura;
-            caixa.style.height = altura;
+            // FORÇA ESTRICTAMENTE O CONTENTOR A SER QUADRADO
+            container.style.width = `${tamanhoQR}px`;
+            container.style.height = `${tamanhoQR}px`;
+            container.style.minWidth = `${tamanhoQR}px`;
+            container.style.minHeight = `${tamanhoQR}px`;
+            container.style.maxWidth = `${tamanhoQR}px`;
+            container.style.maxHeight = `${tamanhoQR}px`;
+
+            // Dimensões da etiqueta térmica 30x50 mm em retrato (vertical)
+            caixa.style.width = '113px';
+            caixa.style.height = '189px';
+            caixa.style.padding = `${paddingEtiqueta}px`;
+            caixa.style.gap = `4px`;
 
             const urlBase = (db.config && db.config.urlPublica && db.config.urlPublica.trim() !== '') ? db.config.urlPublica.trim() : window.location.origin;
             const linkQr = `${urlBase.endsWith('/') ? urlBase.slice(0, -1) : urlBase}?eq=${equipamentoGerenciadorQR.id}`;
@@ -2014,11 +2049,25 @@
                 correctLevel : QRCode.CorrectLevel.M
             });
 
-            // Layout vertical exatamente igual ao modelo da foto enviada
-            document.getElementById('qr-info-detalhe').innerHTML = `
-                <div style="font-size: 7.5px; font-weight: bold; line-height: 1.1; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-top: 2px;">Cód: ${equipamentoGerenciadorQR.codigo || '-'}</div>
-                <div style="font-size: 7.5px; font-weight: bold; line-height: 1.1; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Ativo: ${equipamentoGerenciadorQR.nome || '-'}</div>
-                <div style="font-size: 7.5px; font-weight: bold; line-height: 1.1; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Setor: ${equipamentoGerenciadorQR.setor || '-'}</div>
+            // FORÇA O ELEMENTO GERADO (CANVAS/IMG) A SER PERFEITAMENTE QUADRADO
+            setTimeout(() => {
+                const gerado = container.querySelector('canvas, img');
+                if (gerado) {
+                    gerado.style.width = `${tamanhoQR}px`;
+                    gerado.style.height = `${tamanhoQR}px`;
+                    gerado.style.minWidth = `${tamanhoQR}px`;
+                    gerado.style.minHeight = `${tamanhoQR}px`;
+                    gerado.style.maxWidth = `${tamanhoQR}px`;
+                    gerado.style.maxHeight = `${tamanhoQR}px`;
+                    gerado.style.aspectRatio = '1 / 1';
+                }
+            }, 10);
+
+            detalhe.style.fontSize = `${tamanhoFonte}px`;
+            detalhe.innerHTML = `
+                <div style="font-size: ${tamanhoFonte}px; font-weight: bold; line-height: 1.25; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Cód: ${equipamentoGerenciadorQR.codigo || '-'}</div>
+                <div style="font-size: ${tamanhoFonte}px; font-weight: bold; line-height: 1.25; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Ativo: ${equipamentoGerenciadorQR.nome || '-'}</div>
+                <div style="font-size: ${tamanhoFonte}px; font-weight: bold; line-height: 1.25; color: #000000; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Setor: ${equipamentoGerenciadorQR.setor || '-'}</div>
             `;
         }
 
@@ -2033,7 +2082,7 @@
             estiloDinamico.innerHTML = `
                 @media print {
                     @page {
-                        size: 50mm 30mm;
+                        size: 30mm 50mm;
                         margin: 0 !important;
                     }
                     body {
@@ -2066,6 +2115,7 @@
                     }
                     #modal-qr h3,
                     #modal-qr button,
+                    #modal-qr .grid,
                     #modal-qr .border-t {
                         display: none !important;
                     }
@@ -2075,16 +2125,15 @@
                         position: absolute !important;
                         left: 0 !important;
                         top: 0 !important;
-                        width: 50mm !important;
-                        height: 30mm !important;
+                        width: 30mm !important;
+                        height: 50mm !important;
                         margin: 0 !important;
-                        padding: 1.5mm !important;
                         background: #ffffff !important;
                         color: #000000 !important;
                         border: none !important;
                         box-shadow: none !important;
                         align-items: center !important;
-                        justify-content: center !important;
+                        justify-content: flex-start !important;
                         flex-direction: column !important;
                     }
                     #preview-etiqueta-caixa * {
@@ -2096,6 +2145,7 @@
                         display: block !important;
                         visibility: visible !important;
                         margin: 0 auto !important;
+                        aspect-ratio: 1 / 1 !important;
                     }
                 }
             `;
@@ -2116,7 +2166,7 @@
                     <p><strong>Setor:</strong> <span class="font-bold text-white">${eq.setor || '-'}</span></p>
                     <p><strong>Nº de Série:</strong> ${eq.serial || '-'}</p>
                     <p><strong>Posse:</strong> ${eq.posse || 'Próprio'}</p>
-                    <p><strong>Status:</strong> ${eq.status || 'Ativo'}</p>
+                    <p><strong>Estado:</strong> ${eq.status || 'Ativo'}</p>
                     <p><strong>Ciclo de Vida:</strong> ${ciclo.texto}</p>
                 </div>
             `;
@@ -2258,7 +2308,7 @@
             atualizarRelatorios();
         }
         async function excluirEquipamento(id) {
-            if (confirm('Tem certeza que deseja excluir?')) {
+            if (confirm('Tem a certeza de que pretende excluir?')) {
                 db.equipamentos = db.equipamentos.filter(e => e.id !== id);
                 await salvarBanco();
                 filtrarTabela(); atualizarRelatorios();
@@ -2474,7 +2524,7 @@
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
             container.classList.remove('hidden');
-            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando Gemini...</div>';
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> A consultar Gemini...</div>';
             try {
                 const prompt = `Analise este inventário com ${db.equipamentos.length} equipamentos e forneça um resumo executivo com recomendações de calibração, validação e manutenção. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
                 conteudo.innerHTML = await chamarGeminiComRetry(prompt);
@@ -2487,7 +2537,7 @@
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
             container.classList.remove('hidden');
-            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando...</div>';
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> A auditar...</div>';
             try {
                 const prompt = `Liste 3 sugestões de melhoria para um sistema de inventário laboratorial com foco em validação de equipamentos. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
                 conteudo.innerHTML = await chamarGeminiComRetry(prompt);
@@ -2502,7 +2552,7 @@
             const container = document.getElementById('resultado-ia-container');
             const conteudo = document.getElementById('conteudo-ia-analise');
             container.classList.remove('hidden');
-            conteudo.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Processando...</div>`;
+            conteudo.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> A processar...</div>`;
             try {
                 const prompt = `Responda à solicitação de gerenciamento: "${comando}". Responda em HTML limpo.`;
                 conteudo.innerHTML = await chamarGeminiComRetry(prompt);
