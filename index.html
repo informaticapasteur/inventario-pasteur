@@ -39,7 +39,6 @@
         .border-primary { border-color: var(--cor-primaria); }
         .ring-primary:focus { --tw-ring-color: var(--cor-primaria); }
 
-        /* Estilização e alinhamento do QR Code e Textos da Etiqueta */
         #qr-code-container canvas, #qr-code-container img {
             display: block !important;
             margin: 0 auto !important;
@@ -142,6 +141,7 @@
                 <nav class="flex flex-wrap items-center gap-1.5">
                     <button onclick="mudarAba('inventario')" id="btn-inventario" class="px-3 py-2 text-xs font-medium rounded-xl bg-primary text-white transition shadow-sm"><i class="fa-solid fa-laptop mr-1.5"></i> Inventário</button>
                     <button onclick="mudarAba('manutencao')" id="btn-manutencao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-screwdriver-wrench mr-1.5"></i> Manutenção</button>
+                    <button onclick="mudarAba('validacao')" id="btn-validacao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-check mr-1.5"></i> Validação</button>
                     <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-headset mr-1.5"></i> Helpdesk QR</button>
                     <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> Comodatos</button>
                     <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-right-left mr-1.5"></i> Rastreio</button>
@@ -261,6 +261,41 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-manutencao-body" class="divide-y divide-slate-700/50 text-slate-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA VALIDAÇÃO -->
+            <section id="aba-validacao" class="hidden space-y-6">
+                <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
+                    <div>
+                        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-clipboard-check text-sky-400 mr-2"></i>Módulo de Validação de Equipamentos & Métodos</h2>
+                        <p class="text-xs text-slate-400">Acompanhamento de Qualificações (QI/QO/QD), validação analítica, anexos de documentos e revalidação.</p>
+                    </div>
+                    <button onclick="abrirModalValidacao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
+                        <i class="fa-solid fa-plus"></i> Nova Validação
+                    </button>
+                </div>
+
+                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
+                                    <th class="p-3.5 font-semibold">Equipamento / Processo</th>
+                                    <th class="p-3.5 font-semibold">Tipo de Validação</th>
+                                    <th class="p-3.5 font-semibold">Protocolo / Ref</th>
+                                    <th class="p-3.5 font-semibold">Responsável</th>
+                                    <th class="p-3.5 font-semibold">Data Execução</th>
+                                    <th class="p-3.5 font-semibold">Próxima Revalidação</th>
+                                    <th class="p-3.5 font-semibold text-center">Arquivo Anexo</th>
+                                    <th class="p-3.5 font-semibold">Status</th>
+                                    <th class="p-3.5 font-semibold text-center">Ações & WhatsApp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-validacao-body" class="divide-y divide-slate-700/50 text-slate-200">
                             </tbody>
                         </table>
                     </div>
@@ -773,6 +808,66 @@
         </div>
     </div>
 
+    <!-- MODAL DE VALIDAÇÃO COM ANEXO DE ARQUIVO -->
+    <div id="modal-validacao" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
+            <h3 id="modal-validacao-titulo" class="text-base font-bold text-white">Registar Validação / Qualificação</h3>
+            <input type="hidden" id="val-id" value="">
+            <div class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento / Processo</label>
+                    <select id="val-eq-select" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Validação</label>
+                    <select id="val-tipo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                        <option value="Qualificação de Instalação (QI)" class="bg-slate-900">Qualificação de Instalação (QI)</option>
+                        <option value="Qualificação de Operação (QO)" class="bg-slate-900">Qualificação de Operação (QO)</option>
+                        <option value="Qualificação de Desempenho (QD)" class="bg-slate-900">Qualificação de Desempenho (QD)</option>
+                        <option value="Validação de Método Analítico" class="bg-slate-900">Validação de Método Analítico</option>
+                        <option value="Validação de Sistema Computacional" class="bg-slate-900">Validação de Sistema Computacional</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Protocolo / Número de Referência</label>
+                    <input type="text" id="val-protocolo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono" placeholder="Ex: VAL-2026-001">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Responsável pela Validação</label>
+                    <input type="text" id="val-responsavel" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white" placeholder="Ex: Gilnei Oliveira Meier">
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Data Execução</label>
+                        <input type="date" id="val-data" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Próxima Revalidação</label>
+                        <input type="date" id="val-proxima" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Anexar Documento (PDF, Excel, Word)</label>
+                    <input type="file" id="val-arquivo-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600">
+                    <p id="val-arquivo-atual-info" class="text-[11px] text-sky-400 mt-1"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+                    <select id="val-status" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                        <option value="Aprovado" class="bg-slate-900">Aprovado</option>
+                        <option value="Em Andamento" class="bg-slate-900">Em Andamento</option>
+                        <option value="Pendente" class="bg-slate-900">Pendente</option>
+                        <option value="Reprovado" class="bg-slate-900">Reprovado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
+                <button onclick="fecharModalValidacao()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
+                <button onclick="salvarValidacao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar Validação</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE CHAMADO HELPDESK -->
     <div id="modal-chamado" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
@@ -961,6 +1056,7 @@
             setores: ['PM', 'HBM', 'CAMOBI', 'JC', 'Setor', 'AGUDO', 'SÃO SEPÉ', 'MICROBIOLOGIA', 'ESTERILIZAÇÃO', 'DUQUE DE CAXIAS'],
             tipos: ['Autoclave', 'Balança Digital', 'Banho Maria', 'Cabine de Segurança', 'Centrífuga', 'Computador', 'Diagnóstico', 'Microscópio'],
             manutencoes: [],
+            validacoes: [],
             chamados: [],
             comodatos: [],
             transferencias: [],
@@ -1034,6 +1130,7 @@
                     if (!db.setores) db.setores = dadosCompletosPasteur.setores;
                     if (!db.tipos) db.tipos = dadosCompletosPasteur.tipos;
                     if (!db.manutencoes) db.manutencoes = [];
+                    if (!db.validacoes) db.validacoes = [];
                     if (!db.chamados) db.chamados = [];
                     if (!db.comodatos) db.comodatos = [];
                     if (!db.transferencias) db.transferencias = [];
@@ -1043,6 +1140,7 @@
                     aplicarConfiguracoes();
                     filtrarTabela();
                     renderizarManutencao();
+                    renderizarValidacoes();
                     renderizarChamados();
                     renderizarFinanceiro();
                     renderizarRastreabilidade();
@@ -1173,7 +1271,7 @@
         }
 
         function mudarAba(aba) {
-            ['inventario', 'manutencao', 'helpdesk', 'financeiro', 'rastreabilidade', 'setores', 'relatorios', 'usuarios', 'configuracoes'].forEach(a => {
+            ['inventario', 'manutencao', 'validacao', 'helpdesk', 'financeiro', 'rastreabilidade', 'setores', 'relatorios', 'usuarios', 'configuracoes'].forEach(a => {
                 const el = document.getElementById(`aba-${a}`);
                 const btn = document.getElementById(`btn-${a}`);
                 if (el) el.classList.add('hidden');
@@ -1191,6 +1289,11 @@
 
         function enviarWhatsAppManutencao(nomeEquip, dataProx) {
             const mensagem = encodeURIComponent(`⚠️ *Alerta de Calibração / Manutenção - Laboratório Pasteur*\n\nO equipamento *${nomeEquip}* possui calibração programada para a data: *${dataProx || 'Pendente'}*.\nPor favor, verificar o controle metrológico.`);
+            window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
+        }
+
+        function enviarWhatsAppValidacao(nomeEquip, dataProx) {
+            const mensagem = encodeURIComponent(`⚠️ *Alerta de Revalidação - Laboratório Pasteur*\n\nO ativo/processo *${nomeEquip}* possui revalidação programada para a data: *${dataProx || 'Pendente'}*.\nPor favor, verificar o setor de qualidade.`);
             window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
         }
 
@@ -1446,7 +1549,7 @@
         async function zerarBaseDados() {
             if (usuarioLogado && usuarioLogado.perfil !== 'Admin') return alert('Acesso negado.');
             if (confirm('Deseja zerar toda a base?')) {
-                db.equipamentos = []; db.manutencoes = []; db.chamados = [];
+                db.equipamentos = []; db.manutencoes = []; db.validacoes = []; db.chamados = [];
                 await salvarBanco();
                 alert('Base zerada!');
                 atualizarRelatorios();
@@ -1569,6 +1672,154 @@
                 db.manutencoes = db.manutencoes.filter(m => m.id !== id);
                 await salvarBanco();
                 renderizarManutencao();
+            }
+        }
+
+        // MÓDULO DE VALIDAÇÃO COM SUPORTE A ANEXO DE ARQUIVOS
+        function renderizarValidacoes() {
+            const tbody = document.getElementById('tabela-validacao-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (!db.validacoes) db.validacoes = [];
+
+            if (db.validacoes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">Nenhum registro de validação cadastrado.</td></tr>`;
+            } else {
+                db.validacoes.forEach(v => {
+                    const eq = db.equipamentos.find(e => e.id == v.equipamentoId) || { codigo: 'S/C', nome: 'Ativo Removido' };
+                    let badgeValStatus = 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60';
+                    if (v.status === 'Pendente') badgeValStatus = 'bg-amber-950/60 text-amber-300 border border-amber-800/60';
+                    if (v.status === 'Em Andamento') badgeValStatus = 'bg-sky-950/60 text-sky-300 border border-sky-800/60';
+                    if (v.status === 'Reprovado') badgeValStatus = 'bg-red-950/60 text-red-300 border border-red-800/60';
+
+                    let anexoHtml = `<span class="text-xs text-slate-500">Sem arquivo</span>`;
+                    if (v.arquivoUrl && v.arquivoNome) {
+                        anexoHtml = `<a href="${v.arquivoUrl}" download="${v.arquivoNome}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 rounded-xl text-xs font-medium transition" title="Baixar ${v.arquivoNome}">
+                            <i class="fa-solid fa-download"></i> ${v.arquivoNome.length > 15 ? v.arquivoNome.substring(0, 15) + '...' : v.arquivoNome}
+                        </a>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
+                            <td class="p-3.5 font-medium text-white"><span class="font-mono font-semibold text-xs text-sky-400 mr-1">[${eq.codigo}]</span> ${eq.nome}</td>
+                            <td class="p-3.5 text-slate-300">${v.tipo}</td>
+                            <td class="p-3.5 font-mono text-xs text-slate-300">${v.protocolo || '-'}</td>
+                            <td class="p-3.5 text-slate-300">${v.responsavel || '-'}</td>
+                            <td class="p-3.5 text-slate-300">${v.data}</td>
+                            <td class="p-3.5 text-slate-300">${v.proxima || '-'}</td>
+                            <td class="p-3.5 text-center">${anexoHtml}</td>
+                            <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgeValStatus}">${v.status}</span></td>
+                            <td class="p-3.5 text-center space-x-2">
+                                <button onclick="enviarWhatsAppValidacao('${eq.nome}', '${v.proxima}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Enviar Alerta WhatsApp">
+                                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                                </button>
+                                <button onclick="editarValidacao(${v.id})" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="excluirValidacao(${v.id})" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function abrirModalValidacao(id = null) {
+            const select = document.getElementById('val-eq-select');
+            select.innerHTML = '';
+            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            document.getElementById('modal-validacao').classList.remove('hidden');
+            document.getElementById('val-arquivo-input').value = '';
+
+            if (id !== null) {
+                const v = db.validacoes.find(item => item.id === id);
+                if (v) {
+                    document.getElementById('modal-validacao-titulo').innerText = 'Editar Validação';
+                    document.getElementById('val-id').value = v.id;
+                    document.getElementById('val-eq-select').value = v.equipamentoId;
+                    document.getElementById('val-tipo').value = v.tipo;
+                    document.getElementById('val-protocolo').value = v.protocolo || '';
+                    document.getElementById('val-responsavel').value = v.responsavel || '';
+                    document.getElementById('val-data').value = v.data;
+                    document.getElementById('val-proxima').value = v.proxima || '';
+                    document.getElementById('val-status').value = v.status;
+                    document.getElementById('val-arquivo-atual-info').innerText = v.arquivoNome ? `Arquivo atual anexo: ${v.arquivoNome}` : '';
+                }
+            } else {
+                document.getElementById('modal-validacao-titulo').innerText = 'Registar Validação / Qualificação';
+                document.getElementById('val-id').value = '';
+                document.getElementById('val-protocolo').value = '';
+                document.getElementById('val-responsavel').value = '';
+                document.getElementById('val-data').value = new Date().toISOString().slice(0,10);
+                document.getElementById('val-proxima').value = '';
+                document.getElementById('val-status').value = 'Aprovado';
+                document.getElementById('val-arquivo-atual-info').innerText = '';
+            }
+        }
+
+        function fecharModalValidacao() { document.getElementById('modal-validacao').classList.add('hidden'); }
+
+        async function salvarValidacao() {
+            const id = document.getElementById('val-id').value;
+            const fileInput = document.getElementById('val-arquivo-input');
+            
+            let arquivoUrl = '';
+            let arquivoNome = '';
+
+            if (id) {
+                const existente = db.validacoes.find(item => item.id == id);
+                if (existente) {
+                    arquivoUrl = existente.arquivoUrl || '';
+                    arquivoNome = existente.arquivoNome || '';
+                }
+            }
+
+            const processarGravacao = async (urlFinal, nomeFinal) => {
+                const dados = {
+                    id: id ? Number(id) : Date.now(),
+                    equipamentoId: Number(document.getElementById('val-eq-select').value),
+                    tipo: document.getElementById('val-tipo').value,
+                    protocolo: document.getElementById('val-protocolo').value.trim(),
+                    responsavel: document.getElementById('val-responsavel').value.trim(),
+                    data: document.getElementById('val-data').value,
+                    proxima: document.getElementById('val-proxima').value,
+                    status: document.getElementById('val-status').value,
+                    arquivoUrl: urlFinal,
+                    arquivoNome: nomeFinal
+                };
+                if (!db.validacoes) db.validacoes = [];
+                if (id) {
+                    const idx = db.validacoes.findIndex(item => item.id == id);
+                    if (idx !== -1) db.validacoes[idx] = dados;
+                } else {
+                    db.validacoes.push(dados);
+                }
+                await salvarBanco();
+                fecharModalValidacao();
+                renderizarValidacoes();
+            };
+
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    await processarGravacao(e.target.result, file.name);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                await processarGravacao(arquivoUrl, arquivoNome);
+            }
+        }
+
+        function editarValidacao(id) { abrirModalValidacao(id); }
+
+        async function excluirValidacao(id) {
+            if (confirm('Deseja excluir este registro de validação?')) {
+                db.validacoes = db.validacoes.filter(item => item.id !== id);
+                await salvarBanco();
+                renderizarValidacoes();
             }
         }
 
@@ -1744,7 +1995,6 @@
             atualizarRelatorios();
         }
 
-        // GERENCIADOR DE ETIQUETAS (COM SUPORTE BLINDADO PARA SPOOLER DO WINDOWS E TEXTO PRETO)
         let equipamentoGerenciadorQR = null;
 
         function abrirModalQR(id) {
@@ -2263,7 +2513,7 @@
             container.classList.remove('hidden');
             conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando Gemini...</div>';
             try {
-                const prompt = `Analise este inventário com ${db.equipamentos.length} equipamentos e forneça um resumo executivo com recomendações. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
+                const prompt = `Analise este inventário com ${db.equipamentos.length} equipamentos e forneça um resumo executivo com recomendações de calibração, validação e manutenção. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
                 conteudo.innerHTML = await chamarGeminiComRetry(prompt);
             } catch (err) {
                 conteudo.innerHTML = `<span class="text-red-300">Erro: ${err.message}</span>`;
@@ -2276,7 +2526,7 @@
             container.classList.remove('hidden');
             conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando...</div>';
             try {
-                const prompt = `Liste 3 sugestões de melhoria para um sistema de inventário laboratorial. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
+                const prompt = `Liste 3 sugestões de melhoria para um sistema de inventário laboratorial com foco em validação de equipamentos. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
                 conteudo.innerHTML = await chamarGeminiComRetry(prompt);
             } catch (err) {
                 conteudo.innerHTML = `<span class="text-red-300">Erro: ${err.message}</span>`;
