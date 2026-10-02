@@ -39,7 +39,6 @@
         .border-primary { border-color: var(--cor-primaria); }
         .ring-primary:focus { --tw-ring-color: var(--cor-primaria); }
 
-        /* Estilização e alinhamento do QR Code e Textos da Etiqueta */
         #qr-code-container canvas, #qr-code-container img {
             display: block !important;
             margin: 0 auto !important;
@@ -670,7 +669,7 @@
     <div id="modal-usuario" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
         <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
             <h3 id="modal-usuario-titulo" class="text-base font-bold text-white">Editar Usuário</h3>
-            <input type="hidden" id="usr-edit-index" value="">
+            <input type="hidden" id="usr-edit-id" value="">
             <div class="space-y-3.5">
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Nome Completo</label>
@@ -989,11 +988,11 @@
     <script>
         const dadosCompletosPasteur = {
             equipamentos: [
-                { id: 1, codigo: 'ESTERI-04', nome: 'ESTERILIZAÇÃO AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', ip: '192.168.1.10', statusRede: 'Não testado', serial: '00210', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Inativo' },
-                { id: 2, codigo: 'ESTERI-05', nome: 'ESTERILIZAÇÃO SOLIDSTEEL AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', ip: '192.168.1.11', statusRede: 'Não testado', serial: '00211', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
-                { id: 3, codigo: 'MMICRO-06', nome: 'BACTEC FX40 SETOR MICROBIOLOGIA', tipo: 'Diagnóstico', setor: 'MICROBIOLOGIA', ip: '192.168.1.25', statusRede: 'Não testado', serial: '00063', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
-                { id: 14, codigo: 'CENTRI-05', nome: 'CENTRIFUGA PROCESSAMENTO PM', tipo: 'Centrífuga', setor: 'PM', ip: '192.168.1.40', statusRede: 'Não testado', serial: '00147', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
-                { id: 18, codigo: 'CENTRI-13', nome: 'CENTRIFUGA KACIL DUQUE', tipo: 'Centrífuga', setor: 'DUQUE DE CAXIAS', ip: '192.168.1.55', statusRede: 'Não testado', serial: '00116', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' }
+                { id: '1', codigo: 'ESTERI-04', nome: 'ESTERILIZAÇÃO AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', ip: '192.168.1.10', statusRede: 'Não testado', serial: '00210', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Inativo' },
+                { id: '2', codigo: 'ESTERI-05', nome: 'ESTERILIZAÇÃO SOLIDSTEEL AUTOCLAVE SETOR', tipo: 'Autoclave', setor: 'Setor', ip: '192.168.1.11', statusRede: 'Não testado', serial: '00211', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
+                { id: '3', codigo: 'MMICRO-06', nome: 'BACTEC FX40 SETOR MICROBIOLOGIA', tipo: 'Diagnóstico', setor: 'MICROBIOLOGIA', ip: '192.168.1.25', statusRede: 'Não testado', serial: '00063', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
+                { id: '4', codigo: 'CENTRI-05', nome: 'CENTRIFUGA PROCESSAMENTO PM', tipo: 'Centrífuga', setor: 'PM', ip: '192.168.1.40', statusRede: 'Não testado', serial: '00147', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' },
+                { id: '5', codigo: 'CENTRI-13', nome: 'CENTRIFUGA KACIL DUQUE', tipo: 'Centrífuga', setor: 'DUQUE DE CAXIAS', ip: '192.168.1.55', statusRede: 'Não testado', serial: '00116', posse: 'Próprio', dataEntrada: '2026-06-23', dataSaida: '', status: 'Ativo' }
             ],
             setores: ['PM', 'HBM', 'CAMOBI', 'JC', 'Setor', 'AGUDO', 'SÃO SEPÉ', 'MICROBIOLOGIA', 'ESTERILIZAÇÃO', 'DUQUE DE CAXIAS'],
             tipos: ['Autoclave', 'Balança Digital', 'Banho Maria', 'Cabine de Segurança', 'Centrífuga', 'Computador', 'Diagnóstico', 'Microscópio'],
@@ -1002,7 +1001,7 @@
             comodatos: [],
             transferencias: [],
             usuarios: [
-                { nome: 'Administrador Geral', usuario: 'admin', senha: 'admin', perfil: 'Admin', statusPagamento: 'Ativo' }
+                { id: 'admin1', nome: 'Administrador Geral', usuario: 'admin', senha: 'admin', perfil: 'Admin', statusPagamento: 'Ativo' }
             ],
             config: {
                 empresa: 'Laboratório Pasteur',
@@ -1020,7 +1019,18 @@
             }
         };
 
-        let db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
+        let db = {
+            equipamentos: [],
+            setores: [],
+            tipos: [],
+            manutencoes: [],
+            chamados: [],
+            comodatos: [],
+            transferencias: [],
+            usuarios: [],
+            config: dadosCompletosPasteur.config
+        };
+
         let firestoreDb = null;
         let usuarioLogado = null;
         let equipamentoAtualQR = null;
@@ -1035,7 +1045,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             verificarSessao();
-            inicializarFirebase().catch(err => console.log('Firebase offline:', err));
+            await inicializarFirebase().catch(err => console.log('Firebase offline:', err));
             document.getElementById('print-data-atual').innerText = new Date().toLocaleDateString('pt-BR');
             
             const urlParams = new URLSearchParams(window.location.search);
@@ -1048,6 +1058,7 @@
             }
         });
 
+        // INICIALIZAÇÃO E CARREGAMENTO COM MIGRAÇÃO AUTOMÁTICA
         async function inicializarFirebase() {
             if (typeof firebase === 'undefined') return;
             if (!firebase.apps.length) {
@@ -1061,48 +1072,127 @@
                 });
             }
             firestoreDb = firebase.firestore();
-            const docRef = firestoreDb.collection('inventario_pasteur_v2').doc('dados_gerais');
-            
-            docRef.onSnapshot((docSnap) => {
-                if (docSnap.exists) {
-                    const dadosRemotos = docSnap.data();
-                    if (dadosRemotos && dadosRemotos.equipamentos) db = dadosRemotos;
-                    if (!db.usuarios || db.usuarios.length === 0) db.usuarios = dadosCompletosPasteur.usuarios;
-                    if (!db.setores) db.setores = dadosCompletosPasteur.setores;
-                    if (!db.tipos) db.tipos = dadosCompletosPasteur.tipos;
-                    if (!db.manutencoes) db.manutencoes = [];
-                    if (!db.chamados) db.chamados = [];
-                    if (!db.comodatos) db.comodatos = [];
-                    if (!db.transferencias) db.transferencias = [];
-
-                    if (db.equipamentos) db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-                    
-                    aplicarConfiguracoes();
-                    filtrarTabela();
-                    renderizarMonitoramento();
-                    renderizarManutencao();
-                    renderizarChamados();
-                    renderizarFinanceiro();
-                    renderizarRastreabilidade();
-                    renderizarSetores();
-                    renderizarTipos();
-                    renderizarUsuarios();
-                    atualizarRelatorios();
-                    popularSelects();
-                } else {
-                    docRef.set(db);
-                }
-            });
+            await carregarDadosDasColecoes();
         }
 
-        async function salvarBanco() {
+        async function carregarDadosDasColecoes() {
             try {
-                if (firestoreDb) {
-                    await firestoreDb.collection('inventario_pasteur_v2').doc('dados_gerais').set(db);
+                // 1. Verifica se existe o documento monolítico antigo ("dados_gerais") para migrar automaticamente
+                const docAntigoSnap = await firestoreDb.collection('inventario_pasteur_v2').doc('dados_gerais').get();
+                if (docAntigoSnap.exists) {
+                    console.log('Migrando dados do formato antigo para as novas coleções...');
+                    const dadosAntigos = docAntigoSnap.data();
+
+                    if (dadosAntigos.equipamentos && Array.isArray(dadosAntigos.equipamentos)) {
+                        for (let eq of dadosAntigos.equipamentos) {
+                            await firestoreDb.collection('equipamentos').doc(String(eq.id || Date.now() + Math.random())).set(eq);
+                        }
+                    }
+                    if (dadosAntigos.usuarios && Array.isArray(dadosAntigos.usuarios)) {
+                        for (let u of dadosAntigos.usuarios) {
+                            await firestoreDb.collection('usuarios').doc(u.usuario || 'admin').set(u);
+                        }
+                    }
+                    if (dadosAntigos.manutencoes && Array.isArray(dadosAntigos.manutencoes)) {
+                        for (let m of dadosAntigos.manutencoes) {
+                            await firestoreDb.collection('manutencoes').doc(String(m.id || Date.now() + Math.random())).set(m);
+                        }
+                    }
+                    if (dadosAntigos.chamados && Array.isArray(dadosAntigos.chamados)) {
+                        for (let c of dadosAntigos.chamados) {
+                            await firestoreDb.collection('chamados').doc(String(c.id || Date.now() + Math.random())).set(c);
+                        }
+                    }
+                    if (dadosAntigos.comodatos && Array.isArray(dadosAntigos.comodatos)) {
+                        for (let com of dadosAntigos.comodatos) {
+                            await firestoreDb.collection('comodatos').doc(String(com.id || Date.now() + Math.random())).set(com);
+                        }
+                    }
+                    if (dadosAntigos.transferencias && Array.isArray(dadosAntigos.transferencias)) {
+                        for (let t of dadosAntigos.transferencias) {
+                            await firestoreDb.collection('transferencias').doc(String(t.id || Date.now() + Math.random())).set(t);
+                        }
+                    }
+
+                    await firestoreDb.collection('configuracoes').doc('geral').set({
+                        setores: dadosAntigos.setores || dadosCompletosPasteur.setores,
+                        tipos: dadosAntigos.tipos || dadosCompletosPasteur.tipos,
+                        config: dadosAntigos.config || dadosCompletosPasteur.config
+                    });
+
+                    alert('Migração dos dados antigos concluída com sucesso! Carregando...');
                 }
+
+                // 2. Carrega das coleções do Firestore otimizadas
+                const configDoc = await firestoreDb.collection('configuracoes').doc('geral').get();
+                if (configDoc.exists) {
+                    const data = configDoc.data();
+                    db.setores = data.setores || dadosCompletosPasteur.setores;
+                    db.tipos = data.tipos || dadosCompletosPasteur.tipos;
+                    db.config = { ...dadosCompletosPasteur.config, ...(data.config || {}) };
+                } else {
+                    db.setores = dadosCompletosPasteur.setores;
+                    db.tipos = dadosCompletosPasteur.tipos;
+                    await salvarConfiguracoesFirebase();
+                }
+
+                const eqSnap = await firestoreDb.collection('equipamentos').get();
+                db.equipamentos = eqSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (db.equipamentos.length === 0) {
+                    for (let e of dadosCompletosPasteur.equipamentos) {
+                        await firestoreDb.collection('equipamentos').doc(String(e.id)).set(e);
+                    }
+                    db.equipamentos = [...dadosCompletosPasteur.equipamentos];
+                }
+
+                const manSnap = await firestoreDb.collection('manutencoes').get();
+                db.manutencoes = manSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const chamSnap = await firestoreDb.collection('chamados').get();
+                db.chamados = chamSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const comSnap = await firestoreDb.collection('comodatos').get();
+                db.comodatos = comSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const trSnap = await firestoreDb.collection('transferencias').get();
+                db.transferencias = trSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const usrSnap = await firestoreDb.collection('usuarios').get();
+                db.usuarios = usrSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (db.usuarios.length === 0) {
+                    for (let u of dadosCompletosPasteur.usuarios) {
+                        await firestoreDb.collection('usuarios').doc(u.usuario).set(u);
+                    }
+                    db.usuarios = [...dadosCompletosPasteur.usuarios];
+                }
+
+                db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+                aplicarConfiguracoes();
+                filtrarTabela();
+                renderizarMonitoramento();
+                renderizarManutencao();
+                renderizarChamados();
+                renderizarFinanceiro();
+                renderizarRastreabilidade();
+                renderizarSetores();
+                renderizarTipos();
+                renderizarUsuarios();
+                atualizarRelatorios();
+                popularSelects();
+
             } catch (e) {
-                console.error('Erro ao salvar no Firebase:', e);
+                console.error('Erro ao carregar coleções do Firebase:', e);
             }
+        }
+
+        async function salvarConfiguracoesFirebase() {
+            if (!firestoreDb) return;
+            await firestoreDb.collection('configuracoes').doc('geral').set({
+                setores: db.setores,
+                tipos: db.tipos,
+                config: db.config
+            });
         }
 
         function verificarSessao() {
@@ -1145,7 +1235,6 @@
             const s = document.getElementById('login-senha').value.trim();
             const erroDiv = document.getElementById('login-erro');
 
-            if (!db.usuarios) db.usuarios = dadosCompletosPasteur.usuarios;
             const userFound = db.usuarios.find(usr => usr.usuario === u && usr.senha === s);
 
             if (userFound) {
@@ -1178,9 +1267,11 @@
                 erroDiv.classList.remove('hidden');
                 return;
             }
-            if (!db.usuarios) db.usuarios = [];
-            db.usuarios.push({ nome, usuario, senha, perfil, statusPagamento: 'Ativo' });
-            await salvarBanco();
+            const novoUsr = { id: usuario, nome, usuario, senha, perfil, statusPagamento: 'Ativo' };
+            if (firestoreDb) {
+                await firestoreDb.collection('usuarios').doc(usuario).set(novoUsr);
+            }
+            db.usuarios.push(novoUsr);
             sucessoDiv.innerText = 'Conta criada com sucesso! Faça login.';
             sucessoDiv.classList.remove('hidden');
             erroDiv.classList.add('hidden');
@@ -1256,7 +1347,7 @@
                         <td class="p-3.5 font-mono text-xs text-sky-400">${ip}</td>
                         <td class="p-3.5"><span id="badge-rede-${eq.id}" class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgeRede}">${statusRede}</span></td>
                         <td class="p-3.5 text-center space-x-2">
-                            <button onclick="testarConexaoEquipamento(${eq.id})" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-3 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5">
+                            <button onclick="testarConexaoEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-3 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5">
                                 <i class="fa-solid fa-satellite-dish"></i> Testar IP
                             </button>
                             <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'IP: ${ip} - Status: ${statusRede}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition" title="Enviar Alerta WhatsApp">
@@ -1269,7 +1360,7 @@
         }
 
         async function testarConexaoEquipamento(id) {
-            const eq = db.equipamentos.find(e => e.id === id);
+            const eq = db.equipamentos.find(e => e.id == id);
             if (!eq || !eq.ip || eq.ip.trim() === '') {
                 return alert('Este equipamento não possui um endereço IP cadastrado.');
             }
@@ -1282,6 +1373,7 @@
                 const timeoutId = setTimeout(() => controller.abort(), 3500);
 
                 await fetch(`http://${eq.ip}`, { 
+                    method: 'HEAD',
                     mode: 'no-cors', 
                     signal: controller.signal 
                 });
@@ -1289,14 +1381,18 @@
                 clearTimeout(timeoutId);
                 
                 eq.statusRede = 'Online';
-                await salvarBanco();
+                if (firestoreDb) {
+                    await firestoreDb.collection('equipamentos').doc(String(eq.id)).update({ statusRede: 'Online' });
+                }
                 if (badge) {
                     badge.className = 'inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60';
                     badge.innerText = 'Online';
                 }
             } catch (error) {
                 eq.statusRede = 'Offline';
-                await salvarBanco();
+                if (firestoreDb) {
+                    await firestoreDb.collection('equipamentos').doc(String(eq.id)).update({ statusRede: 'Offline' });
+                }
                 if (badge) {
                     badge.className = 'inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-red-950/60 text-red-300 border border-red-800/60';
                     badge.innerText = 'Offline';
@@ -1326,8 +1422,7 @@
             const tbody = document.getElementById('tabela-usuarios-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (!db.usuarios) db.usuarios = [];
-            db.usuarios.forEach((usr, index) => {
+            db.usuarios.forEach((usr) => {
                 const statusPag = usr.statusPagamento || 'Ativo';
                 const badgePag = statusPag === 'Inadimplente' ? 'bg-red-950/60 text-red-300 border border-red-800/60' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60';
                 tbody.innerHTML += `
@@ -1337,28 +1432,30 @@
                         <td class="p-3.5"><span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-950/60 text-indigo-300 border border-indigo-800/60">${usr.perfil}</span></td>
                         <td class="p-3.5"><span class="px-3.5 py-1 rounded-full text-xs font-semibold ${badgePag}">${statusPag}</span></td>
                         <td class="p-3.5 text-center space-x-3">
-                            <button onclick="abrirModalUsuario(${index})" class="text-sky-400 hover:underline text-xs"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
-                            ${db.usuarios.length > 1 ? `<button onclick="excluirUsuario(${index})" class="text-red-400 hover:underline text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>` : ''}
+                            <button onclick="abrirModalUsuario('${usr.id}')" class="text-sky-400 hover:underline text-xs"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
+                            ${db.usuarios.length > 1 ? `<button onclick="excluirUsuario('${usr.id}')" class="text-red-400 hover:underline text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>` : ''}
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function abrirModalUsuario(index = null) {
+        function abrirModalUsuario(id = null) {
             document.getElementById('modal-usuario').classList.remove('hidden');
-            if (index !== null) {
-                const usr = db.usuarios[index];
-                document.getElementById('modal-usuario-titulo').innerText = 'Editar Usuário';
-                document.getElementById('usr-edit-index').value = index;
-                document.getElementById('usr-nome').value = usr.nome;
-                document.getElementById('usr-login').value = usr.usuario;
-                document.getElementById('usr-senha').value = '';
-                document.getElementById('usr-perfil').value = usr.perfil;
-                document.getElementById('usr-status-pagamento').value = usr.statusPagamento || 'Ativo';
+            if (id !== null) {
+                const usr = db.usuarios.find(u => u.id == id);
+                if (usr) {
+                    document.getElementById('modal-usuario-titulo').innerText = 'Editar Usuário';
+                    document.getElementById('usr-edit-id').value = usr.id;
+                    document.getElementById('usr-nome').value = usr.nome;
+                    document.getElementById('usr-login').value = usr.usuario;
+                    document.getElementById('usr-senha').value = '';
+                    document.getElementById('usr-perfil').value = usr.perfil;
+                    document.getElementById('usr-status-pagamento').value = usr.statusPagamento || 'Ativo';
+                }
             } else {
                 document.getElementById('modal-usuario-titulo').innerText = 'Novo Usuário';
-                document.getElementById('usr-edit-index').value = '';
+                document.getElementById('usr-edit-id').value = '';
                 document.getElementById('usr-nome').value = '';
                 document.getElementById('usr-login').value = '';
                 document.getElementById('usr-senha').value = '';
@@ -1370,7 +1467,7 @@
         function fecharModalUsuario() { document.getElementById('modal-usuario').classList.add('hidden'); }
 
         async function salvarUsuarioModal() {
-            const index = document.getElementById('usr-edit-index').value;
+            const id = document.getElementById('usr-edit-id').value;
             const nome = document.getElementById('usr-nome').value.trim();
             const usuario = document.getElementById('usr-login').value.trim();
             const senha = document.getElementById('usr-senha').value.trim();
@@ -1378,28 +1475,33 @@
             const statusPagamento = document.getElementById('usr-status-pagamento').value;
 
             if (!nome || !usuario) return alert('Preencha os campos obrigatórios.');
-            if (!db.usuarios) db.usuarios = [];
 
-            if (index === '') {
-                if (!senha) return alert('Informe uma senha.');
-                db.usuarios.push({ nome, usuario, senha, perfil, statusPagamento });
-            } else {
-                const idx = Number(index);
-                db.usuarios[idx].nome = nome;
-                db.usuarios[idx].usuario = usuario;
-                db.usuarios[idx].perfil = perfil;
-                db.usuarios[idx].statusPagamento = statusPagamento;
-                if (senha) db.usuarios[idx].senha = senha;
+            let docId = id ? id : usuario;
+            let dadosUsr = { id: docId, nome, usuario, perfil, statusPagamento };
+            if (senha) dadosUsr.senha = senha;
+            else {
+                const existente = db.usuarios.find(u => u.id == docId);
+                if (existente) dadosUsr.senha = existente.senha;
             }
-            await salvarBanco();
+
+            if (firestoreDb) {
+                await firestoreDb.collection('usuarios').doc(docId).set(dadosUsr);
+            }
+
+            const idx = db.usuarios.findIndex(u => u.id == docId);
+            if (idx !== -1) db.usuarios[idx] = dadosUsr;
+            else db.usuarios.push(dadosUsr);
+
             fecharModalUsuario();
             renderizarUsuarios();
         }
 
-        async function excluirUsuario(index) {
+        async function excluirUsuario(id) {
             if (confirm('Deseja excluir este usuário?')) {
-                db.usuarios.splice(index, 1);
-                await salvarBanco();
+                if (firestoreDb) {
+                    await firestoreDb.collection('usuarios').doc(String(id)).delete();
+                }
+                db.usuarios = db.usuarios.filter(u => u.id != id);
                 renderizarUsuarios();
             }
         }
@@ -1457,13 +1559,13 @@
                     
                     const acoesHtml = `
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick="abrirModalQR(${eq.id})" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1" title="Gerenciar e Imprimir QR Code">
+                            <button onclick="abrirModalQR('${eq.id}')" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1" title="Gerenciar e Imprimir QR Code">
                                 <i class="fa-solid fa-qrcode"></i> QR
                             </button>
-                            <button onclick="editarEquipamento(${eq.id})" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
+                            <button onclick="editarEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
                                 <i class="fa-solid fa-pen"></i> Editar
                             </button>
-                            <button onclick="excluirEquipamento(${eq.id})" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
+                            <button onclick="excluirEquipamento('${eq.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
                                 <i class="fa-solid fa-trash"></i> Excluir
                             </button>
                         </div>
@@ -1541,13 +1643,13 @@
                 const conteudo = e.target.result;
                 const linhas = conteudo.split('\n');
                 let importados = 0;
-                linhas.forEach(linha => {
+                for (let linha of linhas) {
                     const l = linha.trim();
-                    if (!l || l.startsWith('#')) return;
+                    if (!l || l.startsWith('#')) continue;
                     const partes = l.split(/[;|	]/).map(p => p.trim());
                     if (partes.length >= 2) {
-                        db.equipamentos.push({
-                            id: Date.now() + Math.random(),
+                        const novoEq = {
+                            id: String(Date.now() + Math.random()),
                             codigo: partes[0] || 'REF-00',
                             nome: partes[1].toUpperCase() || 'EQUIPAMENTO',
                             tipo: partes[2] || (db.tipos ? db.tipos[0] : 'Geral'),
@@ -1559,12 +1661,15 @@
                             dataSaida: partes[8] || '',
                             status: partes[9] || 'Ativo',
                             statusRede: 'Não testado'
-                        });
+                        };
+                        if (firestoreDb) {
+                            await firestoreDb.collection('equipamentos').doc(novoEq.id).set(novoEq);
+                        }
+                        db.equipamentos.push(novoEq);
                         importados++;
                     }
-                });
+                }
                 db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-                await salvarBanco();
                 alert(`${importados} equipamentos importados com sucesso!`);
                 document.getElementById('input-arquivo-txt').value = '';
                 filtrarTabela();
@@ -1576,32 +1681,51 @@
         async function zerarBaseDados() {
             if (usuarioLogado && usuarioLogado.perfil !== 'Admin') return alert('Acesso negado.');
             if (confirm('Deseja zerar toda a base?')) {
-                db.equipamentos = []; db.manutencoes = []; db.chamados = [];
-                await salvarBanco();
-                alert('Base zerada!');
+                if (firestoreDb) {
+                    const batch = firestoreDb.batch();
+                    const snap = await firestoreDb.collection('equipamentos').get();
+                    snap.docs.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+                db.equipamentos = []; db.manutencoes = []; db.chamados = []; db.comodatos = []; db.transferencias = [];
+                filtrarTabela();
+                renderizarManutencao();
+                renderizarChamados();
+                renderizarFinanceiro();
+                renderizarRastreabilidade();
                 atualizarRelatorios();
+                alert('Base de equipamentos zerada!');
             }
         }
 
         async function importarTextoEmMassa() {
             const texto = document.getElementById('texto-importacao-massa').value.trim();
             if (!texto) return;
-            texto.split('\n').forEach(l => {
+            for (let l of texto.split('\n')) {
                 if (l.trim()) {
-                    db.equipamentos.push({ id: Date.now() + Math.random(), codigo: 'IMP', nome: l.trim().substring(0,40), tipo: db.tipos[0], setor: db.setores[0], ip: '', serial: '0000', posse: 'Próprio', dataEntrada: new Date().toISOString().slice(0,10), dataSaida: '', status: 'Ativo', statusRede: 'Não testado' });
+                    const novoEq = { id: String(Date.now() + Math.random()), codigo: 'IMP', nome: l.trim().substring(0,40), tipo: db.tipos[0], setor: db.setores[0], ip: '', serial: '0000', posse: 'Próprio', dataEntrada: new Date().toISOString().slice(0,10), dataSaida: '', status: 'Ativo', statusRede: 'Não testado' };
+                    if (firestoreDb) {
+                        await firestoreDb.collection('equipamentos').doc(novoEq.id).set(novoEq);
+                    }
+                    db.equipamentos.push(novoEq);
                 }
-            });
+            }
             db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-            await salvarBanco();
             alert('Importado com sucesso!');
+            filtrarTabela();
             atualizarRelatorios();
         }
 
         async function carregarDadosPasteur() {
-            db = JSON.parse(JSON.stringify(dadosCompletosPasteur));
+            db.equipamentos = [...dadosCompletosPasteur.equipamentos];
+            if (firestoreDb) {
+                for (let e of db.equipamentos) {
+                    await firestoreDb.collection('equipamentos').doc(String(e.id)).set(e);
+                }
+            }
             db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-            await salvarBanco();
-            alert('Base restaurada!');
+            alert('Base padrão restaurada!');
+            filtrarTabela();
             atualizarRelatorios();
         }
 
@@ -1609,7 +1733,6 @@
             const tbody = document.getElementById('tabela-manutencao-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (!db.manutencoes) db.manutencoes = [];
             
             if (db.manutencoes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum registro de calibração ou manutenção.</td></tr>`;
@@ -1628,10 +1751,10 @@
                                 <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'Calibração Programada: ${m.proxima || 'Pendente'}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Enviar Alerta WhatsApp">
                                     <i class="fa-brands fa-whatsapp"></i> WhatsApp
                                 </button>
-                                <button onclick="editarManutencao(${m.id})" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
+                                <button onclick="editarManutencao('${m.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
-                                <button onclick="excluirManutencao(${m.id})" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
+                                <button onclick="excluirManutencao('${m.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </td>
@@ -1648,7 +1771,7 @@
             document.getElementById('modal-manutencao').classList.remove('hidden');
 
             if (id !== null) {
-                const m = db.manutencoes.find(item => item.id === id);
+                const m = db.manutencoes.find(item => item.id == id);
                 if (m) {
                     document.getElementById('modal-manutencao-titulo').innerText = 'Editar Manutenção';
                     document.getElementById('man-id').value = m.id;
@@ -1671,23 +1794,23 @@
 
         async function salvarManutencao() {
             const id = document.getElementById('man-id').value;
+            const manId = id ? String(id) : String(Date.now());
             const dados = {
-                id: id ? Number(id) : Date.now(),
-                equipamentoId: Number(document.getElementById('man-eq-select').value),
+                id: manId,
+                equipamentoId: document.getElementById('man-eq-select').value,
                 tipo: document.getElementById('man-tipo').value,
                 data: document.getElementById('man-data').value,
                 proxima: document.getElementById('man-proxima').value,
                 laudo: document.getElementById('man-laudo').value || 'laudo.pdf',
                 status: 'Em dia'
             };
-            if (!db.manutencoes) db.manutencoes = [];
-            if (id) {
-                const idx = db.manutencoes.findIndex(m => m.id == id);
-                if (idx !== -1) db.manutencoes[idx] = dados;
-            } else {
-                db.manutencoes.push(dados);
+            if (firestoreDb) {
+                await firestoreDb.collection('manutencoes').doc(manId).set(dados);
             }
-            await salvarBanco();
+            const idx = db.manutencoes.findIndex(m => m.id == manId);
+            if (idx !== -1) db.manutencoes[idx] = dados;
+            else db.manutencoes.push(dados);
+
             fecharModalManutencao();
             renderizarManutencao();
         }
@@ -1696,8 +1819,10 @@
 
         async function excluirManutencao(id) {
             if (confirm('Deseja excluir este registro?')) {
-                db.manutencoes = db.manutencoes.filter(m => m.id !== id);
-                await salvarBanco();
+                if (firestoreDb) {
+                    await firestoreDb.collection('manutencoes').doc(String(id)).delete();
+                }
+                db.manutencoes = db.manutencoes.filter(m => m.id != id);
                 renderizarManutencao();
             }
         }
@@ -1716,7 +1841,6 @@
             const tbody = document.getElementById('tabela-chamados-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (!db.chamados) db.chamados = [];
 
             if (db.chamados.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum chamado registrado.</td></tr>`;
@@ -1750,11 +1874,10 @@
 
             const selectUnidade = document.getElementById('chamado-unidade');
             selectUnidade.innerHTML = '';
-            if (!db.setores) db.setores = [];
             [...db.setores].sort().forEach(s => selectUnidade.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`);
 
             document.getElementById('modal-chamado').classList.remove('hidden');
-            if (id !== null && typeof id === 'string') {
+            if (id !== null) {
                 const c = db.chamados.find(item => item.id == id);
                 if (c) {
                     document.getElementById('modal-chamado-titulo').innerText = 'Editar Chamado';
@@ -1777,30 +1900,35 @@
 
         async function salvarChamado() {
             const id = document.getElementById('chamado-id').value;
-            const eqId = Number(document.getElementById('chamado-eq-select').value);
-            const unidade = document.getElementById('chamado-unidade').value;
-            const prioridade = document.getElementById('chamado-prioridade').value;
-            const status = document.getElementById('chamado-status').value;
-            const descricao = document.getElementById('chamado-descricao').value.trim();
+            const chamadoId = id ? String(id) : String(Date.now()).slice(-6);
+            const dados = {
+                id: chamadoId,
+                equipamentoId: document.getElementById('chamado-eq-select').value,
+                unidade: document.getElementById('chamado-unidade').value,
+                prioridade: document.getElementById('chamado-prioridade').value,
+                status: document.getElementById('chamado-status').value,
+                descricao: document.getElementById('chamado-descricao').value.trim()
+            };
 
-            if (!descricao) return alert('Descreva o problema.');
-            if (!db.chamados) db.chamados = [];
-
-            if (id) {
-                const idx = db.chamados.findIndex(c => c.id == id);
-                if (idx !== -1) db.chamados[idx] = { ...db.chamados[idx], equipamentoId: eqId, unidade, prioridade, status, descricao };
-            } else {
-                db.chamados.push({ id: Date.now().toString().slice(-6), equipamentoId: eqId, unidade, prioridade, descricao, status });
+            if (!dados.descricao) return alert('Descreva o problema.');
+            if (firestoreDb) {
+                await firestoreDb.collection('chamados').doc(chamadoId).set(dados);
             }
-            await salvarBanco();
+
+            const idx = db.chamados.findIndex(c => c.id == chamadoId);
+            if (idx !== -1) db.chamados[idx] = dados;
+            else db.chamados.push(dados);
+
             fecharModalChamado();
             renderizarChamados();
         }
 
         async function excluirChamado(id) {
             if (confirm('Deseja excluir este chamado?')) {
+                if (firestoreDb) {
+                    await firestoreDb.collection('chamados').doc(String(id)).delete();
+                }
                 db.chamados = db.chamados.filter(c => c.id != id);
-                await salvarBanco();
                 renderizarChamados();
             }
         }
@@ -1825,8 +1953,18 @@
         }
         function fecharModalComodato() { document.getElementById('modal-comodato').classList.add('hidden'); }
         async function salvarComodato() {
-            db.comodatos.push({ id: Date.now(), equipamentoId: Number(document.getElementById('com-eq-select').value), fornecedor: document.getElementById('com-fornecedor').value, vigencia: document.getElementById('com-vigencia').value, custo: Number(document.getElementById('com-custo').value) || 0 });
-            await salvarBanco();
+            const comId = String(Date.now());
+            const dados = {
+                id: comId,
+                equipamentoId: document.getElementById('com-eq-select').value,
+                fornecedor: document.getElementById('com-fornecedor').value,
+                vigencia: document.getElementById('com-vigencia').value,
+                custo: Number(document.getElementById('com-custo').value) || 0
+            };
+            if (firestoreDb) {
+                await firestoreDb.collection('comodatos').doc(comId).set(dados);
+            }
+            db.comodatos.push(dados);
             fecharModalComodato();
             renderizarFinanceiro();
             atualizarRelatorios();
@@ -1848,7 +1986,6 @@
             const selectOrig = document.getElementById('tr-origem');
             const selectDest = document.getElementById('tr-destino');
             selectOrig.innerHTML = ''; selectDest.innerHTML = '';
-            if (!db.setores) db.setores = [];
             [...db.setores].sort().forEach(s => {
                 selectOrig.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`;
                 selectDest.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`;
@@ -1862,23 +1999,36 @@
         }
         function fecharModalTransferencia() { document.getElementById('modal-transferencia').classList.add('hidden'); }
         async function salvarTransferencia() {
-            const eqId = Number(document.getElementById('tr-eq-select').value);
-            const eq = db.equipamentos.find(e => e.id === eqId);
+            const eqId = document.getElementById('tr-eq-select').value;
+            const eq = db.equipamentos.find(e => e.id == eqId);
             const origem = document.getElementById('tr-origem').value;
             const destino = document.getElementById('tr-destino').value;
-            db.transferencias.push({ id: Date.now(), data: new Date().toLocaleString(), equipamento: `[${eq.codigo}] ${eq.nome}`, origem, destino, motivo: document.getElementById('tr-motivo').value });
+            const trId = String(Date.now());
+            const dados = {
+                id: trId,
+                data: new Date().toLocaleString(),
+                equipamento: `[${eq.codigo}] ${eq.nome}`,
+                origem,
+                destino,
+                motivo: document.getElementById('tr-motivo').value
+            };
+            if (firestoreDb) {
+                await firestoreDb.collection('transferencias').doc(trId).set(dados);
+                await firestoreDb.collection('equipamentos').doc(String(eq.id)).update({ setor: destino });
+            }
             eq.setor = destino;
-            await salvarBanco();
+            db.transferencias.push(dados);
             fecharModalTransferencia();
             renderizarRastreabilidade();
             atualizarRelatorios();
+            filtrarTabela();
         }
 
-        // GERENCIADOR DE ETIQUETAS (COM SUPORTE BLINDADO PARA SPOOLER DO WINDOWS E TEXTO PRETO)
+        // GERENCIADOR DE ETIQUETAS QR CODE
         let equipamentoGerenciadorQR = null;
 
         function abrirModalQR(id) {
-            equipamentoGerenciadorQR = db.equipamentos.find(e => e.id === id);
+            equipamentoGerenciadorQR = db.equipamentos.find(e => e.id == id);
             if (!equipamentoGerenciadorQR) return;
             document.getElementById('modal-qr').classList.remove('hidden');
             atualizarPreviewEtiqueta();
@@ -2057,13 +2207,11 @@
             if (sf && sm) {
                 sf.innerHTML = '<option value="" class="bg-slate-900">Todos os Setores</option>';
                 sm.innerHTML = '';
-                if (!db.setores) db.setores = [];
                 [...db.setores].sort().forEach(s => { sf.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`; sm.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`; });
             }
             const st = document.getElementById('eq-tipo');
             if (st) {
                 st.innerHTML = '';
-                if (!db.tipos) db.tipos = [];
                 [...db.tipos].sort().forEach(t => st.innerHTML += `<option value="${t}" class="bg-slate-900">${t}</option>`);
             }
         }
@@ -2072,25 +2220,23 @@
             const tbody = document.getElementById('tabela-setores-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (!db.setores) db.setores = [];
             [...db.setores].sort().forEach((s, i) => {
                 tbody.innerHTML += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${s}</td><td class="p-3.5 text-center"><button onclick="excluirSetor(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
             });
         }
         async function salvarSetor() {
             const val = document.getElementById('novo-setor-nome').value.trim().toUpperCase();
-            if (!db.setores) db.setores = [];
             if (val && !db.setores.includes(val)) {
                 db.setores.push(val);
                 document.getElementById('novo-setor-nome').value = '';
-                await salvarBanco();
+                await salvarConfiguracoesFirebase();
                 renderizarSetores(); popularSelects(); atualizarRelatorios();
             }
         }
         async function excluirSetor(i) {
             if (db.setores.length <= 1) return alert('Mantenha pelo menos um setor.');
             db.setores.splice(i, 1);
-            await salvarBanco();
+            await salvarConfiguracoesFirebase();
             renderizarSetores(); popularSelects(); atualizarRelatorios();
         }
 
@@ -2098,25 +2244,23 @@
             const tbody = document.getElementById('tabela-tipos-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (!db.tipos) db.tipos = [];
             [...db.tipos].sort().forEach((t, i) => {
                 tbody.innerHTML += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${t}</td><td class="p-3.5 text-center"><button onclick="excluirTipo(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
             });
         }
         async function salvarTipo() {
             const val = document.getElementById('novo-tipo-nome').value.trim();
-            if (!db.tipos) db.tipos = [];
             if (val && !db.tipos.includes(val)) {
                 db.tipos.push(val);
                 document.getElementById('novo-tipo-nome').value = '';
-                await salvarBanco();
+                await salvarConfiguracoesFirebase();
                 renderizarTipos(); popularSelects(); atualizarRelatorios();
             }
         }
         async function excluirTipo(i) {
             if (db.tipos.length <= 1) return alert('Mantenha pelo menos um tipo.');
             db.tipos.splice(i, 1);
-            await salvarBanco();
+            await salvarConfiguracoesFirebase();
             renderizarTipos(); popularSelects(); atualizarRelatorios();
         }
 
@@ -2124,7 +2268,7 @@
             document.getElementById('modal-equipamento').classList.remove('hidden');
             popularSelects();
             if (id !== null) {
-                const eq = db.equipamentos.find(e => e.id === id);
+                const eq = db.equipamentos.find(e => e.id == id);
                 if (eq) {
                     document.getElementById('modal-titulo').innerText = 'Editar Equipamento';
                     document.getElementById('eq-id').value = eq.id;
@@ -2151,10 +2295,12 @@
             }
         }
         function fecharModalEquipamento() { document.getElementById('modal-equipamento').classList.add('hidden'); }
+
         async function salvarEquipamento() {
             const id = document.getElementById('eq-id').value;
+            const eqId = id ? String(id) : String(Date.now());
             const dados = {
-                id: id ? Number(id) : Date.now(),
+                id: eqId,
                 codigo: document.getElementById('eq-codigo').value.toUpperCase(),
                 nome: document.getElementById('eq-nome').value.toUpperCase(),
                 tipo: document.getElementById('eq-tipo').value,
@@ -2167,23 +2313,31 @@
                 dataSaida: document.getElementById('eq-data-saida').value || '',
                 statusRede: 'Não testado'
             };
-            if (id) {
-                const idx = db.equipamentos.findIndex(e => e.id == id);
-                if (idx !== -1) db.equipamentos[idx] = { ...db.equipamentos[idx], ...dados };
-            } else {
-                db.equipamentos.push(dados);
+
+            if (firestoreDb) {
+                await firestoreDb.collection('equipamentos').doc(eqId).set(dados);
             }
+
+            const idx = db.equipamentos.findIndex(e => e.id == eqId);
+            if (idx !== -1) db.equipamentos[idx] = dados;
+            else db.equipamentos.push(dados);
+
             db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-            await salvarBanco();
             fecharModalEquipamento();
             filtrarTabela();
+            renderizarMonitoramento();
             atualizarRelatorios();
         }
+
         async function excluirEquipamento(id) {
             if (confirm('Tem certeza que deseja excluir?')) {
-                db.equipamentos = db.equipamentos.filter(e => e.id !== id);
-                await salvarBanco();
-                filtrarTabela(); atualizarRelatorios();
+                if (firestoreDb) {
+                    await firestoreDb.collection('equipamentos').doc(String(id)).delete();
+                }
+                db.equipamentos = db.equipamentos.filter(e => e.id != id);
+                filtrarTabela();
+                renderizarMonitoramento();
+                atualizarRelatorios();
             }
         }
         function editarEquipamento(id) { abrirModalEquipamento(id); }
@@ -2360,11 +2514,15 @@
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     db.config.logo = e.target.result;
-                    await salvarBanco(); aplicarConfiguracoes(); alert('Salvo com sucesso!');
+                    await salvarConfiguracoesFirebase();
+                    aplicarConfiguracoes();
+                    alert('Salvo com sucesso!');
                 };
                 reader.readAsDataURL(logoInput.files[0]);
             } else {
-                await salvarBanco(); aplicarConfiguracoes(); alert('Salvo com sucesso!');
+                await salvarConfiguracoesFirebase();
+                aplicarConfiguracoes();
+                alert('Salvo com sucesso!');
             }
         }
 
