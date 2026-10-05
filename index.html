@@ -1123,8 +1123,17 @@
                     alert('Migração dos dados antigos concluída com sucesso! Carregando...');
                 }
 
-                // 2. Carrega das coleções do Firestore otimizadas
-                const configDoc = await firestoreDb.collection('configuracoes').doc('geral').get();
+                // 2. Carrega das coleções do Firestore simultaneamente usando Promise.all (MUITO MAIS RÁPIDO)
+                const [configDoc, eqSnap, manSnap, chamSnap, comSnap, trSnap, usrSnap] = await Promise.all([
+                    firestoreDb.collection('configuracoes').doc('geral').get(),
+                    firestoreDb.collection('equipamentos').get(),
+                    firestoreDb.collection('manutencoes').get(),
+                    firestoreDb.collection('chamados').get(),
+                    firestoreDb.collection('comodatos').get(),
+                    firestoreDb.collection('transferencias').get(),
+                    firestoreDb.collection('usuarios').get()
+                ]);
+
                 if (configDoc.exists) {
                     const data = configDoc.data();
                     db.setores = data.setores || dadosCompletosPasteur.setores;
@@ -1136,33 +1145,41 @@
                     await salvarConfiguracoesFirebase();
                 }
 
-                const eqSnap = await firestoreDb.collection('equipamentos').get();
-                db.equipamentos = eqSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Popula e pré-computa os campos de busca sem acentos (MUITO MAIS RÁPIDO PARA DIGITAR)
+                db.equipamentos = eqSnap.docs.map(doc => {
+                    const data = doc.data();
+                    data._buscaNome = (data.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                    data._buscaCodigo = (data.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                    return { id: doc.id, ...data };
+                });
+
                 if (db.equipamentos.length === 0) {
+                    const promessas = [];
                     for (let e of dadosCompletosPasteur.equipamentos) {
-                        await firestoreDb.collection('equipamentos').doc(String(e.id)).set(e);
+                        e._buscaNome = (e.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                        e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                        promessas.push(firestoreDb.collection('equipamentos').doc(String(e.id)).set(e));
                     }
-                    db.equipamentos = [...dadosCompletosPasteur.equipamentos];
+                    await Promise.all(promessas);
+                    db.equipamentos = [...dadosCompletosPasteur.equipamentos].map(e => {
+                        e._buscaNome = (e.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                        e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                        return e;
+                    });
                 }
 
-                const manSnap = await firestoreDb.collection('manutencoes').get();
                 db.manutencoes = manSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const chamSnap = await firestoreDb.collection('chamados').get();
                 db.chamados = chamSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const comSnap = await firestoreDb.collection('comodatos').get();
                 db.comodatos = comSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const trSnap = await firestoreDb.collection('transferencias').get();
                 db.transferencias = trSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const usrSnap = await firestoreDb.collection('usuarios').get();
                 db.usuarios = usrSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
                 if (db.usuarios.length === 0) {
+                    const promessasUsr = [];
                     for (let u of dadosCompletosPasteur.usuarios) {
-                        await firestoreDb.collection('usuarios').doc(u.usuario).set(u);
+                        promessasUsr.push(firestoreDb.collection('usuarios').doc(u.usuario).set(u));
                     }
+                    await Promise.all(promessasUsr);
                     db.usuarios = [...dadosCompletosPasteur.usuarios];
                 }
 
@@ -1324,13 +1341,13 @@
         function renderizarMonitoramento() {
             const tbody = document.getElementById('tabela-monitoramento-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
             
             if (!db.equipamentos || db.equipamentos.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum equipamento cadastrado.</td></tr>`;
                 return;
             }
 
+            let html = '';
             db.equipamentos.forEach(eq => {
                 const ip = eq.ip || 'Não configurado';
                 const statusRede = eq.statusRede || 'Não testado';
@@ -1339,7 +1356,7 @@
                 if (statusRede === 'Online') badgeRede = 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60';
                 else if (statusRede === 'Offline') badgeRede = 'bg-red-950/60 text-red-300 border border-red-800/60';
 
-                tbody.innerHTML += `
+                html += `
                     <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
                         <td class="p-3.5 font-mono text-xs font-semibold text-slate-300">${eq.codigo || '-'}</td>
                         <td class="p-3.5 font-medium text-white">${eq.nome}</td>
@@ -1357,6 +1374,7 @@
                     </tr>
                 `;
             });
+            tbody.innerHTML = html;
         }
 
         async function testarConexaoEquipamento(id) {
@@ -1421,11 +1439,11 @@
         function renderizarUsuarios() {
             const tbody = document.getElementById('tabela-usuarios-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
+            let html = '';
             db.usuarios.forEach((usr) => {
                 const statusPag = usr.statusPagamento || 'Ativo';
                 const badgePag = statusPag === 'Inadimplente' ? 'bg-red-950/60 text-red-300 border border-red-800/60' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60';
-                tbody.innerHTML += `
+                html += `
                     <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
                         <td class="p-3.5 font-medium text-white">${usr.nome}</td>
                         <td class="p-3.5 font-mono text-xs text-slate-300">${usr.usuario}</td>
@@ -1438,6 +1456,7 @@
                     </tr>
                 `;
             });
+            tbody.innerHTML = html;
         }
 
         function abrirModalUsuario(id = null) {
@@ -1538,7 +1557,6 @@
         function renderizarTabelaPaginada() {
             const tbody = document.getElementById('tabela-equipamentos-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
             
             const totalItens = listaEquipamentosFiltradaCache.length;
             const totalPaginas = Math.ceil(totalItens / itensPorPagina) || 1;
@@ -1552,6 +1570,7 @@
             if (paginaItens.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">Nenhum equipamento encontrado.</td></tr>`;
             } else {
+                let html = '';
                 paginaItens.forEach(eq => {
                     const ciclo = calcularCiclo(eq.dataEntrada);
                     const badgeStatus = obterBadgeStatus(eq.status || 'Ativo');
@@ -1571,21 +1590,21 @@
                         </div>
                     `;
 
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-800/40 transition border-b border-slate-700/50";
-                    tr.innerHTML = `
-                        <td class="p-3.5 font-mono text-xs font-semibold text-slate-300">${eq.codigo || '-'}</td>
-                        <td class="p-3.5 font-medium text-white">${eq.nome}</td>
-                        <td class="p-3.5 text-slate-300">${eq.tipo}</td>
-                        <td class="p-3.5 text-slate-300">${eq.setor}</td>
-                        <td class="p-3.5 text-sky-400 font-mono text-xs">${eq.ip || '-'}</td>
-                        <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgePosse}">${eq.posse || 'Próprio'}</span></td>
-                        <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgeStatus}">${eq.status || 'Ativo'}</span></td>
-                        <td class="p-3.5 min-w-[180px]"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${ciclo.classe}">${ciclo.texto}</span></td>
-                        <td class="p-3.5 text-center no-print">${acoesHtml}</td>
+                    html += `
+                        <tr class="hover:bg-slate-800/40 transition border-b border-slate-700/50">
+                            <td class="p-3.5 font-mono text-xs font-semibold text-slate-300">${eq.codigo || '-'}</td>
+                            <td class="p-3.5 font-medium text-white">${eq.nome}</td>
+                            <td class="p-3.5 text-slate-300">${eq.tipo}</td>
+                            <td class="p-3.5 text-slate-300">${eq.setor}</td>
+                            <td class="p-3.5 text-sky-400 font-mono text-xs">${eq.ip || '-'}</td>
+                            <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgePosse}">${eq.posse || 'Próprio'}</span></td>
+                            <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgeStatus}">${eq.status || 'Ativo'}</span></td>
+                            <td class="p-3.5 min-w-[180px]"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${ciclo.classe}">${ciclo.texto}</span></td>
+                            <td class="p-3.5 text-center no-print">${acoesHtml}</td>
+                        </tr>
                     `;
-                    tbody.appendChild(tr);
                 });
+                tbody.innerHTML = html;
             }
             document.getElementById('paginacao-info').innerText = `Mostrando página ${paginaAtual} de ${totalPaginas} (${totalItens} itens)`;
             document.getElementById('paginacao-numeracao').innerText = `${paginaAtual} / ${totalPaginas}`;
@@ -1595,6 +1614,7 @@
 
         function mudarPagina(direcao) { paginaAtual += direcao; renderizarTabelaPaginada(); }
         function filtrarTabelaComDebounce() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => filtrarTabela(), 300); }
+        
         function filtrarTabela() {
             const busca = document.getElementById('filtro-busca').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
             const setorFiltro = document.getElementById('filtro-setor').value;
@@ -1602,9 +1622,10 @@
             const statusFiltro = document.getElementById('filtro-status').value;
 
             listaEquipamentosFiltradaCache = db.equipamentos.filter(eq => {
-                const nomeNorm = (eq.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                const codNorm = (eq.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                return (nomeNorm.includes(busca) || codNorm.includes(busca)) &&
+                const bn = eq._buscaNome || (eq.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                const bc = eq._buscaCodigo || (eq.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                
+                return (bn.includes(busca) || bc.includes(busca)) &&
                        (setorFiltro === "" || eq.setor === setorFiltro) &&
                        (posseFiltro === "" || (eq.posse || 'Próprio') === posseFiltro) &&
                        (statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro);
@@ -1662,6 +1683,9 @@
                             status: partes[9] || 'Ativo',
                             statusRede: 'Não testado'
                         };
+                        novoEq._buscaNome = novoEq.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                        novoEq._buscaCodigo = novoEq.codigo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
                         if (firestoreDb) {
                             await firestoreDb.collection('equipamentos').doc(novoEq.id).set(novoEq);
                         }
@@ -1704,6 +1728,9 @@
             for (let l of texto.split('\n')) {
                 if (l.trim()) {
                     const novoEq = { id: String(Date.now() + Math.random()), codigo: 'IMP', nome: l.trim().substring(0,40), tipo: db.tipos[0], setor: db.setores[0], ip: '', serial: '0000', posse: 'Próprio', dataEntrada: new Date().toISOString().slice(0,10), dataSaida: '', status: 'Ativo', statusRede: 'Não testado' };
+                    novoEq._buscaNome = novoEq.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                    novoEq._buscaCodigo = novoEq.codigo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                    
                     if (firestoreDb) {
                         await firestoreDb.collection('equipamentos').doc(novoEq.id).set(novoEq);
                     }
@@ -1717,7 +1744,11 @@
         }
 
         async function carregarDadosPasteur() {
-            db.equipamentos = [...dadosCompletosPasteur.equipamentos];
+            db.equipamentos = [...dadosCompletosPasteur.equipamentos].map(e => {
+                e._buscaNome = (e.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                return e;
+            });
             if (firestoreDb) {
                 for (let e of db.equipamentos) {
                     await firestoreDb.collection('equipamentos').doc(String(e.id)).set(e);
@@ -1732,14 +1763,14 @@
         function renderizarManutencao() {
             const tbody = document.getElementById('tabela-manutencao-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
             
             if (db.manutencoes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum registro de calibração ou manutenção.</td></tr>`;
             } else {
+                let html = '';
                 db.manutencoes.forEach(m => {
                     const eq = db.equipamentos.find(e => e.id == m.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
-                    tbody.innerHTML += `
+                    html += `
                         <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
                             <td class="p-3.5 font-medium text-white"><span class="font-mono font-semibold text-xs text-sky-400 mr-1">[${eq.codigo}]</span> ${eq.nome}</td>
                             <td class="p-3.5 text-slate-300">${m.tipo}</td>
@@ -1761,13 +1792,15 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = html;
             }
         }
 
         function abrirModalManutencao(id = null) {
             const select = document.getElementById('man-eq-select');
-            select.innerHTML = '';
-            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            let html = '';
+            db.equipamentos.forEach(e => html += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            select.innerHTML = html;
             document.getElementById('modal-manutencao').classList.remove('hidden');
 
             if (id !== null) {
@@ -1840,15 +1873,15 @@
         function renderizarChamados() {
             const tbody = document.getElementById('tabela-chamados-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
-
+            
             if (db.chamados.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum chamado registrado.</td></tr>`;
             } else {
+                let html = '';
                 db.chamados.forEach(c => {
                     const eq = db.equipamentos.find(e => e.id == c.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
                     const badgeStatus = obterBadgeChamadoStatus(c.status || 'Aberto');
-                    tbody.innerHTML += `
+                    html += `
                         <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
                             <td class="p-3.5 font-mono text-xs font-semibold text-slate-300">#${c.id}</td>
                             <td class="p-3.5 font-medium text-white"><span class="font-mono text-xs text-sky-400 mr-1">[${eq.codigo}]</span> ${eq.nome}</td>
@@ -1863,18 +1896,21 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = html;
             }
         }
 
         function abrirModalChamado(id = null, preSelecionarEqId = null) {
             const selectEq = document.getElementById('chamado-eq-select');
-            selectEq.innerHTML = '';
-            db.equipamentos.forEach(e => selectEq.innerHTML += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            let eqHtml = '';
+            db.equipamentos.forEach(e => eqHtml += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            selectEq.innerHTML = eqHtml;
             if (preSelecionarEqId) selectEq.value = preSelecionarEqId;
 
             const selectUnidade = document.getElementById('chamado-unidade');
-            selectUnidade.innerHTML = '';
-            [...db.setores].sort().forEach(s => selectUnidade.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`);
+            let unHtml = '';
+            [...db.setores].sort().forEach(s => unHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`);
+            selectUnidade.innerHTML = unHtml;
 
             document.getElementById('modal-chamado').classList.remove('hidden');
             if (id !== null) {
@@ -1936,22 +1972,32 @@
         function renderizarFinanceiro() {
             const tbody = document.getElementById('tabela-financeiro-body');
             if (!tbody) return;
-            tbody.innerHTML = db.comodatos.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum comodato.</td></tr>` : '';
-            let total = 0;
-            db.comodatos.forEach(com => {
-                total += Number(com.custo || 0);
-                tbody.innerHTML += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-white">${com.fornecedor}</td><td class="p-3.5 text-slate-300">${com.vigencia}</td><td class="p-3.5 text-slate-300">R$ ${com.custo}</td></tr>`;
-            });
-            document.getElementById('fin-total-comodato').innerText = db.comodatos.length;
-            document.getElementById('fin-custo-mensal').innerText = `R$ ${total.toFixed(2)}`;
+            
+            if (db.comodatos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum comodato.</td></tr>`;
+            } else {
+                let html = '';
+                let total = 0;
+                db.comodatos.forEach(com => {
+                    total += Number(com.custo || 0);
+                    html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-white">${com.fornecedor}</td><td class="p-3.5 text-slate-300">${com.vigencia}</td><td class="p-3.5 text-slate-300">R$ ${com.custo}</td></tr>`;
+                });
+                tbody.innerHTML = html;
+                document.getElementById('fin-total-comodato').innerText = db.comodatos.length;
+                document.getElementById('fin-custo-mensal').innerText = `R$ ${total.toFixed(2)}`;
+            }
         }
+
         function abrirModalComodato() {
             const select = document.getElementById('com-eq-select');
-            select.innerHTML = '';
-            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome}</option>`);
+            let html = '';
+            db.equipamentos.forEach(e => html += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome}</option>`);
+            select.innerHTML = html;
             document.getElementById('modal-comodato').classList.remove('hidden');
         }
+
         function fecharModalComodato() { document.getElementById('modal-comodato').classList.add('hidden'); }
+
         async function salvarComodato() {
             const comId = String(Date.now());
             const dados = {
@@ -1973,23 +2019,30 @@
         function renderizarRastreabilidade() {
             const tbody = document.getElementById('tabela-rastreio-body');
             if (!tbody) return;
-            tbody.innerHTML = db.transferencias.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum registro.</td></tr>` : '';
-            db.transferencias.forEach(t => {
-                tbody.innerHTML += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${t.data}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td></tr>`;
-            });
+            if (db.transferencias.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum registro.</td></tr>`;
+            } else {
+                let html = '';
+                db.transferencias.forEach(t => {
+                    html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${t.data}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td></tr>`;
+                });
+                tbody.innerHTML = html;
+            }
         }
+
         function abrirModalTransferencia() {
             const select = document.getElementById('tr-eq-select');
-            select.innerHTML = '';
-            db.equipamentos.forEach(e => select.innerHTML += `<option value="${e.id}" data-setor="${e.setor}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            let eqHtml = '';
+            db.equipamentos.forEach(e => eqHtml += `<option value="${e.id}" data-setor="${e.setor}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            select.innerHTML = eqHtml;
             
             const selectOrig = document.getElementById('tr-origem');
             const selectDest = document.getElementById('tr-destino');
-            selectOrig.innerHTML = ''; selectDest.innerHTML = '';
-            [...db.setores].sort().forEach(s => {
-                selectOrig.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`;
-                selectDest.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`;
-            });
+            let setorHtml = '';
+            [...db.setores].sort().forEach(s => setorHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`);
+            selectOrig.innerHTML = setorHtml;
+            selectDest.innerHTML = setorHtml;
+            
             select.onchange = () => {
                 const setorAtual = select.options[select.selectedIndex].getAttribute('data-setor');
                 if (setorAtual) selectOrig.value = setorAtual;
@@ -1997,7 +2050,9 @@
             if (select.options.length > 0) select.onchange();
             document.getElementById('modal-transferencia').classList.remove('hidden');
         }
+
         function fecharModalTransferencia() { document.getElementById('modal-transferencia').classList.add('hidden'); }
+
         async function salvarTransferencia() {
             const eqId = document.getElementById('tr-eq-select').value;
             const eq = db.equipamentos.find(e => e.id == eqId);
@@ -2190,10 +2245,12 @@
             `;
             document.getElementById('modal-detalhes-celular').classList.remove('hidden');
         }
+        
         function fecharModalDetalhesCelular() {
             document.getElementById('modal-detalhes-celular').classList.add('hidden');
             window.location.href = window.location.pathname;
         }
+        
         function abrirHelpdeskDireto() {
             if (!equipamentoAtualQR) return;
             fecharModalDetalhesCelular();
@@ -2205,25 +2262,33 @@
             const sf = document.getElementById('filtro-setor');
             const sm = document.getElementById('eq-setor');
             if (sf && sm) {
-                sf.innerHTML = '<option value="" class="bg-slate-900">Todos os Setores</option>';
-                sm.innerHTML = '';
-                [...db.setores].sort().forEach(s => { sf.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`; sm.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`; });
+                let sfHtml = '<option value="" class="bg-slate-900">Todos os Setores</option>';
+                let smHtml = '';
+                [...db.setores].sort().forEach(s => { 
+                    sfHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`; 
+                    smHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`; 
+                });
+                sf.innerHTML = sfHtml;
+                sm.innerHTML = smHtml;
             }
             const st = document.getElementById('eq-tipo');
             if (st) {
-                st.innerHTML = '';
-                [...db.tipos].sort().forEach(t => st.innerHTML += `<option value="${t}" class="bg-slate-900">${t}</option>`);
+                let stHtml = '';
+                [...db.tipos].sort().forEach(t => stHtml += `<option value="${t}" class="bg-slate-900">${t}</option>`);
+                st.innerHTML = stHtml;
             }
         }
 
         function renderizarSetores() {
             const tbody = document.getElementById('tabela-setores-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
+            let html = '';
             [...db.setores].sort().forEach((s, i) => {
-                tbody.innerHTML += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${s}</td><td class="p-3.5 text-center"><button onclick="excluirSetor(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
+                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${s}</td><td class="p-3.5 text-center"><button onclick="excluirSetor(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
             });
+            tbody.innerHTML = html;
         }
+        
         async function salvarSetor() {
             const val = document.getElementById('novo-setor-nome').value.trim().toUpperCase();
             if (val && !db.setores.includes(val)) {
@@ -2233,6 +2298,7 @@
                 renderizarSetores(); popularSelects(); atualizarRelatorios();
             }
         }
+        
         async function excluirSetor(i) {
             if (db.setores.length <= 1) return alert('Mantenha pelo menos um setor.');
             db.setores.splice(i, 1);
@@ -2243,11 +2309,13 @@
         function renderizarTipos() {
             const tbody = document.getElementById('tabela-tipos-body');
             if (!tbody) return;
-            tbody.innerHTML = '';
+            let html = '';
             [...db.tipos].sort().forEach((t, i) => {
-                tbody.innerHTML += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${t}</td><td class="p-3.5 text-center"><button onclick="excluirTipo(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
+                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${t}</td><td class="p-3.5 text-center"><button onclick="excluirTipo(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
             });
+            tbody.innerHTML = html;
         }
+        
         async function salvarTipo() {
             const val = document.getElementById('novo-tipo-nome').value.trim();
             if (val && !db.tipos.includes(val)) {
@@ -2257,6 +2325,7 @@
                 renderizarTipos(); popularSelects(); atualizarRelatorios();
             }
         }
+        
         async function excluirTipo(i) {
             if (db.tipos.length <= 1) return alert('Mantenha pelo menos um tipo.');
             db.tipos.splice(i, 1);
@@ -2313,6 +2382,9 @@
                 dataSaida: document.getElementById('eq-data-saida').value || '',
                 statusRede: 'Não testado'
             };
+            
+            dados._buscaNome = dados.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+            dados._buscaCodigo = dados.codigo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
             if (firestoreDb) {
                 await firestoreDb.collection('equipamentos').doc(eqId).set(dados);
@@ -2387,13 +2459,13 @@
 
             const tabDetalhada = document.getElementById('tabela-relatorio-detalhado-body');
             if (tabDetalhada) {
-                tabDetalhada.innerHTML = '';
                 if (db.equipamentos.length === 0) {
                     tabDetalhada.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-500">Nenhum equipamento cadastrado.</td></tr>`;
                 } else {
+                    let html = '';
                     db.equipamentos.forEach(eq => {
                         const ciclo = calcularCiclo(eq.dataEntrada);
-                        tabDetalhada.innerHTML += `
+                        html += `
                             <tr class="hover:bg-slate-800/40 transition border-b border-slate-700/50">
                                 <td class="p-3.5 font-mono text-xs text-slate-300">${eq.codigo || '-'}</td>
                                 <td class="p-3.5 font-medium text-white">${eq.nome}</td>
@@ -2408,6 +2480,7 @@
                             </tr>
                         `;
                     });
+                    tabDetalhada.innerHTML = html;
                 }
             }
         }
