@@ -51,11 +51,12 @@
             header, nav, button, .no-print, input, select { display: none !important; }
             section { display: none !important; }
             #aba-relatorios:not(.hidden) { display: block !important; }
+            #pdf-conteudo-exportavel { display: block !important; }
             
             .shadow-sm, .border { border: none !important; box-shadow: none !important; }
             .print-only-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
             .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            .print-table th, .print-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 10pt; }
+            .print-table th, .print-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 10pt; color: #000 !important; }
             .print-table th { background-color: #f1f5f9 !important; color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         .print-only-header { display: none; }
@@ -143,6 +144,7 @@
                     <button onclick="mudarAba('monitoramento')" id="btn-monitoramento" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-network-wired mr-1.5"></i> Monitor IP</button>
                     <button onclick="mudarAba('manutencao')" id="btn-manutencao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-screwdriver-wrench mr-1.5"></i> Manutenção</button>
                     <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-headset mr-1.5"></i> Helpdesk QR</button>
+                    <button onclick="mudarAba('validacao')" id="btn-validacao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-check mr-1.5"></i> Validação</button>
                     <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> Comodatos</button>
                     <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-right-left mr-1.5"></i> Rastreio</button>
                     <button onclick="mudarAba('setores')" id="btn-setores" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-layer-group mr-1.5"></i> Setores</button>
@@ -332,6 +334,39 @@
                 </div>
             </section>
 
+            <!-- ABA VALIDAÇÃO (QUALIFICAÇÃO DE ATIVOS) -->
+            <section id="aba-validacao" class="hidden space-y-6">
+                <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
+                    <div>
+                        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-clipboard-check text-sky-400 mr-2"></i>Módulo de Validação e Qualificação de Ativos</h2>
+                        <p class="text-xs text-slate-400">Controle de Qualificação de Instalação (QI), Operação (QO) e Desempenho (QD) laboratorial.</p>
+                    </div>
+                    <button onclick="abrirModalValidacao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
+                        <i class="fa-solid fa-plus"></i> Nova Validação / Qualificação
+                    </button>
+                </div>
+
+                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
+                                    <th class="p-3.5 font-semibold">Equipamento (Cód. Ref & Nome)</th>
+                                    <th class="p-3.5 font-semibold">Tipo de Qualificação</th>
+                                    <th class="p-3.5 font-semibold">Data da Validação</th>
+                                    <th class="p-3.5 font-semibold">Próxima Validação</th>
+                                    <th class="p-3.5 font-semibold">Responsável / Empresa</th>
+                                    <th class="p-3.5 font-semibold">Status</th>
+                                    <th class="p-3.5 font-semibold text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-validacao-body" class="divide-y divide-slate-700/50 text-slate-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- ABA FINANCEIRO DE COMODATOS -->
             <section id="aba-financeiro" class="hidden space-y-6">
                 <div class="bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-6">
@@ -460,11 +495,8 @@
 
             <!-- ABA RELATÓRIOS & IA -->
             <section id="aba-relatorios" class="hidden space-y-6">
-                <div class="flex justify-between items-center no-print">
+                <div class="flex justify-between items-center no-print flex-wrap gap-3">
                     <h2 class="text-lg font-bold text-white tracking-tight">Painel de Relatórios, Indicadores & Gráficos</h2>
-                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-medium shadow transition flex items-center gap-2 border border-slate-700">
-                        <i class="fa-solid fa-print"></i> Imprimir Relatório Completo
-                    </button>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -506,6 +538,83 @@
                     </div>
                 </div>
 
+                <!-- PAINEL DE FILTROS PERSONALIZADOS PARA O RELATÓRIO (FECHADO POR PADRÃO) -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80 flex-wrap gap-3">
+                        <div>
+                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                                <i class="fa-solid fa-filter text-sky-400"></i> Gerador de Relatório Dinâmico Filtrado
+                            </h3>
+                            <p class="text-xs text-slate-400">Aplique filtros para gerar e exibir o relatório sob demanda.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="alternarVisibilidadeRelatorio()" id="btn-toggle-relatorio" class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-medium shadow hover:opacity-95 transition">
+                                <i class="fa-solid fa-chevron-down mr-1"></i> Abrir Relatório Dinâmico
+                            </button>
+                            <button onclick="imprimirRelatorio()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-medium shadow transition flex items-center gap-1.5 border border-slate-700" title="Imprimir Relatório Filtrado">
+                                <i class="fa-solid fa-print"></i> Imprimir
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CONTAINER OCULTO ATÉ O USUÁRIO CLICAR -->
+                    <div id="pdf-conteudo-exportavel" class="hidden bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 no-print">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Setor</label>
+                                <select id="rel-filtro-setor" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                                    <option value="">Todos os Setores</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Equipamento</label>
+                                <select id="rel-filtro-tipo" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                                    <option value="">Todos os Tipos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Posse</label>
+                                <select id="rel-filtro-posse" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                                    <option value="">Todas as Posituras</option>
+                                    <option value="Próprio">Próprio</option>
+                                    <option value="Comodato">Comodato</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+                                <select id="rel-filtro-status" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                                    <option value="">Todos os Status</option>
+                                    <option value="Ativo">Ativo</option>
+                                    <option value="Manutenção">Manutenção</option>
+                                    <option value="Inativo">Inativo</option>
+                                    <option value="Descartado">Descartado</option>
+                                    <option value="Devolvido">Devolvido</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto pt-2">
+                            <table class="w-full text-left border-collapse text-sm print-table">
+                                <thead>
+                                    <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
+                                        <th class="p-3.5 font-semibold">Cód. Ref</th>
+                                        <th class="p-3.5 font-semibold">Equipamento</th>
+                                        <th class="p-3.5 font-semibold">Tipo</th>
+                                        <th class="p-3.5 font-semibold">Setor</th>
+                                        <th class="p-3.5 font-semibold">Série</th>
+                                        <th class="p-3.5 font-semibold">Posse</th>
+                                        <th class="p-3.5 font-semibold">Data Entrada</th>
+                                        <th class="p-3.5 font-semibold">Status</th>
+                                        <th class="p-3.5 font-semibold">Ciclo / Alerta</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-relatorio-detalhado-body" class="divide-y divide-slate-700/50 text-slate-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- PAINEL DE ASSISTENTE IA -->
                 <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white p-6 rounded-3xl shadow-xl border border-indigo-500/20 space-y-5 no-print">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -538,32 +647,6 @@
                     <div id="resultado-ia-container" class="hidden bg-slate-900/90 backdrop-blur-md p-6 rounded-2xl border border-indigo-500/30 text-sm space-y-4 leading-relaxed">
                         <h4 class="font-bold text-amber-300 border-b border-slate-800 pb-2 flex items-center gap-2"><i class="fa-solid fa-brain"></i> Retorno do Assistente de IA</h4>
                         <div id="conteudo-ia-analise" class="space-y-3 text-slate-200 [&>h3]:text-amber-400 [&>h3]:font-bold [&>h3]:text-base [&>h3]:mt-3 [&>p]:leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>li]:mb-1 [&>strong]:text-sky-300"></div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-4">
-                    <h3 class="font-bold text-base text-white border-b border-slate-700/80 pb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-file-lines text-sky-400"></i> Relatório Detalhado de Ativos
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm print-table">
-                            <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Cód. Ref</th>
-                                    <th class="p-3.5 font-semibold">Equipamento</th>
-                                    <th class="p-3.5 font-semibold">Tipo</th>
-                                    <th class="p-3.5 font-semibold">Setor</th>
-                                    <th class="p-3.5 font-semibold">Série</th>
-                                    <th class="p-3.5 font-semibold">Posse</th>
-                                    <th class="p-3.5 font-semibold">Data Entrada</th>
-                                    <th class="p-3.5 font-semibold">Data Saída</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
-                                    <th class="p-3.5 font-semibold">Ciclo / Alerta</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-relatorio-detalhado-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </section>
@@ -765,6 +848,47 @@
             <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
                 <button onclick="fecharModalEquipamento()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
                 <button onclick="salvarEquipamento()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE VALIDAÇÃO -->
+    <div id="modal-validacao" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
+        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
+            <h3 id="modal-validacao-titulo" class="text-base font-bold text-white">Registrar Qualificação / Validação</h3>
+            <input type="hidden" id="val-id" value="">
+            <div class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento Crítico</label>
+                    <select id="val-eq-select" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Qualificação</label>
+                    <select id="val-tipo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                        <option value="Qualificação de Instalação (QI)" class="bg-slate-900">Qualificação de Instalação (QI)</option>
+                        <option value="Qualificação de Operação (QO)" class="bg-slate-900">Qualificação de Operação (QO)</option>
+                        <option value="Qualificação de Desempenho (QD)" class="bg-slate-900">Qualificação de Desempenho (QD)</option>
+                        <option value="Validação Anual Completa" class="bg-slate-900">Validação Anual Completa</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Data Realizada</label>
+                        <input type="date" id="val-data" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Próxima Validação</label>
+                        <input type="date" id="val-proxima" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Responsável / Empresa Externa</label>
+                    <input type="text" id="val-responsavel" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="Ex: Metrologia Pasteur / Engenheiro Responsável">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
+                <button onclick="fecharModalValidacao()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
+                <button onclick="salvarValidacao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar Registro</button>
             </div>
         </div>
     </div>
@@ -997,6 +1121,7 @@
             setores: ['PM', 'HBM', 'CAMOBI', 'JC', 'Setor', 'AGUDO', 'SÃO SEPÉ', 'MICROBIOLOGIA', 'ESTERILIZAÇÃO', 'DUQUE DE CAXIAS'],
             tipos: ['Autoclave', 'Balança Digital', 'Banho Maria', 'Cabine de Segurança', 'Centrífuga', 'Computador', 'Diagnóstico', 'Microscópio'],
             manutencoes: [],
+            validacoes: [],
             chamados: [],
             comodatos: [],
             transferencias: [],
@@ -1024,6 +1149,7 @@
             setores: [],
             tipos: [],
             manutencoes: [],
+            validacoes: [],
             chamados: [],
             comodatos: [],
             transferencias: [],
@@ -1058,7 +1184,6 @@
             }
         });
 
-        // INICIALIZAÇÃO E CARREGAMENTO COM MIGRAÇÃO AUTOMÁTICA
         async function inicializarFirebase() {
             if (typeof firebase === 'undefined') return;
             if (!firebase.apps.length) {
@@ -1077,57 +1202,11 @@
 
         async function carregarDadosDasColecoes() {
             try {
-                // 1. Verifica se existe o documento monolítico antigo ("dados_gerais") para migrar automaticamente
-                const docAntigoSnap = await firestoreDb.collection('inventario_pasteur_v2').doc('dados_gerais').get();
-                if (docAntigoSnap.exists) {
-                    console.log('Migrando dados do formato antigo para as novas coleções...');
-                    const dadosAntigos = docAntigoSnap.data();
-
-                    if (dadosAntigos.equipamentos && Array.isArray(dadosAntigos.equipamentos)) {
-                        for (let eq of dadosAntigos.equipamentos) {
-                            await firestoreDb.collection('equipamentos').doc(String(eq.id || Date.now() + Math.random())).set(eq);
-                        }
-                    }
-                    if (dadosAntigos.usuarios && Array.isArray(dadosAntigos.usuarios)) {
-                        for (let u of dadosAntigos.usuarios) {
-                            await firestoreDb.collection('usuarios').doc(u.usuario || 'admin').set(u);
-                        }
-                    }
-                    if (dadosAntigos.manutencoes && Array.isArray(dadosAntigos.manutencoes)) {
-                        for (let m of dadosAntigos.manutencoes) {
-                            await firestoreDb.collection('manutencoes').doc(String(m.id || Date.now() + Math.random())).set(m);
-                        }
-                    }
-                    if (dadosAntigos.chamados && Array.isArray(dadosAntigos.chamados)) {
-                        for (let c of dadosAntigos.chamados) {
-                            await firestoreDb.collection('chamados').doc(String(c.id || Date.now() + Math.random())).set(c);
-                        }
-                    }
-                    if (dadosAntigos.comodatos && Array.isArray(dadosAntigos.comodatos)) {
-                        for (let com of dadosAntigos.comodatos) {
-                            await firestoreDb.collection('comodatos').doc(String(com.id || Date.now() + Math.random())).set(com);
-                        }
-                    }
-                    if (dadosAntigos.transferencias && Array.isArray(dadosAntigos.transferencias)) {
-                        for (let t of dadosAntigos.transferencias) {
-                            await firestoreDb.collection('transferencias').doc(String(t.id || Date.now() + Math.random())).set(t);
-                        }
-                    }
-
-                    await firestoreDb.collection('configuracoes').doc('geral').set({
-                        setores: dadosAntigos.setores || dadosCompletosPasteur.setores,
-                        tipos: dadosAntigos.tipos || dadosCompletosPasteur.tipos,
-                        config: dadosAntigos.config || dadosCompletosPasteur.config
-                    });
-
-                    alert('Migração dos dados antigos concluída com sucesso! Carregando...');
-                }
-
-                // 2. Carrega das coleções do Firestore simultaneamente usando Promise.all (MUITO MAIS RÁPIDO)
-                const [configDoc, eqSnap, manSnap, chamSnap, comSnap, trSnap, usrSnap] = await Promise.all([
+                const [configDoc, eqSnap, manSnap, valSnap, chamSnap, comSnap, trSnap, usrSnap] = await Promise.all([
                     firestoreDb.collection('configuracoes').doc('geral').get(),
                     firestoreDb.collection('equipamentos').get(),
                     firestoreDb.collection('manutencoes').get(),
+                    firestoreDb.collection('validacoes').get(),
                     firestoreDb.collection('chamados').get(),
                     firestoreDb.collection('comodatos').get(),
                     firestoreDb.collection('transferencias').get(),
@@ -1145,7 +1224,6 @@
                     await salvarConfiguracoesFirebase();
                 }
 
-                // Popula e pré-computa os campos de busca sem acentos (MUITO MAIS RÁPIDO PARA DIGITAR)
                 db.equipamentos = eqSnap.docs.map(doc => {
                     const data = doc.data();
                     data._buscaNome = (data.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
@@ -1169,6 +1247,7 @@
                 }
 
                 db.manutencoes = manSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                db.validacoes = valSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 db.chamados = chamSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 db.comodatos = comSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 db.transferencias = trSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -1189,6 +1268,7 @@
                 filtrarTabela();
                 renderizarMonitoramento();
                 renderizarManutencao();
+                renderizarValidacao();
                 renderizarChamados();
                 renderizarFinanceiro();
                 renderizarRastreabilidade();
@@ -1319,7 +1399,7 @@
         }
 
         function mudarAba(aba) {
-            ['inventario', 'monitoramento', 'manutencao', 'helpdesk', 'financeiro', 'rastreabilidade', 'setores', 'relatorios', 'usuarios', 'configuracoes'].forEach(a => {
+            ['inventario', 'monitoramento', 'manutencao', 'helpdesk', 'validacao', 'financeiro', 'rastreabilidade', 'setores', 'relatorios', 'usuarios', 'configuracoes'].forEach(a => {
                 const el = document.getElementById(`aba-${a}`);
                 const btn = document.getElementById(`btn-${a}`);
                 if (el) el.classList.add('hidden');
@@ -1332,12 +1412,110 @@
             
             if (aba === 'monitoramento') {
                 renderizarMonitoramento();
+            } else if (aba === 'validacao') {
+                renderizarValidacao();
             } else if (aba === 'relatorios') {
                 atualizarRelatorios();
             }
         }
 
-        // MÓDULO DE MONITORAMENTO DE REDE (PING HTTP)
+        function renderizarValidacao() {
+            const tbody = document.getElementById('tabela-validacao-body');
+            if (!tbody) return;
+            
+            if (db.validacoes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum registro de validação ou qualificação.</td></tr>`;
+            } else {
+                let html = '';
+                db.validacoes.forEach(v => {
+                    const eq = db.equipamentos.find(e => e.id == v.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
+                    html += `
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
+                            <td class="p-3.5 font-medium text-white"><span class="font-mono font-semibold text-xs text-sky-400 mr-1">[${eq.codigo}]</span> ${eq.nome}</td>
+                            <td class="p-3.5 text-slate-300">${v.tipo}</td>
+                            <td class="p-3.5 text-slate-300">${v.data}</td>
+                            <td class="p-3.5 text-slate-300">${v.proxima || '-'}</td>
+                            <td class="p-3.5 text-slate-300">${v.responsavel || '-'}</td>
+                            <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${v.status}</span></td>
+                            <td class="p-3.5 text-center space-x-2">
+                                <button onclick="editarValidacao('${v.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="excluirValidacao('${v.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            }
+        }
+
+        function abrirModalValidacao(id = null) {
+            const select = document.getElementById('val-eq-select');
+            let html = '';
+            db.equipamentos.forEach(e => html += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
+            select.innerHTML = html;
+            document.getElementById('modal-validacao').classList.remove('hidden');
+
+            if (id !== null) {
+                const v = db.validacoes.find(item => item.id == id);
+                if (v) {
+                    document.getElementById('modal-validacao-titulo').innerText = 'Editar Qualificação / Validação';
+                    document.getElementById('val-id').value = v.id;
+                    document.getElementById('val-eq-select').value = v.equipamentoId;
+                    document.getElementById('val-tipo').value = v.tipo;
+                    document.getElementById('val-data').value = v.data;
+                    document.getElementById('val-proxima').value = v.proxima || '';
+                    document.getElementById('val-responsavel').value = v.responsavel || '';
+                }
+            } else {
+                document.getElementById('modal-validacao-titulo').innerText = 'Registrar Qualificação / Validação';
+                document.getElementById('val-id').value = '';
+                document.getElementById('val-data').value = new Date().toISOString().slice(0,10);
+                document.getElementById('val-proxima').value = '';
+                document.getElementById('val-responsavel').value = '';
+            }
+        }
+
+        function fecharModalValidacao() { document.getElementById('modal-validacao').classList.add('hidden'); }
+
+        async function salvarValidacao() {
+            const id = document.getElementById('val-id').value;
+            const valId = id ? String(id) : String(Date.now());
+            const dados = {
+                id: valId,
+                equipamentoId: document.getElementById('val-eq-select').value,
+                tipo: document.getElementById('val-tipo').value,
+                data: document.getElementById('val-data').value,
+                proxima: document.getElementById('val-proxima').value,
+                responsavel: document.getElementById('val-responsavel').value.trim() || 'Equipe Interna',
+                status: 'Validado'
+            };
+            if (firestoreDb) {
+                await firestoreDb.collection('validacoes').doc(valId).set(dados);
+            }
+            const idx = db.validacoes.findIndex(v => v.id == valId);
+            if (idx !== -1) db.validacoes[idx] = dados;
+            else db.validacoes.push(dados);
+
+            fecharModalValidacao();
+            renderizarValidacao();
+        }
+
+        function editarValidacao(id) { abrirModalValidacao(id); }
+
+        async function excluirValidacao(id) {
+            if (confirm('Deseja excluir este registro de validação?')) {
+                if (firestoreDb) {
+                    await firestoreDb.collection('validacoes').doc(String(id)).delete();
+                }
+                db.validacoes = db.validacoes.filter(v => v.id != id);
+                renderizarValidacao();
+            }
+        }
+
         function renderizarMonitoramento() {
             const tbody = document.getElementById('tabela-monitoramento-body');
             if (!tbody) return;
@@ -1432,7 +1610,7 @@
         }
 
         function enviarWhatsAppManutencao(nomeEquip, detalhe) {
-            const mensagem = encodeURIComponent(`⚠️ *Alerta Técnico - Laboratório Pasteur*\n\nEquipamento: *${nomeEquip}*\nOcorrência: *${detalhe}*.\nPor favor, verificar imediatamente.`);
+            const mensagem = encodeURIComponent(`⚠️️ *Alerta Técnico - Laboratório Pasteur*\n\nEquipamento: *${nomeEquip}*\nOcorrência: *${detalhe}*.\nPor favor, verificar imediatamente.`);
             window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
         }
 
@@ -1711,9 +1889,10 @@
                     snap.docs.forEach(doc => batch.delete(doc.ref));
                     await batch.commit();
                 }
-                db.equipamentos = []; db.manutencoes = []; db.chamados = []; db.comodatos = []; db.transferencias = [];
+                db.equipamentos = []; db.manutencoes = []; db.validacoes = []; db.chamados = []; db.comodatos = []; db.transferencias = [];
                 filtrarTabela();
                 renderizarManutencao();
+                renderizarValidacao();
                 renderizarChamados();
                 renderizarFinanceiro();
                 renderizarRastreabilidade();
@@ -2079,7 +2258,6 @@
             filtrarTabela();
         }
 
-        // GERENCIADOR DE ETIQUETAS QR CODE
         let equipamentoGerenciadorQR = null;
 
         function abrirModalQR(id) {
@@ -2261,21 +2439,34 @@
         function popularSelects() {
             const sf = document.getElementById('filtro-setor');
             const sm = document.getElementById('eq-setor');
+            const relSetor = document.getElementById('rel-filtro-setor');
+            const relTipo = document.getElementById('rel-filtro-tipo');
+
             if (sf && sm) {
                 let sfHtml = '<option value="" class="bg-slate-900">Todos os Setores</option>';
                 let smHtml = '';
+                let relSetorHtml = '<option value="">Todos os Setores</option>';
+                
                 [...db.setores].sort().forEach(s => { 
                     sfHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`; 
                     smHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`; 
+                    if (relSetor) relSetorHtml += `<option value="${s}">${s}</option>`;
                 });
                 sf.innerHTML = sfHtml;
                 sm.innerHTML = smHtml;
+                if (relSetor) relSetor.innerHTML = relSetorHtml;
             }
+
             const st = document.getElementById('eq-tipo');
-            if (st) {
+            if (st || relTipo) {
                 let stHtml = '';
-                [...db.tipos].sort().forEach(t => stHtml += `<option value="${t}" class="bg-slate-900">${t}</option>`);
-                st.innerHTML = stHtml;
+                let relTipoHtml = '<option value="">Todos os Tipos</option>';
+                [...db.tipos].sort().forEach(t => {
+                    stHtml += `<option value="${t}" class="bg-slate-900">${t}</option>`;
+                    if (relTipo) relTipoHtml += `<option value="${t}">${t}</option>`;
+                });
+                if (st) st.innerHTML = stHtml;
+                if (relTipo) relTipo.innerHTML = relTipoHtml;
             }
         }
 
@@ -2414,6 +2605,72 @@
         }
         function editarEquipamento(id) { abrirModalEquipamento(id); }
 
+        function alternarVisibilidadeRelatorio() {
+            const container = document.getElementById('pdf-conteudo-exportavel');
+            const btn = document.getElementById('btn-toggle-relatorio');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-chevron-up mr-1"></i> Ocultar Relatório Dinâmico';
+                renderizarRelatorioFiltrado();
+            } else {
+                container.classList.add('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-chevron-down mr-1"></i> Abrir Relatório Dinâmico';
+            }
+        }
+
+        function renderizarRelatorioFiltrado() {
+            const setorFiltro = document.getElementById('rel-filtro-setor') ? document.getElementById('rel-filtro-setor').value : "";
+            const tipoFiltro = document.getElementById('rel-filtro-tipo') ? document.getElementById('rel-filtro-tipo').value : "";
+            const posseFiltro = document.getElementById('rel-filtro-posse') ? document.getElementById('rel-filtro-posse').value : "";
+            const statusFiltro = document.getElementById('rel-filtro-status') ? document.getElementById('rel-filtro-status').value : "";
+
+            const tabDetalhada = document.getElementById('tabela-relatorio-detalhado-body');
+            if (!tabDetalhada) return;
+
+            const filtrados = db.equipamentos.filter(eq => {
+                return (setorFiltro === "" || eq.setor === setorFiltro) &&
+                       (tipoFiltro === "" || eq.tipo === tipoFiltro) &&
+                       (posseFiltro === "" || (eq.posse || 'Próprio') === posseFiltro) &&
+                       (statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro);
+            });
+
+            if (filtrados.length === 0) {
+                tabDetalhada.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">Nenhum equipamento corresponde aos filtros selecionados.</td></tr>`;
+            } else {
+                let html = '';
+                filtrados.forEach(eq => {
+                    const ciclo = calcularCiclo(eq.dataEntrada);
+                    html += `
+                        <tr class="hover:bg-slate-800/40 transition border-b border-slate-700/50">
+                            <td class="p-3.5 font-mono text-xs text-slate-300">${eq.codigo || '-'}</td>
+                            <td class="p-3.5 font-medium text-white">${eq.nome}</td>
+                            <td class="p-3.5 text-slate-300">${eq.tipo}</td>
+                            <td class="p-3.5 text-slate-300">${eq.setor}</td>
+                            <td class="p-3.5 text-slate-400 font-mono text-xs">${eq.serial || '-'}</td>
+                            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obderBadgePosse(eq.posse)}">${eq.posse || 'Próprio'}</span></td>
+                            <td class="p-3.5 text-slate-300">${eq.dataEntrada || '-'}</td>
+                            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgeStatus(eq.status)}">${eq.status || 'Ativo'}</span></td>
+                            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${ciclo.classe}">${ciclo.texto}</span></td>
+                        </tr>
+                    `;
+                });
+                tabDetalhada.innerHTML = html;
+            }
+        }
+
+        function imprimirRelatorio() {
+            const container = document.getElementById('pdf-conteudo-exportavel');
+            const estavaOculto = container.classList.contains('hidden');
+            if (estavaOculto) container.classList.remove('hidden');
+
+            renderizarRelatorioFiltrado();
+
+            setTimeout(() => {
+                window.print();
+                if (estavaOculto) container.classList.add('hidden');
+            }, 300);
+        }
+
         function atualizarRelatorios() {
             const rt = document.getElementById('relatorio-total');
             if (!rt) return;
@@ -2456,33 +2713,7 @@
             document.getElementById('relatorio-comodato').innerText = comodatoCount;
 
             renderizarGraficosChartJS(porSetor, porPosse);
-
-            const tabDetalhada = document.getElementById('tabela-relatorio-detalhado-body');
-            if (tabDetalhada) {
-                if (db.equipamentos.length === 0) {
-                    tabDetalhada.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-500">Nenhum equipamento cadastrado.</td></tr>`;
-                } else {
-                    let html = '';
-                    db.equipamentos.forEach(eq => {
-                        const ciclo = calcularCiclo(eq.dataEntrada);
-                        html += `
-                            <tr class="hover:bg-slate-800/40 transition border-b border-slate-700/50">
-                                <td class="p-3.5 font-mono text-xs text-slate-300">${eq.codigo || '-'}</td>
-                                <td class="p-3.5 font-medium text-white">${eq.nome}</td>
-                                <td class="p-3.5 text-slate-300">${eq.tipo}</td>
-                                <td class="p-3.5 text-slate-300">${eq.setor}</td>
-                                <td class="p-3.5 text-slate-400 font-mono text-xs">${eq.serial || '-'}</td>
-                                <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obderBadgePosse(eq.posse)}">${eq.posse || 'Próprio'}</span></td>
-                                <td class="p-3.5 text-slate-300">${eq.dataEntrada || '-'}</td>
-                                <td class="p-3.5 text-slate-300">${eq.dataSaida || '-'}</td>
-                                <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgeStatus(eq.status)}">${eq.status || 'Ativo'}</span></td>
-                                <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${ciclo.classe}">${ciclo.texto}</span></td>
-                            </tr>
-                        `;
-                    });
-                    tabDetalhada.innerHTML = html;
-                }
-            }
+            renderizarRelatorioFiltrado();
         }
 
         function renderizarGraficosChartJS(porSetor, porPosse) {
@@ -2604,7 +2835,8 @@
             if (!apiKey) throw new Error('Chave da API do Gemini não configurada.');
             const { GoogleGenerativeAI } = await import("@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            
+            const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
             let tentativa = 0;
             while (tentativa < maxTentativas) {
