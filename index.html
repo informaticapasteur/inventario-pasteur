@@ -3,190 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratório Pasteur - Gestão de Ativos Corporativa</title>
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    
-    <!-- FontAwesome para Ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase SDKs (App & Firestore) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <!-- QRCode.js CDN para Geração de QR Codes -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <!-- Chart.js CDN para Gráficos Estatísticos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- IMPORT MAP: SDK Oficial do Google Gemini -->
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+    <title>Laboratório Pasteur - Gestão de Ativos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--cor-primaria, #0284c7)',
+                    }
+                }
+            }
         }
-      }
     </script>
-
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- QRCode Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --cor-primaria: #0284c7; /* Azul Laboratório */
-        }
-        .bg-primary { background-color: var(--cor-primaria); }
-        .text-primary { color: var(--cor-primaria); }
-        .border-primary { border-color: var(--cor-primaria); }
-        .ring-primary:focus { --tw-ring-color: var(--cor-primaria); }
-
-        #qr-code-container canvas, #qr-code-container img {
-            display: block !important;
-            margin: 0 auto !important;
-            max-width: 100% !important;
-            height: auto !important;
-        }
-
+        :root { --cor-primaria: #0284c7; }
+        
+        /* CORREÇÃO DEFINITIVA PARA IMPRESSORAS TÉRMICAS NÃO PULAREM ETIQUETAS */
         @media print {
-            body { background: white !important; color: black !important; }
-            header, nav, button, .no-print, input, select { display: none !important; }
-            section { display: none !important; }
-            #aba-relatorios:not(.hidden) { display: block !important; }
-            #pdf-conteudo-exportavel { display: block !important; }
+            body > :not(#area-impressao) {
+                display: none !important;
+            }
             
-            .shadow-sm, .border { border: none !important; box-shadow: none !important; }
-            .print-only-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-            .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            .print-table th, .print-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 10pt; color: #000 !important; }
-            .print-table th { background-color: #f1f5f9 !important; color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow: hidden !important;
+                background-color: white !important;
+            }
+            
+            #area-impressao {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important; 
+                top: 0 !important;
+                margin: 0 !important; 
+                padding: 0 !important;
+                border: none !important;
+                page-break-after: avoid !important;
+                page-break-before: avoid !important;
+            }
+            
+            #etiqueta-final-print {
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            
+            .no-print { display: none !important; }
         }
-        .print-only-header { display: none; }
+
+        .bg-checkered {
+            background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), linear-gradient(-45deg, #1e293b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1e293b 75%), linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
-    <!-- TELA DE LOGIN & CADASTRO DE USUÁRIOS -->
-    <div id="tela-login" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4" style="display: flex;">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-800">
-            <div class="text-center space-y-3">
-                <div id="login-logo-container" class="w-16 h-16 bg-sky-500/10 text-primary rounded-2xl flex items-center justify-center mx-auto text-2xl border border-sky-500/20 shadow-inner overflow-hidden p-1">
-                    <i class="fa-solid fa-flask-vial"></i>
+    <!-- TELA DE LOGIN / AUTENTICAÇÃO -->
+    <div id="tela-login" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-8 shadow-2xl relative">
+            <div class="text-center mb-6">
+                <div id="login-logo-container" class="w-16 h-16 bg-primary/20 text-primary rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <i class="fa-solid fa-flask-vial text-2xl"></i>
                 </div>
-                <h1 id="login-empresa-titulo" class="text-xl font-bold text-white tracking-tight">Laboratório Pasteur SM</h1>
-                <p id="login-subtitulo" class="text-xs text-slate-400">Plataforma Profissional de Gestão de Ativos</p>
+                <h1 id="login-empresa-titulo" class="text-xl font-bold text-white">Laboratório Pasteur</h1>
+                <p id="login-subtitulo" class="text-xs text-slate-400 mt-1">Plataforma Profissional de Gestão de Ativos</p>
             </div>
-            
-            <div id="login-erro" class="hidden bg-red-950/50 text-red-300 p-3 rounded-xl text-xs font-medium text-center border border-red-900/50"></div>
-            <div id="login-sucesso" class="hidden bg-emerald-950/50 text-emerald-300 p-3 rounded-xl text-xs font-medium text-center border border-emerald-900/50"></div>
 
-            <!-- FORMULÁRIO DE LOGIN -->
+            <div id="login-erro" class="hidden mb-4 p-3 rounded-xl bg-red-950/60 border border-red-800/60 text-red-300 text-xs text-center font-medium"></div>
+            <div id="login-sucesso" class="hidden mb-4 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-xs text-center font-medium"></div>
+
             <div id="form-login" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Usuário</label>
-                    <input type="text" id="login-usuario" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition" placeholder="Digite seu usuário">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Usuário</label>
+                    <input type="text" id="login-usuario" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="Digite seu usuário">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Senha</label>
-                    <input type="password" id="login-senha" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition" placeholder="••••••••">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Senha</label>
+                    <input type="password" id="login-senha" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="••••••••">
                 </div>
-                <button onclick="fazerLogin()" class="w-full bg-primary hover:opacity-95 text-white py-2.5 rounded-xl font-medium shadow-lg shadow-sky-500/20 transition active:scale-[0.98]">Entrar no Sistema</button>
-                <div class="text-center pt-2">
-                    <button onclick="alternarTelaAuth('cadastro')" class="text-xs text-sky-400 font-medium hover:underline">Criar Nova Conta</button>
+                <button onclick="fazerLogin()" class="w-full bg-primary hover:bg-sky-600 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-900/30">
+                    Entrar no Sistema
+                </button>
+                <div class="text-center mt-4">
+                    <button onclick="alternarTelaAuth('cadastro')" class="text-xs text-sky-400 hover:underline">Não tem conta? Cadastre-se</button>
                 </div>
             </div>
 
-            <!-- FORMULÁRIO DE CADASTRO DE NOVO USUÁRIO -->
-            <div id="form-cadastro" class="space-y-4 hidden">
+            <div id="form-cadastro" class="hidden space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome Completo</label>
-                    <input type="text" id="cad-nome" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="Ex: Nome do Colaborador">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome Completo</label>
+                    <input type="text" id="cad-nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome de Usuário (Login)</label>
-                    <input type="text" id="cad-usuario" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="Ex: gilnei.tec">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Usuário</label>
+                    <input type="text" id="cad-usuario" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Senha</label>
-                    <input type="password" id="cad-senha" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="••••••••">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Senha</label>
+                    <input type="password" id="cad-senha" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1.5">Nível de Permissão</label>
-                    <select id="cad-perfil" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                        <option value="Tecnico" class="bg-slate-900">Técnico (Operações, Manutenção e Helpdesk)</option>
-                        <option value="Visualizador" class="bg-slate-900">Visualizador (Apenas Leitura e Relatórios)</option>
-                        <option value="Admin" class="bg-slate-900">Administrador (Acesso Total e Ajustes)</option>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Perfil de Acesso</label>
+                    <select id="cad-perfil" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary">
+                        <option value="Tecnico">Técnico</option>
+                        <option value="Admin">Administrador</option>
                     </select>
                 </div>
-                <button onclick="cadastrarNovoUsuario()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-medium shadow-lg shadow-emerald-600/20 transition active:scale-[0.98]">Cadastrar Nova Conta</button>
-                <div class="text-center pt-2">
-                    <button onclick="alternarTelaAuth('login')" class="text-xs text-sky-400 font-medium hover:underline">Voltar para o Login</button>
+                <button onclick="cadastrarNovoUsuario()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30">
+                    Concluir Cadastro
+                </button>
+                <div class="text-center mt-4">
+                    <button onclick="alternarTelaAuth('login')" class="text-xs text-sky-400 hover:underline">Já tem conta? Faça login</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- APLICAÇÃO PRINCIPAL -->
-    <div id="app-principal" class="hidden flex-grow flex flex-col min-h-screen" style="display: none;">
-
-        <!-- CABEÇALHO -->
-        <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 shadow-sm sticky top-0 z-40 no-print">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-3">
-                <div class="flex items-center space-x-3">
-                    <div id="logo-container" class="h-11 w-32 bg-sky-500/10 text-primary rounded-xl flex items-center justify-center overflow-hidden border border-sky-500/20 p-1">
-                        <i class="fa-solid fa-flask-vial text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 id="empresa-nome" class="font-bold text-base text-white tracking-tight">Laboratório Pasteur SM</h1>
-                        <p class="text-xs text-slate-400">Logado como: <strong id="info-usuario-logado" class="text-sky-400">Admin</strong> (<span id="info-perfil-logado">Administrador</span>)</p>
-                    </div>
+    <!-- APLICATIVO PRINCIPAL -->
+    <div id="app-principal" class="hidden flex-col flex-1">
+        <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between no-print">
+            <div class="flex items-center gap-3">
+                <div id="logo-container" class="w-10 h-10 bg-primary/20 text-primary rounded-xl flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-flask-vial text-xl"></i>
                 </div>
-                <nav class="flex flex-wrap items-center gap-1.5">
-                    <button onclick="mudarAba('inventario')" id="btn-inventario" class="px-3 py-2 text-xs font-medium rounded-xl bg-primary text-white transition shadow-sm"><i class="fa-solid fa-laptop mr-1.5"></i> Inventário</button>
-                    <button onclick="mudarAba('monitoramento')" id="btn-monitoramento" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-network-wired mr-1.5"></i> Monitor IP</button>
-                    <button onclick="mudarAba('manutencao')" id="btn-manutencao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-screwdriver-wrench mr-1.5"></i> Manutenção</button>
-                    <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-headset mr-1.5"></i> Helpdesk QR</button>
-                    <button onclick="mudarAba('validacao')" id="btn-validacao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-check mr-1.5"></i> Validação</button>
-                    <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> Comodatos</button>
-                    <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-right-left mr-1.5"></i> Rastreio</button>
-                    <button onclick="mudarAba('setores')" id="btn-setores" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-layer-group mr-1.5"></i> Setores</button>
-                    <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-chart-pie mr-1.5"></i> Relatórios & IA</button>
-                    <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only"><i class="fa-solid fa-users-gear mr-1.5"></i> Usuários</button>
-                    <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only"><i class="fa-solid fa-gear mr-1.5"></i> Ajustes</button>
-                    <button onclick="fazerLogout()" class="px-2.5 py-2 text-xs font-medium rounded-xl text-red-400 hover:bg-red-950/50 transition ml-1 border border-red-900/50" title="Sair do Sistema"><i class="fa-solid fa-right-from-bracket"></i></button>
-                </nav>
+                <div>
+                    <h1 id="empresa-nome" class="text-base font-bold text-white tracking-wide">Laboratório Pasteur</h1>
+                    <p class="text-[11px] text-slate-400">Sistema de Gestão e Monitoramento de Ativos</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex flex-col text-right">
+                    <span id="info-usuario-logado" class="text-xs font-semibold text-white">Usuário</span>
+                    <span id="info-perfil-logado" class="text-[10px] text-sky-400 font-medium">Perfil</span>
+                </div>
+                <button onclick="fazerLogout()" class="bg-slate-800 hover:bg-red-950/60 hover:text-red-300 hover:border-red-800/60 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-power-off"></i> Sair
+                </button>
             </div>
         </header>
 
-        <!-- CONTEÚDO PRINCIPAL -->
-        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+        <nav class="bg-slate-900/60 border-b border-slate-800 px-6 py-2 flex items-center gap-2 overflow-x-auto no-print">
+            <button onclick="mudarAba('inventario')" id="btn-inventario" class="px-3 py-2 text-xs font-medium rounded-xl bg-primary text-white transition shadow-sm">
+                <i class="fa-solid fa-boxes-stacked mr-1.5"></i> Inventário
+            </button>
+            <button onclick="mudarAba('monitoramento')" id="btn-monitoramento" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-network-wired mr-1.5"></i> Monitoramento IP
+            </button>
+            <button onclick="mudarAba('manutencao')" id="btn-manutencao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-screwdriver-wrench mr-1.5"></i> Manutenção
+            </button>
+            <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-headset mr-1.5"></i> Helpdesk
+            </button>
+            <button onclick="mudarAba('validacao')" id="btn-validacao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-shield-halved mr-1.5"></i> Validação
+            </button>
+            <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> Financeiro
+            </button>
+            <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-route mr-1.5"></i> Rastreabilidade
+            </button>
+            <button onclick="mudarAba('setores')" id="btn-setores" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-building mr-1.5"></i> Setores / Tipos
+            </button>
+            <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+                <i class="fa-solid fa-chart-pie mr-1.5"></i> Relatórios & IA
+            </button>
+            <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only">
+                <i class="fa-solid fa-users mr-1.5"></i> Usuários
+            </button>
+            <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only">
+                <i class="fa-solid fa-gear mr-1.5"></i> Configurações
+            </button>
+        </nav>
 
-            <!-- CABEÇALHO PARA IMPRESSÃO -->
-            <div class="print-only-header">
-                <div class="flex items-center space-x-3">
-                    <div id="print-logo-container" class="h-14 w-40 flex items-center justify-center overflow-hidden"></div>
-                    <div>
-                        <h1 id="print-empresa-nome" class="text-xl font-bold text-slate-900">Laboratório Pasteur SM</h1>
-                        <p class="text-sm text-slate-600">Relatório Executivo e Inventário de Equipamentos</p>
-                    </div>
-                </div>
-                <div class="text-right text-xs text-slate-500">
-                    <p>Emitido em: <span id="print-data-atual"></span></p>
-                </div>
-            </div>
-
-            <!-- ABA INVENTÁRIO -->
+        <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
             <section id="aba-inventario" class="space-y-6">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80 no-print">
-                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
-                        <input type="text" id="filtro-busca" placeholder="Pesquisar..." class="px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 w-full md:w-72" oninput="filtrarTabelaComDebounce()">
-                        <select id="filtro-setor" class="px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" onchange="filtrarTabela()">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800 no-print">
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <input type="text" id="filtro-busca" oninput="filtrarTabelaComDebounce()" placeholder="Buscar por código ou nome..." class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary w-full md:w-64">
+                        <select id="filtro-setor" onchange="filtrarTabela()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
                             <option value="">Todos os Setores</option>
                         </select>
-                        <select id="filtro-posse" class="px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" onchange="filtrarTabela()">
-                            <option value="">Todas as Posituras (Próprio/Comodato)</option>
+                        <select id="filtro-posse" onchange="filtrarTabela()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                            <option value="">Todas as Posses</option>
                             <option value="Próprio">Próprio</option>
                             <option value="Comodato">Comodato</option>
                         </select>
-                        <select id="filtro-status" class="px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" onchange="filtrarTabela()">
+                        <select id="filtro-status" onchange="filtrarTabela()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
                             <option value="">Todos os Status</option>
                             <option value="Ativo">Ativo</option>
                             <option value="Manutenção">Manutenção</option>
@@ -195,920 +216,752 @@
                             <option value="Devolvido">Devolvido</option>
                         </select>
                     </div>
-                    <div class="flex gap-2.5">
-                        <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-sm font-medium shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5 active:scale-[0.98]" title="Exportar tabela filtrada para CSV/Excel">
-                            <i class="fa-solid fa-file-excel"></i> Exportar CSV
-                        </button>
-                        <button onclick="abrirModalEquipamento()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
+                    <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                        <button onclick="abrirModalEquipamento()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-sky-900/30 write-allowed">
                             <i class="fa-solid fa-plus"></i> Novo Equipamento
+                        </button>
+                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition" title="Exportar CSV">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </button>
+                        <button onclick="fazerBackup()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition" title="Backup JSON">
+                            <i class="fa-solid fa-download"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
+                        <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Cód. Ref / Patrimônio</th>
-                                    <th class="p-3.5 font-semibold">Equipamento</th>
-                                    <th class="p-3.5 font-semibold">Tipo</th>
-                                    <th class="p-3.5 font-semibold">Setor</th>
-                                    <th class="p-3.5 font-semibold">IP / Rede</th>
-                                    <th class="p-3.5 font-semibold">Posse</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
-                                    <th class="p-3.5 font-semibold min-w-[180px]">Ciclo / Alerta</th>
-                                    <th class="p-3.5 font-semibold text-center no-print">Ações</th>
+                                <tr class="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-700">
+                                    <th class="p-3.5">Cód</th>
+                                    <th class="p-3.5">Equipamento</th>
+                                    <th class="p-3.5">Tipo</th>
+                                    <th class="p-3.5">Setor</th>
+                                    <th class="p-3.5">IP</th>
+                                    <th class="p-3.5">Posse</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5">Ciclo de Vida</th>
+                                    <th class="p-3.5 text-center no-print">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-equipamentos-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
+                            <tbody id="tabela-equipamentos-body" class="divide-y divide-slate-800"></tbody>
                         </table>
                     </div>
-                    <div class="p-4 bg-slate-900/40 border-t border-slate-700/80 flex flex-col sm:flex-row justify-between items-center gap-3 no-print">
-                        <div id="paginacao-info" class="text-xs text-slate-400">Mostrando página 1</div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="mudarPagina(-1)" id="btn-prev-pagina" class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-700 transition disabled:opacity-40">Anterior</button>
-                            <span id="paginacao-numeracao" class="text-xs font-bold text-white px-2">1 / 1</span>
-                            <button onclick="mudarPagina(1)" id="btn-next-pagina" class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-700 transition disabled:opacity-40">Próxima</button>
+                    <div class="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 no-print">
+                        <span id="paginacao-info">Mostrando 0 itens</span>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-prev-pagina" onclick="mudarPagina(-1)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 disabled:opacity-40 transition">Anterior</button>
+                            <span id="paginacao-numeracao" class="px-2 font-mono font-semibold text-white">1 / 1</span>
+                            <button id="btn-next-pagina" onclick="mudarPagina(1)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 disabled:opacity-40 transition">Próxima</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- ABA MONITORAMENTO DE REDE (PING) -->
             <section id="aba-monitoramento" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
+                <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
                     <div>
-                        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-network-wired text-sky-400 mr-2"></i>Monitoramento de Conectividade (Ping HTTP)</h2>
-                        <p class="text-xs text-slate-400">Verificação em tempo real de analisadores, servidores e impressoras na rede local.</p>
+                        <h2 class="text-sm font-bold text-white">Monitoramento de Rede e IPs</h2>
+                        <p class="text-xs text-slate-400">Verifique a conectividade dos equipamentos em tempo real.</p>
                     </div>
-                    <button onclick="verificarTodosIPs()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 active:scale-[0.98]">
+                    <button onclick="verificarTodosIPs()" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
                         <i class="fa-solid fa-rotate"></i> Testar Todos os IPs
                     </button>
                 </div>
-
-                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Cód. Ref</th>
-                                    <th class="p-3.5 font-semibold">Equipamento</th>
-                                    <th class="p-3.5 font-semibold">Setor</th>
-                                    <th class="p-3.5 font-semibold">Endereço IP</th>
-                                    <th class="p-3.5 font-semibold">Status de Rede</th>
-                                    <th class="p-3.5 font-semibold text-center">Ações & Teste</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-monitoramento-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA MANUTENÇÃO E CALIBRAÇÃO (METROLOGIA) -->
-            <section id="aba-manutencao" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
-                    <div>
-                        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-screwdriver-wrench text-sky-400 mr-2"></i>Módulo de Calibração e Manutenção Preventiva (RBC)</h2>
-                        <p class="text-xs text-slate-400">Controle metrológico para centrífugas, autoclaves, balanças e banhos-maria com alertas WhatsApp.</p>
-                    </div>
-                    <button onclick="abrirModalManutencao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
-                        <i class="fa-solid fa-plus"></i> Nova Calibração / Manutenção
-                    </button>
-                </div>
-
-                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Equipamento (Cód. Ref & Nome)</th>
-                                    <th class="p-3.5 font-semibold">Tipo de Intervenção</th>
-                                    <th class="p-3.5 font-semibold">Data Realizada</th>
-                                    <th class="p-3.5 font-semibold">Próxima Calibração</th>
-                                    <th class="p-3.5 font-semibold">Laudo Técnico</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
-                                    <th class="p-3.5 font-semibold text-center">Ações & WhatsApp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-manutencao-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA HELPDESK / CHAMADOS QR CODE -->
-            <section id="aba-helpdesk" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
-                    <div>
-                        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-headset text-sky-400 mr-2"></i>Gestão de Chamados & Helpdesk (Via QR Code)</h2>
-                        <p class="text-xs text-slate-400">Abertura instantânea de chamados pelas unidades externas.</p>
-                    </div>
-                    <button onclick="abrirModalChamado()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 active:scale-[0.98]">
-                        <i class="fa-solid fa-ticket"></i> Abrir Chamado Técnico
-                    </button>
-                </div>
-
-                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">ID / Protocolo</th>
-                                    <th class="p-3.5 font-semibold">Equipamento Vinculado</th>
-                                    <th class="p-3.5 font-semibold">Setor / Unidade Solicitante</th>
-                                    <th class="p-3.5 font-semibold">Problema Relatado</th>
-                                    <th class="p-3.5 font-semibold">Prioridade</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
-                                    <th class="p-3.5 font-semibold text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-chamados-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA VALIDAÇÃO (QUALIFICAÇÃO DE ATIVOS) -->
-            <section id="aba-validacao" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
-                    <div>
-                        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-clipboard-check text-sky-400 mr-2"></i>Módulo de Validação e Qualificação de Ativos</h2>
-                        <p class="text-xs text-slate-400">Controle de Qualificação de Instalação (QI), Operação (QO) e Desempenho (QD) laboratorial.</p>
-                    </div>
-                    <button onclick="abrirModalValidacao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
-                        <i class="fa-solid fa-plus"></i> Nova Validação / Qualificação
-                    </button>
-                </div>
-
-                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Equipamento (Cód. Ref & Nome)</th>
-                                    <th class="p-3.5 font-semibold">Tipo de Qualificação</th>
-                                    <th class="p-3.5 font-semibold">Data da Validação</th>
-                                    <th class="p-3.5 font-semibold">Próxima Validação</th>
-                                    <th class="p-3.5 font-semibold">Responsável / Empresa</th>
-                                    <th class="p-3.5 font-semibold">Status</th>
-                                    <th class="p-3.5 font-semibold text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-validacao-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA FINANCEIRO DE COMODATOS -->
-            <section id="aba-financeiro" class="hidden space-y-6">
-                <div class="bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-6">
-                    <div class="flex justify-between items-center border-b border-slate-700/80 pb-4">
-                        <div>
-                            <h2 class="text-base font-bold text-white"><i class="fa-solid fa-file-invoice-dollar text-sky-400 mr-2"></i>Dashboard Financeiro de Comodatos vs. Ativos Próprios</h2>
-                            <p class="text-xs text-slate-400">Controle de contratos, analisadores de diagnóstico e taxas de amortização.</p>
-                        </div>
-                        <button onclick="abrirModalComodato()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
-                            <i class="fa-solid fa-plus"></i> Novo Contrato / Comodato
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-                        <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/80">
-                            <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total em Comodato / Locação</h3>
-                            <p id="fin-total-comodato" class="text-2xl font-bold text-sky-400 mt-1.5">0</p>
-                        </div>
-                        <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/80">
-                            <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Custo Mensal Estimado</h3>
-                            <p id="fin-custo-mensal" class="text-2xl font-bold text-white mt-1.5">R$ 0,00</p>
-                        </div>
-                        <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/80">
-                            <h3 class="text-xs font-medium text-slate-400 uppercase tracking-wider">Alertas de Vencimento de Contrato</h3>
-                            <p id="fin-alertas-venc" class="text-2xl font-bold text-amber-400 mt-1.5">0</p>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto pt-2">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Equipamento / Analisador</th>
-                                    <th class="p-3.5 font-semibold">Fornecedor / Parceiro</th>
-                                    <th class="p-3.5 font-semibold">Vigência do Contrato</th>
-                                    <th class="p-3.5 font-semibold">Custo Mensal / Amortização</th>
-                                    <th class="p-3.5 font-semibold">Status de Renovação</th>
-                                    <th class="p-3.5 font-semibold text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-financeiro-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA RASTREABILIDADE (AUDIT TRAIL) -->
-            <section id="aba-rastreabilidade" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80">
-                    <div>
-                        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-right-left text-sky-400 mr-2"></i>Rastreabilidade de Transferência entre Unidades (Audit Trail)</h2>
-                        <p class="text-xs text-slate-400">Histórico rigoroso de movimentação de ativos entre setores.</p>
-                    </div>
-                    <button onclick="abrirModalTransferencia()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 hover:opacity-95 transition flex items-center gap-2 write-allowed active:scale-[0.98]">
-                        <i class="fa-solid fa-truck-moving"></i> Registrar Transferência
-                    </button>
-                </div>
-
-                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-700/80 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                    <th class="p-3.5 font-semibold">Data / Hora</th>
-                                    <th class="p-3.5 font-semibold">Equipamento</th>
-                                    <th class="p-3.5 font-semibold">Origem</th>
-                                    <th class="p-3.5 font-semibold">Destino</th>
-                                    <th class="p-3.5 font-semibold">Responsável</th>
-                                    <th class="p-3.5 font-semibold">Motivo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-rastreio-body" class="divide-y divide-slate-700/50 text-slate-200">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA SETORES E TIPOS -->
-            <section id="aba-setores" class="hidden space-y-6 max-w-4xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Gerenciar Setores -->
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-4">
-                        <h2 class="text-base font-bold text-white border-b border-slate-700/80 pb-3"><i class="fa-solid fa-building text-sky-400 mr-2"></i>Gerenciar Setores</h2>
-                        <div class="flex gap-2 write-allowed">
-                            <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor" class="flex-grow px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            <button onclick="salvarSetor()" class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-medium shadow hover:opacity-95 transition">Adicionar</button>
-                        </div>
-                        <div class="overflow-x-auto pt-1 max-h-72 overflow-y-auto">
-                            <table class="w-full text-left border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                        <th class="p-3.5 font-semibold">Setor</th>
-                                        <th class="p-3.5 font-semibold text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-setores-body" class="divide-y divide-slate-700/50 text-slate-200">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Gerenciar Tipos de Equipamento -->
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-4">
-                        <h2 class="text-base font-bold text-white border-b border-slate-700/80 pb-3"><i class="fa-solid fa-laptop text-sky-400 mr-2"></i>Tipos de Equipamento</h2>
-                        <div class="flex gap-2 write-allowed">
-                            <input type="text" id="novo-tipo-nome" placeholder="Ex: Analisador Bioquímico" class="flex-grow px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            <button onclick="salvarTipo()" class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-medium shadow hover:opacity-95 transition">Adicionar</button>
-                        </div>
-                        <div class="overflow-x-auto pt-1 max-h-72 overflow-y-auto">
-                            <table class="w-full text-left border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                        <th class="p-3.5 font-semibold">Tipo de Equipamento</th>
-                                        <th class="p-3.5 font-semibold text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-tipos-body" class="divide-y divide-slate-700/50 text-slate-200">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA RELATÓRIOS & IA -->
-            <section id="aba-relatorios" class="hidden space-y-6">
-                <div class="flex justify-between items-center no-print flex-wrap gap-3">
-                    <h2 class="text-lg font-bold text-white tracking-tight">Painel de Relatórios, Indicadores & Gráficos</h2>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-700/80">
-                        <h3 class="font-medium text-slate-400 text-xs uppercase tracking-wider mb-2"><i class="fa-solid fa-triangle-exclamation text-amber-400 mr-2"></i>Alerta 4 Anos</h3>
-                        <p id="relatorio-4-anos" class="text-3xl font-bold text-white">0</p>
-                        <p class="text-xs text-slate-400 mt-1.5">Revisão preventiva recomendada.</p>
-                    </div>
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-700/80">
-                        <h3 class="font-medium text-slate-400 text-xs uppercase tracking-wider mb-2"><i class="fa-solid fa-circle-exclamation text-red-400 mr-2"></i>Alerta 5+ Anos</h3>
-                        <p id="relatorio-5-anos" class="text-3xl font-bold text-white">0</p>
-                        <p class="text-xs text-slate-400 mt-1.5">Substituição crítica necessária.</p>
-                    </div>
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-700/80">
-                        <h3 class="font-medium text-slate-400 text-xs uppercase tracking-wider mb-2"><i class="fa-solid fa-file-contract text-sky-400 mr-2"></i>Próprio / Comodato</h3>
-                        <p class="text-sm font-bold text-white mt-2"><span id="relatorio-proprio">0</span> Próprios | <span id="relatorio-comodato">0</span> Comodato</p>
-                        <p class="text-xs text-slate-400 mt-1.5">Divisão de posse dos ativos.</p>
-                    </div>
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-700/80">
-                        <h3 class="font-medium text-slate-400 text-xs uppercase tracking-wider mb-2"><i class="fa-solid fa-boxes-stacked text-primary mr-2"></i>Total de Ativos</h3>
-                        <p id="relatorio-total" class="text-3xl font-bold text-white">0</p>
-                        <p class="text-xs text-slate-400 mt-1.5">Equipamentos cadastrados.</p>
-                    </div>
-                </div>
-
-                <!-- GRÁFICOS VISUAIS COM CHART.JS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-700/80">
-                        <h3 class="font-bold text-white mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-bar text-sky-400"></i> Distribuição de Ativos por Setor</h3>
-                        <div class="relative h-64 flex justify-center">
-                            <canvas id="chartSetores"></canvas>
-                        </div>
-                    </div>
-                    <div class="bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-700/80">
-                        <h3 class="font-bold text-white mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-pie text-sky-400"></i> Posse dos Ativos (Próprio vs Comodato)</h3>
-                        <div class="relative h-64 flex justify-center">
-                            <canvas id="chartPosse"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PAINEL DE FILTROS PERSONALIZADOS PARA O RELATÓRIO (FECHADO POR PADRÃO) -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between bg-slate-800/60 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-700/80 flex-wrap gap-3">
-                        <div>
-                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                                <i class="fa-solid fa-filter text-sky-400"></i> Gerador de Relatório Dinâmico Filtrado
-                            </h3>
-                            <p class="text-xs text-slate-400">Aplique filtros para gerar e exibir o relatório sob demanda.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="alternarVisibilidadeRelatorio()" id="btn-toggle-relatorio" class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-medium shadow hover:opacity-95 transition">
-                                <i class="fa-solid fa-chevron-down mr-1"></i> Abrir Relatório Dinâmico
-                            </button>
-                            <button onclick="imprimirRelatorio()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-medium shadow transition flex items-center gap-1.5 border border-slate-700" title="Imprimir Relatório Filtrado">
-                                <i class="fa-solid fa-print"></i> Imprimir
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- CONTAINER OCULTO ATÉ O USUÁRIO CLICAR -->
-                    <div id="pdf-conteudo-exportavel" class="hidden bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 no-print">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Setor</label>
-                                <select id="rel-filtro-setor" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
-                                    <option value="">Todos os Setores</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Equipamento</label>
-                                <select id="rel-filtro-tipo" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
-                                    <option value="">Todos os Tipos</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Posse</label>
-                                <select id="rel-filtro-posse" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
-                                    <option value="">Todas as Posituras</option>
-                                    <option value="Próprio">Próprio</option>
-                                    <option value="Comodato">Comodato</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
-                                <select id="rel-filtro-status" onchange="renderizarRelatorioFiltrado()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
-                                    <option value="">Todos os Status</option>
-                                    <option value="Ativo">Ativo</option>
-                                    <option value="Manutenção">Manutenção</option>
-                                    <option value="Inativo">Inativo</option>
-                                    <option value="Descartado">Descartado</option>
-                                    <option value="Devolvido">Devolvido</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto pt-2">
-                            <table class="w-full text-left border-collapse text-sm print-table">
-                                <thead>
-                                    <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                        <th class="p-3.5 font-semibold">Cód. Ref</th>
-                                        <th class="p-3.5 font-semibold">Equipamento</th>
-                                        <th class="p-3.5 font-semibold">Tipo</th>
-                                        <th class="p-3.5 font-semibold">Setor</th>
-                                        <th class="p-3.5 font-semibold">Série</th>
-                                        <th class="p-3.5 font-semibold">Posse</th>
-                                        <th class="p-3.5 font-semibold">Data Entrada</th>
-                                        <th class="p-3.5 font-semibold">Status</th>
-                                        <th class="p-3.5 font-semibold">Ciclo / Alerta</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabela-relatorio-detalhado-body" class="divide-y divide-slate-700/50 text-slate-200">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PAINEL DE ASSISTENTE IA -->
-                <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white p-6 rounded-3xl shadow-xl border border-indigo-500/20 space-y-5 no-print">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Assistente de IA - Estudo, Modificações e Auditoria</h3>
-                            <p class="text-xs text-slate-400">Análise de vida útil, alterações em lote e auditoria completa com sugestão de novos recursos.</p>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button id="btn-gerar-ia" onclick="gerarEstudoIA()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs shadow transition flex items-center gap-1.5 active:scale-[0.98]">
-                                <i class="fa-solid fa-brain"></i> Estudo Analítico (Gemini)
-                            </button>
-                            <button id="btn-auditar-ia" onclick="auditarESugerirRecursosIA()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow transition flex items-center gap-1.5 active:scale-[0.98]">
-                                <i class="fa-solid fa-stethoscope"></i> Auditar App & Recursos
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 border-t border-indigo-500/20 space-y-2 write-allowed">
-                        <label class="block font-bold text-amber-300 text-xs uppercase tracking-wider">
-                            <i class="fa-solid fa-pen-to-square mr-1"></i> Executar Alteração em Massa via IA
-                        </label>
-                        <div class="flex gap-2">
-                            <input type="text" id="ai-comando-massa" placeholder="Ex: Analisar equipamentos críticos e sugerir manutenções" class="flex-grow px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400">
-                            <button onclick="executarAlteracaoMassaIA()" id="btn-executar-massa" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow flex items-center gap-1 shrink-0 active:scale-[0.98]">
-                                <i class="fa-solid fa-bolt"></i> Consultar IA
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="resultado-ia-container" class="hidden bg-slate-900/90 backdrop-blur-md p-6 rounded-2xl border border-indigo-500/30 text-sm space-y-4 leading-relaxed">
-                        <h4 class="font-bold text-amber-300 border-b border-slate-800 pb-2 flex items-center gap-2"><i class="fa-solid fa-brain"></i> Retorno do Assistente de IA</h4>
-                        <div id="conteudo-ia-analise" class="space-y-3 text-slate-200 [&>h3]:text-amber-400 [&>h3]:font-bold [&>h3]:text-base [&>h3]:mt-3 [&>p]:leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>li]:mb-1 [&>strong]:text-sky-300"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA GERENCIAMENTO DE USUÁRIOS (ADMIN ONLY) -->
-            <section id="aba-usuarios" class="hidden max-w-4xl mx-auto bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-6 no-print">
-                <div class="flex justify-between items-center border-b border-slate-700/80 pb-4">
-                    <h2 class="text-base font-bold text-white"><i class="fa-solid fa-users-gear text-sky-400 mr-2"></i>Gerenciamento de Clientes, Usuários & Status de Assinatura</h2>
-                    <button onclick="abrirModalUsuario()" class="bg-primary text-white px-3.5 py-2 rounded-xl text-xs font-medium shadow hover:opacity-95 transition flex items-center gap-1.5 active:scale-[0.98]">
-                        <i class="fa-solid fa-user-plus"></i> Novo Usuário
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-slate-900/60 text-slate-400 border-b border-slate-700/80 text-xs uppercase tracking-wider">
-                                <th class="p-3.5 font-semibold">Nome</th>
-                                <th class="p-3.5 font-semibold">Usuário (Login)</th>
-                                <th class="p-3.5 font-semibold">Perfil</th>
-                                <th class="p-3.5 font-semibold">Status Pagamento</th>
-                                <th class="p-3.5 font-semibold text-center">Ações</th>
+                            <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                <th class="p-3.5">Cód</th>
+                                <th class="p-3.5">Equipamento</th>
+                                <th class="p-3.5">Setor</th>
+                                <th class="p-3.5">Endereço IP</th>
+                                <th class="p-3.5">Status da Rede</th>
+                                <th class="p-3.5 text-center">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="tabela-usuarios-body" class="divide-y divide-slate-700/50 text-slate-200">
-                        </tbody>
+                        <tbody id="tabela-monitoramento-body" class="divide-y divide-slate-800"></tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- ABA CONFIGURAÇÕES & DADOS -->
-            <section id="aba-configuracoes" class="hidden max-w-2xl mx-auto bg-slate-800/60 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-700/80 space-y-6 no-print">
-                <h2 class="text-base font-bold text-white border-b border-slate-700/80 pb-3">Configurações de Layout, Backup & IA</h2>
-                
-                <div class="space-y-4">
+            <section id="aba-manutencao" class="hidden space-y-6">
+                <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
                     <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome da Empresa</label>
-                        <input type="text" id="config-empresa" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" placeholder="Ex: Laboratório Pasteur SM">
+                        <h2 class="text-sm font-bold text-white">Calibração e Manutenção Preventiva</h2>
+                        <p class="text-xs text-slate-400">Controle laudos, calibrações e manutenções programadas.</p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1.5">URL Pública do Sistema (Obrigatório para QR Code no celular)</label>
-                        <input type="text" id="config-url-publica" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm font-mono text-white" placeholder="Ex: https://inventario-60bf7.web.app">
-                        <p class="text-xs text-slate-400 mt-1">Cole aqui o endereço web público onde sua aplicação está hospedada (Firebase, Vercel, etc).</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Texto de Direitos Autorais (Rodapé)</label>
-                        <input type="text" id="config-copyright" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white" placeholder="Ex: © 2026 Laboratório Pasteur - Todos os direitos reservados.">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1.5">Chave da API do Google Gemini (AI Studio)</label>
-                        <input type="password" id="config-gemini-key" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm font-mono text-white" placeholder="Cole sua chave API aqui (ex: AIzaSy...)">
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Cor Principal do Sistema</label>
-                            <input type="color" id="config-cor" value="#0284c7" class="w-full h-10 p-1 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Logotipo (Arquivo de Imagem)</label>
-                            <input type="file" id="config-logo" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600">
-                        </div>
-                    </div>
-                    <button onclick="salvarConfiguracoes()" class="w-full bg-primary text-white py-2.5 rounded-xl font-medium shadow hover:opacity-95 transition active:scale-[0.98]">Salvar Alterações</button>
-                </div>
-
-                <div class="border-t border-slate-700/80 pt-6 space-y-3">
-                    <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-cloud-arrow-down mr-2 text-sky-400"></i>Backup Completo do Sistema</h3>
-                    <p class="text-xs text-slate-400">Baixe um arquivo de backup em formato JSON com todos os dados salvos no Firebase.</p>
-                    <button onclick="fazerBackup()" class="w-full bg-sky-700 hover:bg-sky-600 text-white py-2.5 rounded-xl text-sm font-medium shadow transition flex items-center justify-center gap-2 active:scale-[0.98]">
-                        <i class="fa-solid fa-download"></i> Baixar Backup Completo (JSON)
+                    <button onclick="abrirModalManutencao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md write-allowed">
+                        <i class="fa-solid fa-plus"></i> Registrar Manutenção
                     </button>
                 </div>
-
-                <div class="border-t border-slate-700/80 pt-6 space-y-3">
-                    <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-file-arrow-up mr-2 text-sky-400"></i>Importar Equipamentos via Arquivo .TXT</h3>
-                    <p class="text-xs text-slate-400">Selecione um arquivo `.txt` com os equipamentos.</p>
-                    <input type="file" id="input-arquivo-txt" accept=".txt" onchange="importarArquivoTxt(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                <th class="p-3.5">Equipamento</th>
+                                <th class="p-3.5">Tipo</th>
+                                <th class="p-3.5">Data Realizada</th>
+                                <th class="p-3.5">Próxima Manutenção</th>
+                                <th class="p-3.5">Laudo</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-manutencao-body" class="divide-y divide-slate-800"></tbody>
+                    </table>
                 </div>
+            </section>
 
-                <div class="border-t border-slate-700/80 pt-6 space-y-4">
-                    <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-file-arrow-down mr-2 text-sky-400"></i>Importador em Massa por Texto (Colado)</h3>
-                    <textarea id="texto-importacao-massa" rows="4" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono text-white placeholder-slate-500" placeholder="Exemplo: CENTRI-05/ 00147-CENTRIFUGA PROCESSAMENTO PM UNI 1,0 CENTRIFUGA"></textarea>
-                    <div class="flex gap-2">
-                        <button onclick="importarTextoEmMassa()" class="flex-grow bg-indigo-600 text-white py-2 px-4 rounded-xl text-xs font-medium shadow hover:bg-indigo-500 transition active:scale-[0.98]">Processar e Adicionar no Firebase</button>
-                        <button onclick="carregarDadosPasteur()" class="bg-slate-700 text-white py-2 px-4 rounded-xl text-xs font-medium shadow hover:bg-slate-600 transition active:scale-[0.98]">Restaurar Base Padrão</button>
+            <section id="aba-helpdesk" class="hidden space-y-6">
+                <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Central de Chamados e Suporte Técnico</h2>
+                        <p class="text-xs text-slate-400">Acompanhe solicitações e ocorrências nas unidades.</p>
+                    </div>
+                    <button onclick="abrirModalChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md">
+                        <i class="fa-solid fa-plus"></i> Abrir Chamado
+                    </button>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                <th class="p-3.5">ID</th>
+                                <th class="p-3.5">Equipamento</th>
+                                <th class="p-3.5">Unidade / Setor</th>
+                                <th class="p-3.5">Descrição</th>
+                                <th class="p-3.5">Prioridade</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-chamados-body" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="aba-validacao" class="hidden space-y-6">
+                <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Qualificação e Validação de Equipamentos</h2>
+                        <p class="text-xs text-slate-400">Controle de qualificação térmica, analítica e de sistemas.</p>
+                    </div>
+                    <button onclick="abrirModalValidacao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md write-allowed">
+                        <i class="fa-solid fa-plus"></i> Nova Validação
+                    </button>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                <th class="p-3.5">Equipamento</th>
+                                <th class="p-3.5">Tipo de Validação</th>
+                                <th class="p-3.5">Data Realizada</th>
+                                <th class="p-3.5">Próxima Validação</th>
+                                <th class="p-3.5">Responsável</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-validacao-body" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="aba-financeiro" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                        <span class="text-xs text-slate-400 font-medium">Total de Equipamentos em Comodato</span>
+                        <h3 id="fin-total-comodato" class="text-2xl font-bold text-white mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                        <span class="text-xs text-slate-400 font-medium">Custo Mensal Estimado (Comodatos)</span>
+                        <h3 id="fin-custo-mensal" class="text-2xl font-bold text-emerald-400 mt-1">R$ 0,00</h3>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                    <h2 class="text-sm font-bold text-white">Contratos e Custos de Comodato</h2>
+                    <button onclick="abrirModalComodato()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition write-allowed">
+                        <i class="fa-solid fa-plus mr-1"></i> Adicionar Comodato
+                    </button>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                <th class="p-3.5">Fornecedor</th>
+                                <th class="p-3.5">Vigência</th>
+                                <th class="p-3.5">Custo Mensal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-financeiro-body" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="aba-rastreabilidade" class="hidden space-y-6">
+                <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Rastreabilidade e Histórico de Transferências</h2>
+                        <p class="text-xs text-slate-400">Histórico de movimentações entre setores e unidades.</p>
+                    </div>
+                    <button onclick="abrirModalTransferencia()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition write-allowed">
+                        <i class="fa-solid fa-right-left mr-1"></i> Registrar Transferência
+                    </button>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                <th class="p-3.5">Data/Hora</th>
+                                <th class="p-3.5">Equipamento</th>
+                                <th class="p-3.5">Origem</th>
+                                <th class="p-3.5">Destino</th>
+                                <th class="p-3.5">Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-rastreio-body" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="aba-setores" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <h2 class="text-sm font-bold text-white">Gerenciar Setores</h2>
+                        <div class="flex gap-2">
+                            <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                            <button onclick="salvarSetor()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Adicionar</button>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl">
+                            <table class="w-full text-left border-collapse"><tbody id="tabela-setores-body" class="divide-y divide-slate-800"></tbody></table>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <h2 class="text-sm font-bold text-white">Gerenciar Tipos de Equipamentos</h2>
+                        <div class="flex gap-2">
+                            <input type="text" id="novo-tipo-nome" placeholder="Nome do novo tipo..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                            <button onclick="salvarTipo()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Adicionar</button>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl">
+                            <table class="w-full text-left border-collapse"><tbody id="tabela-tipos-body" class="divide-y divide-slate-800"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="aba-relatorios" class="hidden space-y-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-xs text-slate-400 font-medium">Total de Equipamentos</span>
+                        <h3 id="relatorio-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-xs text-slate-400 font-medium">Ativos Próprios</span>
+                        <h3 id="relatorio-proprio" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-xs text-slate-400 font-medium">Em Comodato</span>
+                        <h3 id="relatorio-comodato" class="text-2xl font-bold text-sky-400 mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-xs text-slate-400 font-medium">Ciclo Crítico (≥5 Anos)</span>
+                        <h3 id="relatorio-5-anos" class="text-2xl font-bold text-red-400 mt-1">0</h3>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-700/80 pt-6 space-y-4">
-                    <h3 class="font-bold text-red-400 text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo - Limpeza de Dados no Firebase</h3>
-                    <button onclick="zerarBaseDados()" class="bg-red-600 hover:bg-red-500 text-white py-2.5 px-4 rounded-xl text-sm font-medium shadow transition w-full flex items-center justify-center gap-2 active:scale-[0.98]">
-                        <i class="fa-solid fa-trash-can"></i> Zerar Toda a Base no Firebase
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl h-72">
+                        <h3 class="text-xs font-bold text-white mb-3">Distribuição por Setor</h3>
+                        <div class="relative h-56"><canvas id="chartSetores"></canvas></div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl h-72">
+                        <h3 class="text-xs font-bold text-white mb-3">Posse dos Ativos</h3>
+                        <div class="relative h-56"><canvas id="chartPosse"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 no-print">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Assistente Inteligente (Gemini)</h2>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="gerarEstudoIA()" class="bg-amber-950/60 text-amber-300 border border-amber-800/60 hover:bg-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition">Gerar Relatório Executivo</button>
+                        <button onclick="auditarESugerirRecursosIA()" class="bg-amber-950/60 text-amber-300 border border-amber-800/60 hover:bg-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition">Auditoria de Inventário</button>
+                    </div>
+                    <div id="resultado-ia-container" class="hidden bg-slate-950 border border-slate-800 p-4 rounded-xl text-xs text-slate-200">
+                        <div id="conteudo-ia-analise"></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <h2 class="text-sm font-bold text-white">Relatório Dinâmico Filtrado</h2>
+                        <div class="flex items-center gap-3 no-print">
+                            <select id="rel-filtro-setor" onchange="renderizarRelatorioFiltrado()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <option value="">Todos os Setores</option>
+                            </select>
+                            <select id="rel-filtro-tipo" onchange="renderizarRelatorioFiltrado()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <option value="">Todos os Tipos</option>
+                            </select>
+                            <button onclick="imprimirRelatorio()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-print"></i> Imprimir PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pdf-conteudo-exportavel" class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                    <th class="p-3.5">Cód</th>
+                                    <th class="p-3.5">Equipamento</th>
+                                    <th class="p-3.5">Tipo</th>
+                                    <th class="p-3.5">Setor</th>
+                                    <th class="p-3.5">Serial</th>
+                                    <th class="p-3.5">Posse</th>
+                                    <th class="p-3.5">Entrada</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5">Ciclo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-relatorio-detalhado-body" class="divide-y divide-slate-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="aba-usuarios" class="hidden space-y-6 admin-only">
+                <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Gerenciamento de Usuários e Perfis</h2>
+                        <p class="text-xs text-slate-400">Controle permissões e status de acesso ao sistema.</p>
+                    </div>
+                    <button onclick="abrirModalUsuario()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md">
+                        <i class="fa-solid fa-plus mr-1"></i> Novo Usuário
                     </button>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                                <th class="p-3.5">Nome</th>
+                                <th class="p-3.5">Usuário</th>
+                                <th class="p-3.5">Perfil</th>
+                                <th class="p-3.5">Status Pagamento</th>
+                                <th class="p-3.5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-usuarios-body" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="aba-configuracoes" class="hidden space-y-6 admin-only">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 max-w-2xl">
+                    <h2 class="text-sm font-bold text-white">Configurações Gerais do Sistema</h2>
+                    <div class="space-y-4 text-xs">
+                        <div>
+                            <label class="block text-slate-300 font-medium mb-1">Nome da Empresa / Instituição</label>
+                            <input type="text" id="config-empresa" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-medium mb-1">Cor Primária</label>
+                            <input type="color" id="config-cor" class="w-full h-10 bg-slate-800 border border-slate-700 rounded-xl px-2 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-medium mb-1">URL Pública (Base para QR Codes)</label>
+                            <input type="text" id="config-url-publica" placeholder="https://seu-sistema.web.app" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-medium mb-1">Chave da API do Gemini (IA)</label>
+                            <input type="password" id="config-gemini-key" placeholder="AIzaSy..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-medium mb-1">Logotipo (Imagem PNG/JPG)</label>
+                            <input type="file" id="config-logo" accept="image/*" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-300">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-medium mb-1">Texto de Rodapé (Copyright)</label>
+                            <input type="text" id="config-copyright" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary">
+                        </div>
+                        <button onclick="salvarConfiguracoes()" class="bg-primary hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-semibold transition shadow-md">
+                            Salvar Alterações
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>
 
-        <footer class="bg-slate-900 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-400 mt-auto no-print">
+        <footer class="bg-slate-900 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 no-print">
             <span id="texto-copyright">© 2026 Laboratório Pasteur SM - Todos os direitos reservados.</span>
         </footer>
     </div>
 
-    <!-- MODAL DE USUÁRIO -->
-    <div id="modal-usuario" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 id="modal-usuario-titulo" class="text-base font-bold text-white">Editar Usuário</h3>
-            <input type="hidden" id="usr-edit-id" value="">
-            <div class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome Completo</label>
-                    <input type="text" id="usr-nome" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome de Usuário (Login)</label>
-                    <input type="text" id="usr-login" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nova Senha</label>
-                    <input type="password" id="usr-senha" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white" placeholder="••••••••">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nível de Permissão</label>
-                    <select id="usr-perfil" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                        <option value="Tecnico" class="bg-slate-900">Técnico</option>
-                        <option value="Visualizador" class="bg-slate-900">Visualizador</option>
-                        <option value="Admin" class="bg-slate-900">Administrador</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Status de Pagamento / Acesso</label>
-                    <select id="usr-status-pagamento" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                        <option value="Ativo" class="bg-slate-900">Ativo</option>
-                        <option value="Inadimplente" class="bg-slate-900">Inadimplente</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                <button onclick="fecharModalUsuario()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarUsuarioModal()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE EQUIPAMENTO -->
-    <div id="modal-equipamento" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 id="modal-titulo" class="text-base font-bold text-white">Novo Equipamento</h3>
+    <!-- MODAL EQUIPAMENTO -->
+    <div id="modal-equipamento" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <h3 id="modal-titulo" class="text-sm font-bold text-white">Novo Equipamento</h3>
             <input type="hidden" id="eq-id">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Cód. de Referência / Patrimônio</label>
-                    <input type="text" id="eq-codigo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono">
+                    <label class="block text-slate-300 mb-1">Cód. Referência</label>
+                    <input type="text" id="eq-codigo" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome / Descrição Completa</label>
-                    <input type="text" id="eq-nome" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    <label class="block text-slate-300 mb-1">Nome do Equipamento</label>
+                    <input type="text" id="eq-nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Equipamento</label>
-                    <select id="eq-tipo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
+                    <label class="block text-slate-300 mb-1">Tipo</label>
+                    <select id="eq-tipo" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Setor</label>
-                    <select id="eq-setor" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
+                    <label class="block text-slate-300 mb-1">Setor</label>
+                    <select id="eq-setor" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Endereço IP (Monitoramento Rede)</label>
-                    <input type="text" id="eq-ip" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono" placeholder="Ex: 192.168.1.50">
+                    <label class="block text-slate-300 mb-1">Endereço IP</label>
+                    <input type="text" id="eq-ip" placeholder="192.168.1.X" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Número de Série</label>
-                    <input type="text" id="eq-serial" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono">
+                    <label class="block text-slate-300 mb-1">Nº de Série</label>
+                    <input type="text" id="eq-serial" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Situação de Posse</label>
-                    <select id="eq-posse" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                        <option value="Próprio" class="bg-slate-900">Próprio</option>
-                        <option value="Comodato" class="bg-slate-900">Comodato</option>
+                    <label class="block text-slate-300 mb-1">Posse</label>
+                    <select id="eq-posse" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Próprio">Próprio</option>
+                        <option value="Comodato">Comodato</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
-                    <select id="eq-status" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                        <option value="Ativo" class="bg-slate-900">Ativo</option>
-                        <option value="Manutenção" class="bg-slate-900">Manutenção</option>
-                        <option value="Inativo" class="bg-slate-900">Inativo</option>
-                        <option value="Descartado" class="bg-slate-900">Descartado</option>
-                        <option value="Devolvido" class="bg-slate-900">Devolvido</option>
+                    <label class="block text-slate-300 mb-1">Status</label>
+                    <select id="eq-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Ativo">Ativo</option>
+                        <option value="Manutenção">Manutenção</option>
+                        <option value="Inativo">Inativo</option>
+                        <option value="Descartado">Descartado</option>
+                        <option value="Devolvido">Devolvido</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Data de Entrada</label>
-                    <input type="date" id="eq-data" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    <label class="block text-slate-300 mb-1">Data Entrada</label>
+                    <input type="date" id="eq-data" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                 </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Data de Saída (Opcional)</label>
-                    <input type="date" id="eq-data-saida" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                <div>
+                    <label class="block text-slate-300 mb-1">Data Saída (Opcional)</label>
+                    <input type="date" id="eq-data-saida" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                 </div>
             </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                <button onclick="fecharModalEquipamento()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarEquipamento()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar</button>
+            <div class="flex justify-end gap-2 pt-3">
+                <button onclick="fecharModalEquipamento()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button onclick="salvarEquipamento()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE VALIDAÇÃO -->
-    <div id="modal-validacao" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 id="modal-validacao-titulo" class="text-base font-bold text-white">Registrar Qualificação / Validação</h3>
-            <input type="hidden" id="val-id" value="">
-            <div class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento Crítico</label>
-                    <select id="val-eq-select" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Qualificação</label>
-                    <select id="val-tipo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                        <option value="Qualificação de Instalação (QI)" class="bg-slate-900">Qualificação de Instalação (QI)</option>
-                        <option value="Qualificação de Operação (QO)" class="bg-slate-900">Qualificação de Operação (QO)</option>
-                        <option value="Qualificação de Desempenho (QD)" class="bg-slate-900">Qualificação de Desempenho (QD)</option>
-                        <option value="Validação Anual Completa" class="bg-slate-900">Validação Anual Completa</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Data Realizada</label>
-                        <input type="date" id="val-data" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Próxima Validação</label>
-                        <input type="date" id="val-proxima" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Responsável / Empresa Externa</label>
-                    <input type="text" id="val-responsavel" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500" placeholder="Ex: Metrologia Pasteur / Engenheiro Responsável">
-                </div>
-            </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                <button onclick="fecharModalValidacao()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarValidacao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar Registro</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE MANUTENÇÃO -->
-    <div id="modal-manutencao" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 id="modal-manutencao-titulo" class="text-base font-bold text-white">Registar Calibração / Manutenção</h3>
-            <input type="hidden" id="man-id" value="">
-            <div class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento Crítico</label>
-                    <select id="man-eq-select" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Intervenção</label>
-                    <select id="man-tipo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                        <option value="Calibração RBC" class="bg-slate-900">Calibração RBC (Metrologia)</option>
-                        <option value="Manutenção Preventiva" class="bg-slate-900">Manutenção Preventiva</option>
-                        <option value="Manutenção Corretiva" class="bg-slate-900">Manutenção Corretiva</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Data Realizada</label>
-                        <input type="date" id="man-data" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Próxima Calibração</label>
-                        <input type="date" id="man-proxima" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Laudo Técnico (PDF / Observações)</label>
-                    <input type="text" id="man-laudo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500">
-                </div>
-            </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                <button onclick="fecharModalManutencao()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarManutencao()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar Registro</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CHAMADO HELPDESK -->
-    <div id="modal-chamado" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 id="modal-chamado-titulo" class="text-base font-bold text-white">Abrir Chamado Técnico</h3>
-            <input type="hidden" id="chamado-id" value="">
-            <div class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento Vinculado</label>
-                    <select id="chamado-eq-select" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Setor / Unidade Solicitante</label>
-                    <select id="chamado-unidade" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Prioridade</label>
-                        <select id="chamado-prioridade" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                            <option value="Normal">Normal</option>
-                            <option value="Urgente">Urgente</option>
-                            <option value="Crítica (Parado)">Crítica (Parado)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
-                        <select id="chamado-status" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                            <option value="Aberto">Aberto</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Resolvido">Resolvido</option>
-                            <option value="Fechado">Fechado</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Descrição do Problema</label>
-                    <textarea id="chamado-descricao" rows="3" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></textarea>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                <button onclick="fecharModalChamado()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarChamado()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE COMODATO -->
-    <div id="modal-comodato" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 class="text-base font-bold text-white">Novo Contrato de Comodato / Locação</h3>
-            <div class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Analisador / Equipamento</label>
-                    <select id="com-eq-select" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Fornecedor / Parceiro</label>
-                    <input type="text" id="com-fornecedor" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Término da Vigência</label>
-                        <input type="date" id="com-vigencia" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Custo Mensal (R$)</label>
-                        <input type="number" step="0.01" id="com-custo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                <button onclick="fecharModalComodato()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarComodato()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE TRANSFERÊNCIA -->
-    <div id="modal-transferencia" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 no-print">
-        <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <h3 class="text-base font-bold text-white">Registrar Transferência de Ativo</h3>
-            <div class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Equipamento</label>
-                    <select id="tr-eq-select" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Setor Origem</label>
-                        <select id="tr-origem" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Setor Destino</label>
-                        <select id="tr-destino" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white"></select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Motivo</label>
-                    <input type="text" id="tr-motivo" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
-                </div>
-            </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-                <button onclick="fecharModalTransferencia()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Cancelar</button>
-                <button onclick="salvarTransferencia()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow hover:opacity-95 active:scale-[0.98]">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- GERENCIADOR AVANÇADO DE ETIQUETAS QR CODE -->
-    <div id="modal-qr" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-800">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3 no-print">
-                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-qrcode text-sky-400 mr-2"></i>Gerenciador de Impressão de Etiquetas</h3>
-                <button onclick="fecharModalQR()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <!-- PAINEL DE CONTROLES DA ETIQUETA -->
-            <div id="painel-controles-etiqueta" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/50 p-4 rounded-2xl border border-slate-800 no-print">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Tamanho da Etiqueta</label>
-                    <select id="sel-tamanho-etiqueta" onchange="atualizarPreviewEtiqueta()" class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white">
-                        <option value="50x30">50 x 30 mm (Padrão Térmica Bobina)</option>
-                        <option value="40x25">40 x 25 mm (Pequena)</option>
-                        <option value="100x50">100 x 50 mm (Grande / Caixa)</option>
-                        <option value="a4">Folha A4 Convencional</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Perfil de Impressora</label>
-                    <select id="sel-tipo-impressora" class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white">
-                        <option value="termica">Impressora Térmica (Zebra/Elgin/Argox)</option>
-                        <option value="convencional">Impressora Jato de Tinta / Laser (A4)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- CAIXA DE PREVIEW DA ETIQUETA -->
-            <div class="flex justify-center p-4 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-                <div id="preview-etiqueta-caixa" class="bg-white text-black p-2 rounded-xl shadow-md flex flex-col items-center justify-center text-center transition-all duration-300 overflow-hidden" style="width: 210px; height: 130px; color: #000000 !important;">
-                    <div id="qr-code-container" class="flex justify-center items-center overflow-hidden mb-1"></div>
-                    <div id="qr-info-detalhe" class="text-[9px] font-bold leading-tight font-mono w-full px-1" style="color: #000000 !important;"></div>
-                </div>
-            </div>
-
-            <!-- BOTÕES DE AÇÃO -->
-            <div class="flex gap-2.5 pt-2 no-print border-t border-slate-800">
-                <button onclick="imprimirEtiquetaPersonalizada()" class="flex-grow bg-primary text-white py-2.5 rounded-xl text-xs font-bold shadow hover:opacity-95 transition flex items-center justify-center gap-1.5 active:scale-[0.98]">
-                    <i class="fa-solid fa-print"></i> Imprimir Etiqueta
-                </button>
-                <button onclick="fecharModalQR()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-medium text-slate-300">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL CELULAR -->
-    <div id="modal-detalhes-celular" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-800">
-            <div class="flex items-center space-x-3 border-b border-slate-800 pb-4">
-                <div class="w-12 h-12 bg-sky-500/10 text-primary rounded-2xl flex items-center justify-center text-xl border border-sky-500/20">
-                    <i class="fa-solid fa-laptop-medical"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-white leading-tight">Ficha Técnica do Equipamento</h3>
-                    <p class="text-xs text-slate-400">Consulta via QR Code</p>
-                </div>
-            </div>
-            <div id="ficha-tecnica-conteudo" class="space-y-1.5 text-sm text-slate-300 bg-slate-800/60 p-4 rounded-2xl border border-slate-700"></div>
-            <div class="flex gap-2.5 pt-2 border-t border-slate-800">
-                <button onclick="abrirHelpdeskDireto()" class="flex-grow bg-primary text-white py-2.5 rounded-xl text-sm font-medium shadow hover:opacity-95 transition flex items-center justify-center gap-2 active:scale-[0.98]">
+    <!-- MODAL DETALHES CELULAR (QR SCAN) -->
+    <div id="modal-detalhes-celular" class="hidden fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4 text-left">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-circle-info text-primary"></i> Ficha Técnica do Ativo</h3>
+            <div id="ficha-tecnica-conteudo" class="bg-slate-950 p-4 rounded-xl border border-slate-800"></div>
+            <div class="flex flex-col gap-2 pt-2">
+                <button onclick="abrirHelpdeskDireto()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-headset"></i> Abrir Chamado Técnico
                 </button>
-                <button onclick="fecharModalDetalhesCelular()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-medium text-slate-300">Fechar</button>
+                <button onclick="fecharModalDetalhesCelular()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">
+                    Fechar / Voltar ao Início
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA -->
+    <!-- MODAL MANUTENÇÃO -->
+    <div id="modal-manutencao" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <h3 id="modal-manutencao-titulo" class="text-sm font-bold text-white">Registar Manutenção</h3>
+            <input type="hidden" id="man-id">
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1">Equipamento</label>
+                    <select id="man-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Tipo de Manutenção</label>
+                    <select id="man-tipo" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Calibração">Calibração</option>
+                        <option value="Preventiva">Preventiva</option>
+                        <option value="Corretiva">Corretiva</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Data Realizada</label>
+                    <input type="date" id="man-data" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Próxima Manutenção (Previsão)</label>
+                    <input type="date" id="man-proxima" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Laudo / Observações</label>
+                    <input type="text" id="man-laudo" placeholder="Ex: laudo_tecnico.pdf" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button onclick="fecharModalManutencao()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button onclick="salvarManutencao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VALIDAÇÃO -->
+    <div id="modal-validacao" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <h3 id="modal-validacao-titulo" class="text-sm font-bold text-white">Registrar Validação</h3>
+            <input type="hidden" id="val-id">
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1">Equipamento</label>
+                    <select id="val-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Tipo de Validação</label>
+                    <input type="text" id="val-tipo" placeholder="Ex: Qualificação Térmica / Analítica" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Data da Validação</label>
+                    <input type="date" id="val-data" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Próxima Validação</label>
+                    <input type="date" id="val-proxima" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Responsável</label>
+                    <input type="text" id="val-responsavel" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button onclick="fecharModalValidacao()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button onclick="salvarValidacao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHAMADO -->
+    <div id="modal-chamado" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <h3 id="modal-chamado-titulo" class="text-sm font-bold text-white">Abrir Chamado Técnico</h3>
+            <input type="hidden" id="chamado-id">
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1">Equipamento</label>
+                    <select id="chamado-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Unidade / Setor</label>
+                    <select id="chamado-unidade" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Prioridade</label>
+                    <select id="chamado-prioridade" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média" selected>Média</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Urgente">Urgente</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Status</label>
+                    <select id="chamado-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Aberto">Aberto</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Resolvido">Resolvido</option>
+                        <option value="Fechado">Fechado</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Descrição do Problema</label>
+                    <textarea id="chamado-descricao" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-primary"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button onclick="fecharModalChamado()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button onclick="salvarChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL COMODATO -->
+    <div id="modal-comodato" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <h3 class="text-sm font-bold text-white">Adicionar Contrato de Comodato</h3>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1">Equipamento</label>
+                    <select id="com-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Fornecedor / Parceiro</label>
+                    <input type="text" id="com-fornecedor" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Vigência do Contrato</label>
+                    <input type="text" id="com-vigencia" placeholder="Ex: 2026 - 2028" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Custo Mensal (R$)</label>
+                    <input type="number" step="0.01" id="com-custo" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button onclick="fecharModalComodato()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button onclick="salvarComodato()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TRANSFERÊNCIA -->
+    <div id="modal-transferencia" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <h3 class="text-sm font-bold text-white">Registrar Transferência de Setor</h3>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1">Equipamento</label>
+                    <select id="tr-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Setor de Origem</label>
+                    <select id="tr-origem" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white" disabled></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Setor de Destino</label>
+                    <select id="tr-destino" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Motivo / Observação</label>
+                    <input type="text" id="tr-motivo" placeholder="Ex: Remanejamento operacional" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button onclick="fecharModalTransferencia()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button onclick="salvarTransferencia()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL USUÁRIO -->
+    <div id="modal-usuario" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <h3 id="modal-usuario-titulo" class="text-sm font-bold text-white">Novo Usuário</h3>
+            <input type="hidden" id="usr-edit-id">
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1">Nome Completo</label>
+                    <input type="text" id="usr-nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Usuário (Login)</label>
+                    <input type="text" id="usr-login" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Senha</label>
+                    <input type="password" id="usr-senha" placeholder="Deixe em branco para manter" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Perfil</label>
+                    <select id="usr-perfil" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Tecnico">Técnico</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Status de Pagamento</label>
+                    <select id="usr-status-pagamento" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inadimplente">Inadimplente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-3">
+                <button onclick="fecharModalUsuario()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button onclick="salvarUsuarioModal()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GERENCIADOR DE ETIQUETAS DINÂMICO -->
+    <div id="modal-qr" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden shadow-2xl">
+            
+            <div class="w-full md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-slate-800 space-y-5 overflow-y-auto max-h-[90vh]">
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-print text-primary"></i> Gerenciador de Etiqueta</h3>
+                    <p class="text-xs text-slate-400 mt-1">Configure o tamanho da bobina e das fontes antes de imprimir.</p>
+                </div>
+                
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block text-slate-300 mb-1 font-semibold">Tamanho da Etiqueta (Largura x Altura)</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="lbl-w" value="50" oninput="atualizarPreviewEtiqueta()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-center" title="Largura em mm">
+                            <span class="flex items-center text-slate-500">x</span>
+                            <input type="number" id="lbl-h" value="30" oninput="atualizarPreviewEtiqueta()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-center" title="Altura em mm">
+                            <span class="flex items-center text-slate-500">mm</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-3 border-t border-slate-800 pt-3">
+                        <div>
+                            <label class="block text-slate-300 mb-1 font-semibold">Fonte do Código (pt)</label>
+                            <input type="number" id="lbl-font-title" value="14" oninput="atualizarPreviewEtiqueta()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-center">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 mb-1 font-semibold">Fonte Textos (pt)</label>
+                            <input type="number" id="lbl-font-info" value="10" oninput="atualizarPreviewEtiqueta()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-center">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 border-b border-slate-800 pb-3">
+                        <label class="block text-slate-300 mb-1 font-semibold">Tamanho QR Code (mm)</label>
+                        <input type="number" id="lbl-qr-size" value="26" oninput="atualizarPreviewEtiqueta()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-center">
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-semibold mt-2">Informações a imprimir</label>
+                        <div class="space-y-2 bg-slate-800/50 p-3 rounded-xl border border-slate-800">
+                            <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white transition"><input type="checkbox" id="chk-cod" checked onchange="atualizarPreviewEtiqueta()" class="rounded border-slate-600 bg-slate-700"> Exibir Código</label>
+                            <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white transition"><input type="checkbox" id="chk-nome" checked onchange="atualizarPreviewEtiqueta()" class="rounded border-slate-600 bg-slate-700"> Exibir Nome do Ativo</label>
+                            <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white transition"><input type="checkbox" id="chk-setor" checked onchange="atualizarPreviewEtiqueta()" class="rounded border-slate-600 bg-slate-700"> Exibir Setor</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-4 border-t border-slate-800">
+                    <button onclick="fecharModalQR()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                    <button onclick="imprimirEtiquetaGerenciador()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20">
+                        <i class="fa-solid fa-print"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+
+            <div class="w-full md:w-1/2 p-6 bg-slate-950 flex flex-col items-center justify-center bg-checkered">
+                <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-4 bg-slate-900 px-3 py-1 rounded-full">Pré-visualização</span>
+                
+                <div id="preview-box" class="bg-white border-2 border-slate-300 shadow-2xl relative transition-all duration-300 flex items-center" style="width: 50mm; height: 30mm; box-sizing: border-box; padding: 2mm;">
+                    <div id="preview-qr" class="flex-shrink-0 flex items-center justify-center"></div>
+                    <div id="preview-textos" class="flex-1 text-black flex flex-col justify-center overflow-hidden pl-1 space-y-0.5" style="line-height: 1.1;"></div>
+                </div>
+                
+                <p class="text-[10px] text-slate-500 mt-4 text-center px-4">O layout se ajustará às dimensões definidas. Ao clicar em Imprimir, certifique-se de configurar as margens como "Nenhuma".</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÁREA DE IMPRESSÃO ISOLADA -->
+    <div id="area-impressao" class="hidden"></div>
+
     <script>
         const dadosCompletosPasteur = {
             equipamentos: [
@@ -1160,6 +1013,7 @@
         let firestoreDb = null;
         let usuarioLogado = null;
         let equipamentoAtualQR = null;
+        let equipamentoGerenciadorQR = null;
 
         let paginaAtual = 1;
         const itensPorPagina = 25;
@@ -1172,7 +1026,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             verificarSessao();
             await inicializarFirebase().catch(err => console.log('Firebase offline:', err));
-            document.getElementById('print-data-atual').innerText = new Date().toLocaleDateString('pt-BR');
             
             const urlParams = new URLSearchParams(window.location.search);
             const eqIdParam = urlParams.get('eq');
@@ -1438,12 +1291,8 @@
                             <td class="p-3.5 text-slate-300">${v.responsavel || '-'}</td>
                             <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${v.status}</span></td>
                             <td class="p-3.5 text-center space-x-2">
-                                <button onclick="editarValidacao('${v.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <button onclick="excluirValidacao('${v.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
+                                <button onclick="editarValidacao('${v.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="excluirValidacao('${v.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
@@ -1569,7 +1418,7 @@
                 const timeoutId = setTimeout(() => controller.abort(), 3500);
 
                 await fetch(`http://${eq.ip}`, { 
-                    method: 'HEAD',
+                    method: 'HEAD', 
                     mode: 'no-cors', 
                     signal: controller.signal 
                 });
@@ -1610,7 +1459,7 @@
         }
 
         function enviarWhatsAppManutencao(nomeEquip, detalhe) {
-            const mensagem = encodeURIComponent(`⚠️️ *Alerta Técnico - Laboratório Pasteur*\n\nEquipamento: *${nomeEquip}*\nOcorrência: *${detalhe}*.\nPor favor, verificar imediatamente.`);
+            const mensagem = encodeURIComponent(`⚠ *Alerta Técnico - Laboratório Pasteur*\n\nEquipamento: *${nomeEquip}*\nOcorrência: *${detalhe}*.\nPor favor, verificar imediatamente.`);
             window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
         }
 
@@ -1756,15 +1605,9 @@
                     
                     const acoesHtml = `
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick="abrirModalQR('${eq.id}')" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1" title="Gerenciar e Imprimir QR Code">
-                                <i class="fa-solid fa-qrcode"></i> QR
-                            </button>
-                            <button onclick="editarEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
-                                <i class="fa-solid fa-pen"></i> Editar
-                            </button>
-                            <button onclick="excluirEquipamento('${eq.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
-                                <i class="fa-solid fa-trash"></i> Excluir
-                            </button>
+                            <button onclick="abrirModalQR('${eq.id}')" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1" title="Gerenciar e Imprimir QR Code"><i class="fa-solid fa-qrcode"></i> QR</button>
+                            <button onclick="editarEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar"><i class="fa-solid fa-pen"></i> Editar</button>
+                            <button onclick="excluirEquipamento('${eq.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir"><i class="fa-solid fa-trash"></i> Excluir</button>
                         </div>
                     `;
 
@@ -1834,111 +1677,6 @@
             downloadAnchor.remove();
         }
 
-        async function importarArquivoTxt(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const conteudo = e.target.result;
-                const linhas = conteudo.split('\n');
-                let importados = 0;
-                for (let linha of linhas) {
-                    const l = linha.trim();
-                    if (!l || l.startsWith('#')) continue;
-                    const partes = l.split(/[;|	]/).map(p => p.trim());
-                    if (partes.length >= 2) {
-                        const novoEq = {
-                            id: String(Date.now() + Math.random()),
-                            codigo: partes[0] || 'REF-00',
-                            nome: partes[1].toUpperCase() || 'EQUIPAMENTO',
-                            tipo: partes[2] || (db.tipos ? db.tipos[0] : 'Geral'),
-                            setor: partes[3] || (db.setores ? db.setores[0] : 'Geral'),
-                            ip: partes[4] || '',
-                            serial: partes[5] || '0000',
-                            posse: partes[6] || 'Próprio',
-                            dataEntrada: partes[7] || new Date().toISOString().slice(0,10),
-                            dataSaida: partes[8] || '',
-                            status: partes[9] || 'Ativo',
-                            statusRede: 'Não testado'
-                        };
-                        novoEq._buscaNome = novoEq.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                        novoEq._buscaCodigo = novoEq.codigo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-
-                        if (firestoreDb) {
-                            await firestoreDb.collection('equipamentos').doc(novoEq.id).set(novoEq);
-                        }
-                        db.equipamentos.push(novoEq);
-                        importados++;
-                    }
-                }
-                db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-                alert(`${importados} equipamentos importados com sucesso!`);
-                document.getElementById('input-arquivo-txt').value = '';
-                filtrarTabela();
-                atualizarRelatorios();
-            };
-            reader.readAsText(file);
-        }
-
-        async function zerarBaseDados() {
-            if (usuarioLogado && usuarioLogado.perfil !== 'Admin') return alert('Acesso negado.');
-            if (confirm('Deseja zerar toda a base?')) {
-                if (firestoreDb) {
-                    const batch = firestoreDb.batch();
-                    const snap = await firestoreDb.collection('equipamentos').get();
-                    snap.docs.forEach(doc => batch.delete(doc.ref));
-                    await batch.commit();
-                }
-                db.equipamentos = []; db.manutencoes = []; db.validacoes = []; db.chamados = []; db.comodatos = []; db.transferencias = [];
-                filtrarTabela();
-                renderizarManutencao();
-                renderizarValidacao();
-                renderizarChamados();
-                renderizarFinanceiro();
-                renderizarRastreabilidade();
-                atualizarRelatorios();
-                alert('Base de equipamentos zerada!');
-            }
-        }
-
-        async function importarTextoEmMassa() {
-            const texto = document.getElementById('texto-importacao-massa').value.trim();
-            if (!texto) return;
-            for (let l of texto.split('\n')) {
-                if (l.trim()) {
-                    const novoEq = { id: String(Date.now() + Math.random()), codigo: 'IMP', nome: l.trim().substring(0,40), tipo: db.tipos[0], setor: db.setores[0], ip: '', serial: '0000', posse: 'Próprio', dataEntrada: new Date().toISOString().slice(0,10), dataSaida: '', status: 'Ativo', statusRede: 'Não testado' };
-                    novoEq._buscaNome = novoEq.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                    novoEq._buscaCodigo = novoEq.codigo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                    
-                    if (firestoreDb) {
-                        await firestoreDb.collection('equipamentos').doc(novoEq.id).set(novoEq);
-                    }
-                    db.equipamentos.push(novoEq);
-                }
-            }
-            db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-            alert('Importado com sucesso!');
-            filtrarTabela();
-            atualizarRelatorios();
-        }
-
-        async function carregarDadosPasteur() {
-            db.equipamentos = [...dadosCompletosPasteur.equipamentos].map(e => {
-                e._buscaNome = (e.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                return e;
-            });
-            if (firestoreDb) {
-                for (let e of db.equipamentos) {
-                    await firestoreDb.collection('equipamentos').doc(String(e.id)).set(e);
-                }
-            }
-            db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-            alert('Base padrão restaurada!');
-            filtrarTabela();
-            atualizarRelatorios();
-        }
-
         function renderizarManutencao() {
             const tbody = document.getElementById('tabela-manutencao-body');
             if (!tbody) return;
@@ -1958,15 +1696,9 @@
                             <td class="p-3.5 text-slate-400 font-mono text-xs">${m.laudo || '-'}</td>
                             <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${m.status}</span></td>
                             <td class="p-3.5 text-center space-x-2">
-                                <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'Calibração Programada: ${m.proxima || 'Pendente'}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Enviar Alerta WhatsApp">
-                                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
-                                </button>
-                                <button onclick="editarManutencao('${m.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <button onclick="excluirManutencao('${m.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
+                                <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'Calibração Programada: ${m.proxima || 'Pendente'}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+                                <button onclick="editarManutencao('${m.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="excluirManutencao('${m.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
@@ -2258,153 +1990,6 @@
             filtrarTabela();
         }
 
-        let equipamentoGerenciadorQR = null;
-
-        function abrirModalQR(id) {
-            equipamentoGerenciadorQR = db.equipamentos.find(e => e.id == id);
-            if (!equipamentoGerenciadorQR) return;
-            document.getElementById('modal-qr').classList.remove('hidden');
-            atualizarPreviewEtiqueta();
-        }
-
-        function fecharModalQR() { 
-            document.getElementById('modal-qr').classList.add('hidden'); 
-        }
-
-        function atualizarPreviewEtiqueta() {
-            if (!equipamentoGerenciadorQR) return;
-            const tamanho = document.getElementById('sel-tamanho-etiqueta').value;
-            const caixa = document.getElementById('preview-etiqueta-caixa');
-            const container = document.getElementById('qr-code-container');
-            container.innerHTML = '';
-
-            let largura = '210px';
-            let altura = '130px';
-            let tamanhoQR = 75; 
-
-            if (tamanho === '50x30') {
-                largura = '190px'; altura = '114px'; tamanhoQR = 65;
-            } else if (tamanho === '40x25') {
-                largura = '151px'; altura = '94px'; tamanhoQR = 50;
-            } else if (tamanho === '100x50') {
-                largura = '320px'; altura = '160px'; tamanhoQR = 105;
-            } else if (tamanho === 'a4') {
-                largura = '260px'; altura = '180px'; tamanhoQR = 90;
-            }
-
-            caixa.style.width = largura;
-            caixa.style.height = altura;
-
-            const urlBase = (db.config && db.config.urlPublica && db.config.urlPublica.trim() !== '') ? db.config.urlPublica.trim() : window.location.origin;
-            const linkQr = `${urlBase.endsWith('/') ? urlBase.slice(0, -1) : urlBase}?eq=${equipamentoGerenciadorQR.id}`;
-            
-            new QRCode(container, {
-                text: linkQr,
-                width: tamanhoQR,
-                height: tamanhoQR,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.M
-            });
-
-            document.getElementById('qr-info-detalhe').innerHTML = `
-                <div style="font-size: 8px; font-weight: bold; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #000000 !important;">[${equipamentoGerenciadorQR.codigo || '-'}] ${equipamentoGerenciadorQR.nome || '-'}</div>
-                <div style="font-size: 7px; line-height: 1.1; color: #000000 !important;">Setor: ${equipamentoGerenciadorQR.setor || '-'}</div>
-            `;
-        }
-
-        function imprimirEtiquetaPersonalizada() {
-            const tamanho = document.getElementById('sel-tamanho-etiqueta').value;
-            
-            let estiloDinamico = document.getElementById('estilo-impressao-dinamico');
-            if (!estiloDinamico) {
-                estiloDinamico = document.createElement('style');
-                estiloDinamico.id = 'estilo-impressao-dinamico';
-                document.head.appendChild(estiloDinamico);
-            }
-
-            let larguraMm = '50mm';
-            let alturaMm = '30mm';
-            if (tamanho === '40x25') { larguraMm = '40mm'; alturaMm = '25mm'; }
-            else if (tamanho === '100x50') { larguraMm = '100mm'; alturaMm = '50mm'; }
-            else if (tamanho === 'a4') { larguraMm = '210mm'; alturaMm = '297mm'; }
-
-            estiloDinamico.innerHTML = `
-                @media print {
-                    @page {
-                        size: ${larguraMm} ${alturaMm};
-                        margin: 0 !important;
-                    }
-                    body {
-                        background: #ffffff !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-                    body > * {
-                        display: none !important;
-                    }
-                    #modal-qr {
-                        display: block !important;
-                        position: static !important;
-                        background: white !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        box-shadow: none !important;
-                        border: none !important;
-                    }
-                    #modal-qr > div {
-                        max-width: 100% !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background: white !important;
-                        box-shadow: none !important;
-                        border: none !important;
-                    }
-                    #painel-controles-etiqueta,
-                    #modal-qr h3,
-                    #modal-qr button,
-                    #modal-qr .border-t {
-                        display: none !important;
-                    }
-                    #preview-etiqueta-caixa {
-                        display: flex !important;
-                        visibility: visible !important;
-                        position: absolute !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: 100% !important;
-                        height: 100% !important;
-                        margin: 0 !important;
-                        padding: 1mm !important;
-                        background: #ffffff !important;
-                        color: #000000 !important;
-                        border: none !important;
-                        box-shadow: none !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        flex-direction: column !important;
-                    }
-                    #preview-etiqueta-caixa * {
-                        visibility: visible !important;
-                        color: #000000 !important;
-                    }
-                    #qr-code-container canvas, 
-                    #qr-code-container img {
-                        display: block !important;
-                        visibility: visible !important;
-                        margin: 0 auto !important;
-                    }
-                }
-            `;
-
-            setTimeout(() => {
-                window.print();
-            }, 200);
-        }
-
         function exibirModalDetalhesCelular(eq) {
             equipamentoAtualQR = eq;
             const ciclo = calcularCiclo(eq.dataEntrada);
@@ -2605,33 +2190,15 @@
         }
         function editarEquipamento(id) { abrirModalEquipamento(id); }
 
-        function alternarVisibilidadeRelatorio() {
-            const container = document.getElementById('pdf-conteudo-exportavel');
-            const btn = document.getElementById('btn-toggle-relatorio');
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                btn.innerHTML = '<i class="fa-solid fa-chevron-up mr-1"></i> Ocultar Relatório Dinâmico';
-                renderizarRelatorioFiltrado();
-            } else {
-                container.classList.add('hidden');
-                btn.innerHTML = '<i class="fa-solid fa-chevron-down mr-1"></i> Abrir Relatório Dinâmico';
-            }
-        }
-
         function renderizarRelatorioFiltrado() {
             const setorFiltro = document.getElementById('rel-filtro-setor') ? document.getElementById('rel-filtro-setor').value : "";
             const tipoFiltro = document.getElementById('rel-filtro-tipo') ? document.getElementById('rel-filtro-tipo').value : "";
-            const posseFiltro = document.getElementById('rel-filtro-posse') ? document.getElementById('rel-filtro-posse').value : "";
-            const statusFiltro = document.getElementById('rel-filtro-status') ? document.getElementById('rel-filtro-status').value : "";
-
             const tabDetalhada = document.getElementById('tabela-relatorio-detalhado-body');
             if (!tabDetalhada) return;
 
             const filtrados = db.equipamentos.filter(eq => {
                 return (setorFiltro === "" || eq.setor === setorFiltro) &&
-                       (tipoFiltro === "" || eq.tipo === tipoFiltro) &&
-                       (posseFiltro === "" || (eq.posse || 'Próprio') === posseFiltro) &&
-                       (statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro);
+                       (tipoFiltro === "" || eq.tipo === tipoFiltro);
             });
 
             if (filtrados.length === 0) {
@@ -2647,7 +2214,7 @@
                             <td class="p-3.5 text-slate-300">${eq.tipo}</td>
                             <td class="p-3.5 text-slate-300">${eq.setor}</td>
                             <td class="p-3.5 text-slate-400 font-mono text-xs">${eq.serial || '-'}</td>
-                            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obderBadgePosse(eq.posse)}">${eq.posse || 'Próprio'}</span></td>
+                            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgePosse(eq.posse)}">${eq.posse || 'Próprio'}</span></td>
                             <td class="p-3.5 text-slate-300">${eq.dataEntrada || '-'}</td>
                             <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgeStatus(eq.status)}">${eq.status || 'Ativo'}</span></td>
                             <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${ciclo.classe}">${ciclo.texto}</span></td>
@@ -2659,16 +2226,8 @@
         }
 
         function imprimirRelatorio() {
-            const container = document.getElementById('pdf-conteudo-exportavel');
-            const estavaOculto = container.classList.contains('hidden');
-            if (estavaOculto) container.classList.remove('hidden');
-
             renderizarRelatorioFiltrado();
-
-            setTimeout(() => {
-                window.print();
-                if (estavaOculto) container.classList.add('hidden');
-            }, 300);
+            setTimeout(() => { window.print(); }, 300);
         }
 
         function atualizarRelatorios() {
@@ -2707,7 +2266,6 @@
                 }
             });
 
-            document.getElementById('relatorio-4-anos').innerText = alerta4Anos;
             document.getElementById('relatorio-5-anos').innerText = alerta5Anos;
             document.getElementById('relatorio-proprio').innerText = proprioCount;
             document.getElementById('relatorio-comodato').innerText = comodatoCount;
@@ -2767,8 +2325,6 @@
             }
         }
 
-        function obderBadgePosse(posse) { return obterBadgePosse(posse); }
-
         function aplicarConfiguracoes() {
             if (!db.config) return;
             document.getElementById('empresa-nome').innerText = db.config.empresa;
@@ -2779,30 +2335,9 @@
             if (document.getElementById('config-url-publica')) document.getElementById('config-url-publica').value = db.config.urlPublica || '';
             if (document.getElementById('config-gemini-key')) document.getElementById('config-gemini-key').value = db.config.geminiKey || '';
             if (document.getElementById('config-copyright')) document.getElementById('config-copyright').value = db.config.copyright || '';
-            
-            if (document.getElementById('config-cor') && db.config.cor) {
-                document.getElementById('config-cor').value = db.config.cor;
-            }
+            if (document.getElementById('config-cor') && db.config.cor) document.getElementById('config-cor').value = db.config.cor;
 
             document.getElementById('texto-copyright').innerText = db.config.copyright || '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.';
-
-            const logoContainer = document.getElementById('logo-container');
-            if (logoContainer) {
-                if (db.config.logo) {
-                    logoContainer.innerHTML = `<img src="${db.config.logo}" class="h-full w-full object-contain">`;
-                } else {
-                    logoContainer.innerHTML = `<i class="fa-solid fa-flask-vial text-xl"></i>`;
-                }
-            }
-
-            const loginLogoContainer = document.getElementById('login-logo-container');
-            if (loginLogoContainer) {
-                if (db.config.logo) {
-                    loginLogoContainer.innerHTML = `<img src="${db.config.logo}" class="h-full w-full object-contain rounded-xl">`;
-                } else {
-                    loginLogoContainer.innerHTML = `<i class="fa-solid fa-flask-vial text-2xl"></i>`;
-                }
-            }
         }
 
         async function salvarConfiguracoes() {
@@ -2832,11 +2367,10 @@
 
         async function chamarGeminiComRetry(promptText, maxTentativas = 3) {
             const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
-            if (!apiKey) throw new Error('Chave da API do Gemini não configurada.');
+            if (!apiKey) throw new Error('Chave da API do Gemini não configurada nas Configurações.');
             const { GoogleGenerativeAI } = await import("@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
-            
-            const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
             let tentativa = 0;
             while (tentativa < maxTentativas) {
@@ -2861,7 +2395,7 @@
             container.classList.remove('hidden');
             conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Consultando Gemini...</div>';
             try {
-                const prompt = `Analise este inventário com ${db.equipamentos.length} equipamentos e forneça um resumo executivo com recomendações. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
+                const prompt = `Analise este inventário com ${db.equipamentos.length} equipamentos e forneça um resumo executivo com recomendações. Responda em HTML limpo.`;
                 conteudo.innerHTML = await chamarGeminiComRetry(prompt);
             } catch (err) {
                 conteudo.innerHTML = `<span class="text-red-300">Erro: ${err.message}</span>`;
@@ -2874,27 +2408,120 @@
             container.classList.remove('hidden');
             conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Auditando...</div>';
             try {
-                const prompt = `Liste 3 sugestões de melhoria para um sistema de inventário laboratorial. Responda em HTML limpo (tags <h3>, <p>, <ul>, <li>, <strong>).`;
+                const prompt = `Liste 3 sugestões de melhoria para um sistema de inventário laboratorial. Responda em HTML limpo.`;
                 conteudo.innerHTML = await chamarGeminiComRetry(prompt);
             } catch (err) {
                 conteudo.innerHTML = `<span class="text-red-300">Erro: ${err.message}</span>`;
             }
         }
 
-        async function executarAlteracaoMassaIA() {
-            const comando = document.getElementById('ai-comando-massa').value.trim();
-            if (!comando) return alert('Digite um comando.');
-            const container = document.getElementById('resultado-ia-container');
-            const conteudo = document.getElementById('conteudo-ia-analise');
-            container.classList.remove('hidden');
-            conteudo.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Processando...</div>`;
-            try {
-                const prompt = `Responda à solicitação de gerenciamento: "${comando}". Responda em HTML limpo.`;
-                conteudo.innerHTML = await chamarGeminiComRetry(prompt);
-                document.getElementById('ai-comando-massa').value = '';
-            } catch (err) {
-                conteudo.innerHTML = `<span class="text-red-300">Erro: ${err.message}</span>`;
+        // ==============================================================
+        // LÓGICA DO GERENCIADOR DE ETIQUETAS E IMPRESSÃO DINÂMICA
+        // ==============================================================
+
+        function abrirModalQR(id) {
+            equipamentoGerenciadorQR = db.equipamentos.find(e => e.id == id);
+            if (!equipamentoGerenciadorQR) return;
+            document.getElementById('modal-qr').classList.remove('hidden');
+            atualizarPreviewEtiqueta();
+        }
+
+        function fecharModalQR() { 
+            document.getElementById('modal-qr').classList.add('hidden'); 
+        }
+
+        function atualizarPreviewEtiqueta() {
+            if (!equipamentoGerenciadorQR) return;
+            
+            const w = document.getElementById('lbl-w').value || 50;
+            const h = document.getElementById('lbl-h').value || 30;
+            
+            const fontSizeTitle = document.getElementById('lbl-font-title').value || 14;
+            const fontSizeInfo = document.getElementById('lbl-font-info').value || 10;
+            const qrSizeMm = document.getElementById('lbl-qr-size').value || 26;
+
+            const box = document.getElementById('preview-box');
+            box.style.width = `${w}mm`;
+            box.style.height = `${h}mm`;
+
+            const chkCod = document.getElementById('chk-cod').checked;
+            const chkNome = document.getElementById('chk-nome').checked;
+            const chkSetor = document.getElementById('chk-setor').checked;
+
+            const boxTextos = document.getElementById('preview-textos');
+            let htmlTextos = '';
+            
+            if (chkCod) htmlTextos += `<div style="font-size: ${fontSizeTitle}pt; font-weight: 900; font-family: Arial, sans-serif; word-wrap: break-word; line-height: 1.1; margin-bottom: 3px; color: #000;">${equipamentoGerenciadorQR.codigo || '-'}</div>`;
+            if (chkNome) htmlTextos += `<div style="font-size: ${fontSizeInfo}pt; font-weight: 700; font-family: Arial, sans-serif; word-wrap: break-word; line-height: 1.2; margin-bottom: 2px; color: #000;">${equipamentoGerenciadorQR.nome || '-'}</div>`;
+            if (chkSetor) htmlTextos += `<div style="font-size: ${fontSizeInfo}pt; font-weight: 600; font-family: Arial, sans-serif; word-wrap: break-word; line-height: 1.2; color: #000;">${equipamentoGerenciadorQR.setor || '-'}</div>`;
+            
+            boxTextos.innerHTML = htmlTextos;
+
+            const boxQr = document.getElementById('preview-qr');
+            boxQr.innerHTML = ''; 
+            boxQr.style.width = `${qrSizeMm}mm`;
+            boxQr.style.height = `${qrSizeMm}mm`;
+            
+            const sizeQrPx = qrSizeMm * 3.78; 
+            
+            const urlBase = (db.config && db.config.urlPublica && db.config.urlPublica.trim() !== '') ? db.config.urlPublica.trim() : window.location.origin;
+            const linkQr = `${urlBase.endsWith('/') ? urlBase.slice(0, -1) : urlBase}?eq=${equipamentoGerenciadorQR.id}`;
+            
+            new QRCode(boxQr, {
+                text: linkQr,
+                width: sizeQrPx,
+                height: sizeQrPx,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.L
+            });
+            
+            setTimeout(() => {
+                const img = boxQr.querySelector('img');
+                const canvas = boxQr.querySelector('canvas');
+                if(img) { img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'contain'; }
+                if(canvas) { canvas.style.width = '100%'; canvas.style.height = '100%'; }
+            }, 10);
+        }
+
+        function imprimirEtiquetaGerenciador() {
+            const w = document.getElementById('lbl-w').value || 50;
+            const h = document.getElementById('lbl-h').value || 30;
+            
+            let styleEl = document.getElementById('dynamic-print-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'dynamic-print-style';
+                document.head.appendChild(styleEl);
             }
+            
+            styleEl.innerHTML = `@page { size: ${w}mm ${h}mm; margin: 0; }`;
+
+            const previewOriginal = document.getElementById('preview-box');
+            const areaImpressao = document.getElementById('area-impressao');
+            
+            areaImpressao.innerHTML = '';
+            
+            const cloneBox = previewOriginal.cloneNode(true);
+            cloneBox.id = "etiqueta-final-print";
+            
+            cloneBox.className = ''; 
+            cloneBox.style.cssText = `
+                width: ${w}mm; 
+                height: ${h}mm; 
+                background: white; 
+                display: flex; 
+                align-items: center; 
+                box-sizing: border-box; 
+                padding: 2mm;
+                margin: 0;
+            `;
+
+            areaImpressao.appendChild(cloneBox);
+
+            setTimeout(() => {
+                window.print();
+            }, 300);
         }
     </script>
 </body>
