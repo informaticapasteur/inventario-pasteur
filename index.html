@@ -1637,22 +1637,48 @@
         function filtrarTabelaComDebounce() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => filtrarTabela(), 300); }
         
         function filtrarTabela() {
-            const busca = document.getElementById('filtro-busca').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-            const setorFiltro = document.getElementById('filtro-setor').value;
-            const posseFiltro = document.getElementById('filtro-posse').value;
-            const statusFiltro = document.getElementById('filtro-status').value;
+    const busca = document.getElementById('filtro-busca').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    const setorFiltro = document.getElementById('filtro-setor').value;
+    const posseFiltro = document.getElementById('filtro-posse').value;
+    const statusFiltro = document.getElementById('filtro-status').value;
+    const ordenacao = document.getElementById('filtro-ordenacao') ? document.getElementById('filtro-ordenacao').value : 'nome';
 
-            listaEquipamentosFiltradaCache = db.equipamentos.filter(eq => {
-                const bn = eq._buscaNome || (eq.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                const bc = eq._buscaCodigo || (eq.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                
-                return (bn.includes(busca) || bc.includes(busca)) &&
-                       (setorFiltro === "" || eq.setor === setorFiltro) &&
-                       (posseFiltro === "" || (eq.posse || 'Próprio') === posseFiltro) &&
-                       (statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro);
-            });
-            renderizarTabelaPaginada();
+    // 1. Filtragem
+    listaEquipamentosFiltradaCache = db.equipamentos.filter(eq => {
+        const bn = eq._buscaNome || (eq.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        const bc = eq._buscaCodigo || (eq.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        
+        return (bn.includes(busca) || bc.includes(busca)) &&
+               (setorFiltro === "" || eq.setor === setorFiltro) &&
+               (posseFiltro === "" || (eq.posse || 'Próprio') === posseFiltro) &&
+               (statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro);
+    });
+
+    // 2. Ordenação
+    listaEquipamentosFiltradaCache.sort((a, b) => {
+        if (ordenacao === 'codigo-num') {
+            // Extrai apenas os números do código (ex: "ESTERI-04" vira 4, "CENTRI-13" vira 13)
+            const numA = parseInt((a.codigo || '').replace(/\D/g, '')) || 0;
+            const numB = parseInt((b.codigo || '').replace(/\D/g, '')) || 0;
+            if (numA !== numB) return numA - numB;
+            // Se os números forem iguais, ordena pelo código completo alfabeticamente
+            return (a.codigo || '').localeCompare(b.codigo || '');
+        } 
+        else if (ordenacao === 'tipo') {
+            const tipoA = (a.tipo || '').toLowerCase();
+            const tipoB = (b.tipo || '').toLowerCase();
+            if (tipoA !== tipoB) return tipoA.localeCompare(tipoB);
+            return (a.nome || '').localeCompare(b.nome || '');
+        } 
+        else {
+            // Padrão: Nome do equipamento (A-Z)
+            return (a.nome || '').localeCompare(b.nome || '');
         }
+    });
+
+    paginaAtual = 1; // Reseta para a primeira página ao filtrar/ordenar
+    renderizarTabelaPaginada();
+}
 
         function exportarCSV() {
             let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;IP;Serial;Posse;Data Entrada;Data Saida;Status\n";
