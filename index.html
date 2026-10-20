@@ -2366,28 +2366,30 @@
         }
 
         async function chamarGeminiComRetry(promptText, maxTentativas = 3) {
-            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
-            if (!apiKey) throw new Error('Chave da API do Gemini não configurada nas Configurações.');
-            const { GoogleGenerativeAI } = await import("@google/generative-ai");
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
+    if (!apiKey) throw new Error('Chave da API do Gemini não configurada nas Configurações.');
+    
+    // Importa a biblioteca diretamente via CDN para rodar no navegador
+    const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-            let tentativa = 0;
-            while (tentativa < maxTentativas) {
-                try {
-                    const result = await model.generateContent(promptText);
-                    const response = await result.response;
-                    return response.text();
-                } catch (err) {
-                    tentativa++;
-                    if ((err.message.includes('503') || err.message.includes('high demand')) && tentativa < maxTentativas) {
-                        await new Promise(resolve => setTimeout(resolve, 2000 * tentativa));
-                        continue;
-                    }
-                    throw err;
-                }
+    let tentativa = 0;
+    while (tentativa < maxTentativas) {
+        try {
+            const result = await model.generateContent(promptText);
+            const response = await result.response;
+            return response.text();
+        } catch (err) {
+            tentativa++;
+            if ((err.message.includes('503') || err.message.includes('high demand')) && tentativa < maxTentativas) {
+                await new Promise(resolve => setTimeout(resolve, 2000 * tentativa));
+                continue;
             }
+            throw err;
         }
+    }
+}
 
         async function gerarEstudoIA() {
             const container = document.getElementById('resultado-ia-container');
