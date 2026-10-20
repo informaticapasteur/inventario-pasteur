@@ -1009,6 +1009,23 @@
             }
         }
 
+        function aplicarConfiguracoes() {
+            if (db.config) {
+                if (db.config.empresa) {
+                    document.getElementById('empresa-nome').innerText = db.config.empresa;
+                    const loginTitulo = document.getElementById('login-empresa-titulo');
+                    if (loginTitulo) loginTitulo.innerText = db.config.empresa;
+                }
+                if (db.config.copyright) {
+                    const copy = document.getElementById('texto-copyright');
+                    if (copy) copy.innerText = db.config.copyright;
+                }
+                if (db.config.cor) {
+                    document.documentElement.style.setProperty('--cor-primaria', db.config.cor);
+                }
+            }
+        }
+
         async function registrarAuditoria(acao, detalhes) {
             const log = {
                 id: String(Date.now()),
