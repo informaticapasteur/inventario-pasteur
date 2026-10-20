@@ -1573,18 +1573,37 @@
             return 'bg-purple-950/60 text-purple-300 border border-purple-800/60';
         }
 
-        function calcularCiclo(dataEntrada) {
-            if (!dataEntrada) return { texto: 'Sem data', classe: 'bg-slate-800 text-slate-300' };
-            const entrada = new Date(dataEntrada);
-            const hoje = new Date();
-            let anos = hoje.getFullYear() - entrada.getFullYear();
-            const m = hoje.getMonth() - entrada.getMonth();
-            if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
+        function calcularCiclo(eqId, dataEntrada) {
+    if (!dataEntrada) return { texto: 'Sem data', classe: 'bg-slate-800 text-slate-300' };
+    
+    const entrada = new Date(dataEntrada);
+    const hoje = new Date();
+    let anos = hoje.getFullYear() - entrada.getFullYear();
+    const m = hoje.getMonth() - entrada.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
 
-            if (anos >= 5) return { texto: `⚠️ ${anos} anos (Crítico)`, classe: 'bg-red-950/60 text-red-300 border border-red-800/60' };
-            else if (anos === 4) return { texto: `⚡ 4 anos (Revisão)`, classe: 'bg-amber-950/60 text-amber-300 border border-amber-800/60' };
-            else return { texto: `✅ ${anos} anos (Ativo)`, classe: 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' };
+    // Verifica se existe alguma manutenção/revisão cadastrada para este equipamento
+    const manutencoesEq = db.manutencoes.filter(m => m.equipamentoId == eqId);
+    const temManutencaoRecente = manutencoesEq.length > 0; // Você também pode refinar por data se preferir
+
+    if (anos >= 5) {
+        if (temManutencaoRecente) {
+            return { 
+                texto: `🛡️ ${anos} anos (Revisado / Seguro)`, 
+                classe: 'bg-sky-950/60 text-sky-300 border border-sky-800/60' 
+            };
+        } else {
+            return { 
+                texto: `⚠️ ${anos} anos (Crítico / Sem Revisão)`, 
+                classe: 'bg-red-950/60 text-red-300 border border-red-800/60' 
+            };
         }
+    } else if (anos === 4) {
+        return { texto: `⚡ 4 anos (Revisão)`, classe: 'bg-amber-950/60 text-amber-300 border border-amber-800/60' };
+    } else {
+        return { texto: `✅ ${anos} anos (Ativo)`, classe: 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' };
+    }
+}
 
         function renderizarTabelaPaginada() {
             const tbody = document.getElementById('tabela-equipamentos-body');
