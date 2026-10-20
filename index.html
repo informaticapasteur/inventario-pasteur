@@ -2369,10 +2369,11 @@
     const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
     if (!apiKey) throw new Error('Chave da API do Gemini não configurada nas Configurações.');
     
-    // Importa a biblioteca diretamente via CDN para rodar no navegador
     const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    // ATUALIZE AQUI: mude de "gemini-2.5-flash" para "gemini-3.8-flash"
+    const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
     let tentativa = 0;
     while (tentativa < maxTentativas) {
