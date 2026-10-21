@@ -29,8 +29,9 @@
     <style>
         :root { --cor-primaria: #0284c7; }
         
+        /* CORREÇÃO DEFINITIVA PARA IMPRESSORAS TÉRMICAS (vindas do index1) */
         @media print {
-            body > :not(#app-principal) {
+            body > :not(#area-impressao) {
                 display: none !important;
             }
             
@@ -38,28 +39,9 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
+                height: 100% !important;
+                overflow: hidden !important;
                 background-color: white !important;
-                color: black !important;
-            }
-
-            #app-principal {
-                background-color: white !important;
-            }
-
-            span {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            #pdf-conteudo-exportavel th {
-                background-color: #f1f5f9 !important;
-                color: #0f172a !important;
-                border-bottom: 2px solid #cbd5e1 !important;
-            }
-
-            #pdf-conteudo-exportavel td {
-                border-bottom: 1px solid #e2e8f0 !important;
-                color: #1e293b !important;
             }
             
             #area-impressao {
@@ -70,6 +52,13 @@
                 margin: 0 !important; 
                 padding: 0 !important;
                 border: none !important;
+                page-break-after: avoid !important;
+                page-break-before: avoid !important;
+            }
+            
+            #etiqueta-final-print {
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
             }
             
             .no-print { display: none !important; }
@@ -943,7 +932,7 @@
         </div>
     </div>
 
-    <!-- GERENCIADOR DE ETIQUETAS DINÂMICO -->
+    <!-- GERENCIADOR DE ETIQUETAS DINÂMICO (código otimizado do index1) -->
     <div id="modal-qr" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden shadow-2xl">
             <div class="w-full md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-slate-800 space-y-5 overflow-y-auto max-h-[90vh]">
@@ -2550,7 +2539,7 @@
             
             const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
             let tentativa = 0;
             while (tentativa < maxTentativas) {
@@ -2656,6 +2645,10 @@ Responda em formato HTML estilizado utilizando tags limpas (como <h4>, <p>, <ul>
                 conteudo.innerHTML = `<span class="text-red-300">Erro ao gerar plano de ação via IA: ${err.message}</span>`;
             }
         }
+
+        // ==============================================================
+        // LÓGICA DO GERENCIADOR DE ETIQUETAS E IMPRESSÃO (do index1.html)
+        // ==============================================================
 
         function abrirModalQR(id) {
             equipamentoGerenciadorQR = db.equipamentos.find(e => e.id == id);
