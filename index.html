@@ -29,9 +29,8 @@
     <style>
         :root { --cor-primaria: #0284c7; }
         
-        /* CORREÇÃO DEFINITIVA PARA IMPRESSORAS TÉRMICAS NÃO PULAREM ETIQUETAS */
         @media print {
-            body > :not(#area-impressao) {
+            body > :not(#app-principal) {
                 display: none !important;
             }
             
@@ -39,9 +38,28 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
-                height: 100% !important;
-                overflow: hidden !important;
                 background-color: white !important;
+                color: black !important;
+            }
+
+            #app-principal {
+                background-color: white !important;
+            }
+
+            span {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            #pdf-conteudo-exportavel th {
+                background-color: #f1f5f9 !important;
+                color: #0f172a !important;
+                border-bottom: 2px solid #cbd5e1 !important;
+            }
+
+            #pdf-conteudo-exportavel td {
+                border-bottom: 1px solid #e2e8f0 !important;
+                color: #1e293b !important;
             }
             
             #area-impressao {
@@ -52,13 +70,6 @@
                 margin: 0 !important; 
                 padding: 0 !important;
                 border: none !important;
-                page-break-after: avoid !important;
-                page-break-before: avoid !important;
-            }
-            
-            #etiqueta-final-print {
-                page-break-after: avoid !important;
-                page-break-inside: avoid !important;
             }
             
             .no-print { display: none !important; }
@@ -90,17 +101,17 @@
             <div id="form-login" class="space-y-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Usuário</label>
-                    <input type="text" id="login-usuario" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="Digite seu usuário">
+                    <input type="text" id="login-usuario" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="Digite seu usuário" value="admin">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Senha</label>
-                    <input type="password" id="login-senha" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="••••••••">
+                    <input type="password" id="login-senha" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="••••••••" value="admin">
                 </div>
-                <button onclick="fazerLogin()" class="w-full bg-primary hover:bg-sky-600 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-900/30">
+                <button type="button" onclick="fazerLogin()" class="w-full bg-primary hover:bg-sky-600 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-900/30 cursor-pointer">
                     Entrar no Sistema
                 </button>
                 <div class="text-center mt-4">
-                    <button onclick="alternarTelaAuth('cadastro')" class="text-xs text-sky-400 hover:underline">Não tem conta? Cadastre-se</button>
+                    <button type="button" onclick="alternarTelaAuth('cadastro')" class="text-xs text-sky-400 hover:underline cursor-pointer">Não tem conta? Cadastre-se</button>
                 </div>
             </div>
 
@@ -124,11 +135,11 @@
                         <option value="Admin">Administrador</option>
                     </select>
                 </div>
-                <button onclick="cadastrarNovoUsuario()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30">
+                <button type="button" onclick="cadastrarNovoUsuario()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30 cursor-pointer">
                     Concluir Cadastro
                 </button>
                 <div class="text-center mt-4">
-                    <button onclick="alternarTelaAuth('login')" class="text-xs text-sky-400 hover:underline">Já tem conta? Faça login</button>
+                    <button type="button" onclick="alternarTelaAuth('login')" class="text-xs text-sky-400 hover:underline cursor-pointer">Já tem conta? Faça login</button>
                 </div>
             </div>
         </div>
@@ -136,6 +147,22 @@
 
     <!-- APLICATIVO PRINCIPAL -->
     <div id="app-principal" class="hidden flex-col flex-1">
+        <!-- BANNER DE ALERTA GLOBAL PARA EQUIPAMENTOS CRÍTICOS -->
+        <div id="banner-alerta-criticos" class="hidden bg-red-950/80 border-b border-red-800/80 px-6 py-3 flex items-center justify-between no-print">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-red-900/60 text-red-300 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-red-200">Atenção: Equipamentos Críticos Pendentes de Revisão!</h4>
+                    <p id="texto-alerta-criticos" class="text-[11px] text-red-300">Existem ativos com 5 anos ou mais sem histórico de manutenção registrada.</p>
+                </div>
+            </div>
+            <button onclick="mudarAba('relatorios'); document.getElementById('rel-filtro-ciclo').value='critico'; renderizarRelatorioFiltrado();" class="bg-red-900 hover:bg-red-800 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-sm cursor-pointer">
+                Ver Equipamentos Críticos
+            </button>
+        </div>
+
         <header class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between no-print">
             <div class="flex items-center gap-3">
                 <div id="logo-container" class="w-10 h-10 bg-primary/20 text-primary rounded-xl flex items-center justify-center shadow-inner">
@@ -152,44 +179,44 @@
                     <span id="info-usuario-logado" class="text-xs font-semibold text-white">Usuário</span>
                     <span id="info-perfil-logado" class="text-[10px] text-sky-400 font-medium">Perfil</span>
                 </div>
-                <button onclick="fazerLogout()" class="bg-slate-800 hover:bg-red-950/60 hover:text-red-300 hover:border-red-800/60 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                <button onclick="fazerLogout()" class="bg-slate-800 hover:bg-red-950/60 hover:text-red-300 hover:border-red-800/60 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-power-off"></i> Sair
                 </button>
             </div>
         </header>
 
         <nav class="bg-slate-900/60 border-b border-slate-800 px-6 py-2 flex items-center gap-2 overflow-x-auto no-print">
-            <button onclick="mudarAba('inventario')" id="btn-inventario" class="px-3 py-2 text-xs font-medium rounded-xl bg-primary text-white transition shadow-sm">
+            <button onclick="mudarAba('inventario')" id="btn-inventario" class="px-3 py-2 text-xs font-medium rounded-xl bg-primary text-white transition shadow-sm cursor-pointer">
                 <i class="fa-solid fa-boxes-stacked mr-1.5"></i> Inventário
             </button>
-            <button onclick="mudarAba('monitoramento')" id="btn-monitoramento" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('monitoramento')" id="btn-monitoramento" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-network-wired mr-1.5"></i> Monitoramento IP
             </button>
-            <button onclick="mudarAba('manutencao')" id="btn-manutencao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('manutencao')" id="btn-manutencao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-screwdriver-wrench mr-1.5"></i> Manutenção
             </button>
-            <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('helpdesk')" id="btn-helpdesk" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-headset mr-1.5"></i> Helpdesk
             </button>
-            <button onclick="mudarAba('validacao')" id="btn-validacao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('validacao')" id="btn-validacao" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-shield-halved mr-1.5"></i> Validação
             </button>
-            <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> Financeiro
             </button>
-            <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('rastreabilidade')" id="btn-rastreabilidade" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-route mr-1.5"></i> Rastreabilidade
             </button>
-            <button onclick="mudarAba('setores')" id="btn-setores" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('setores')" id="btn-setores" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-building mr-1.5"></i> Setores / Tipos
             </button>
-            <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
                 <i class="fa-solid fa-chart-pie mr-1.5"></i> Relatórios & IA
             </button>
-            <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only">
+            <button onclick="mudarAba('usuarios')" id="btn-usuarios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only cursor-pointer">
                 <i class="fa-solid fa-users mr-1.5"></i> Usuários
             </button>
-            <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only">
+            <button onclick="mudarAba('configuracoes')" id="btn-configuracoes" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition admin-only cursor-pointer">
                 <i class="fa-solid fa-gear mr-1.5"></i> Configurações
             </button>
         </nav>
@@ -222,13 +249,13 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-                        <button onclick="abrirModalEquipamento()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-sky-900/30 write-allowed">
+                        <button onclick="abrirModalEquipamento()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-sky-900/30 write-allowed cursor-pointer">
                             <i class="fa-solid fa-plus"></i> Novo Equipamento
                         </button>
-                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition" title="Exportar CSV">
+                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer" title="Exportar CSV">
                             <i class="fa-solid fa-file-excel"></i>
                         </button>
-                        <button onclick="fazerBackup()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition" title="Backup JSON">
+                        <button onclick="fazerBackup()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer" title="Backup JSON">
                             <i class="fa-solid fa-download"></i>
                         </button>
                     </div>
@@ -256,9 +283,9 @@
                     <div class="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 no-print">
                         <span id="paginacao-info">Mostrando 0 itens</span>
                         <div class="flex items-center gap-2">
-                            <button id="btn-prev-pagina" onclick="mudarPagina(-1)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 disabled:opacity-40 transition">Anterior</button>
+                            <button id="btn-prev-pagina" onclick="mudarPagina(-1)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 disabled:opacity-40 transition cursor-pointer">Anterior</button>
                             <span id="paginacao-numeracao" class="px-2 font-mono font-semibold text-white">1 / 1</span>
-                            <button id="btn-next-pagina" onclick="mudarPagina(1)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 disabled:opacity-40 transition">Próxima</button>
+                            <button id="btn-next-pagina" onclick="mudarPagina(1)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 disabled:opacity-40 transition cursor-pointer">Próxima</button>
                         </div>
                     </div>
                 </div>
@@ -270,7 +297,7 @@
                         <h2 class="text-sm font-bold text-white">Monitoramento de Rede e IPs</h2>
                         <p class="text-xs text-slate-400">Verifique a conectividade dos equipamentos em tempo real.</p>
                     </div>
-                    <button onclick="verificarTodosIPs()" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                    <button onclick="verificarTodosIPs()" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-rotate"></i> Testar Todos os IPs
                     </button>
                 </div>
@@ -297,7 +324,7 @@
                         <h2 class="text-sm font-bold text-white">Calibração e Manutenção Preventiva</h2>
                         <p class="text-xs text-slate-400">Controle laudos, calibrações e manutenções programadas.</p>
                     </div>
-                    <button onclick="abrirModalManutencao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md write-allowed">
+                    <button onclick="abrirModalManutencao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md write-allowed cursor-pointer">
                         <i class="fa-solid fa-plus"></i> Registrar Manutenção
                     </button>
                 </div>
@@ -325,7 +352,7 @@
                         <h2 class="text-sm font-bold text-white">Central de Chamados e Suporte Técnico</h2>
                         <p class="text-xs text-slate-400">Acompanhe solicitações e ocorrências nas unidades.</p>
                     </div>
-                    <button onclick="abrirModalChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md">
+                    <button onclick="abrirModalChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md cursor-pointer">
                         <i class="fa-solid fa-plus"></i> Abrir Chamado
                     </button>
                 </div>
@@ -353,7 +380,7 @@
                         <h2 class="text-sm font-bold text-white">Qualificação e Validação de Equipamentos</h2>
                         <p class="text-xs text-slate-400">Controle de qualificação térmica, analítica e de sistemas.</p>
                     </div>
-                    <button onclick="abrirModalValidacao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md write-allowed">
+                    <button onclick="abrirModalValidacao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md write-allowed cursor-pointer">
                         <i class="fa-solid fa-plus"></i> Nova Validação
                     </button>
                 </div>
@@ -388,7 +415,7 @@
                 </div>
                 <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
                     <h2 class="text-sm font-bold text-white">Contratos e Custos de Comodato</h2>
-                    <button onclick="abrirModalComodato()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition write-allowed">
+                    <button onclick="abrirModalComodato()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition write-allowed cursor-pointer">
                         <i class="fa-solid fa-plus mr-1"></i> Adicionar Comodato
                     </button>
                 </div>
@@ -412,7 +439,7 @@
                         <h2 class="text-sm font-bold text-white">Rastreabilidade e Histórico de Transferências</h2>
                         <p class="text-xs text-slate-400">Histórico de movimentações entre setores e unidades.</p>
                     </div>
-                    <button onclick="abrirModalTransferencia()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition write-allowed">
+                    <button onclick="abrirModalTransferencia()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition write-allowed cursor-pointer">
                         <i class="fa-solid fa-right-left mr-1"></i> Registrar Transferência
                     </button>
                 </div>
@@ -438,7 +465,7 @@
                         <h2 class="text-sm font-bold text-white">Gerenciar Setores</h2>
                         <div class="flex gap-2">
                             <input type="text" id="novo-setor-nome" placeholder="Nome do novo setor..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
-                            <button onclick="salvarSetor()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Adicionar</button>
+                            <button onclick="salvarSetor()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Adicionar</button>
                         </div>
                         <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl">
                             <table class="w-full text-left border-collapse"><tbody id="tabela-setores-body" class="divide-y divide-slate-800"></tbody></table>
@@ -448,7 +475,7 @@
                         <h2 class="text-sm font-bold text-white">Gerenciar Tipos de Equipamentos</h2>
                         <div class="flex gap-2">
                             <input type="text" id="novo-tipo-nome" placeholder="Nome do novo tipo..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
-                            <button onclick="salvarTipo()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Adicionar</button>
+                            <button onclick="salvarTipo()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Adicionar</button>
                         </div>
                         <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl">
                             <table class="w-full text-left border-collapse"><tbody id="tabela-tipos-body" class="divide-y divide-slate-800"></tbody></table>
@@ -458,22 +485,31 @@
             </section>
 
             <section id="aba-relatorios" class="hidden space-y-6">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                        <span class="text-xs text-slate-400 font-medium">Total de Equipamentos</span>
-                        <h3 id="relatorio-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                <!-- CARDS DE RESUMO COM INDICADORES DE REVISADOS E CRÍTICOS -->
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-[11px] text-slate-400 font-medium">Total de Equipamentos</span>
+                        <h3 id="relatorio-total" class="text-xl font-bold text-white mt-1">0</h3>
                     </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                        <span class="text-xs text-slate-400 font-medium">Ativos Próprios</span>
-                        <h3 id="relatorio-proprio" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-[11px] text-slate-400 font-medium">Ativos Próprios</span>
+                        <h3 id="relatorio-proprio" class="text-xl font-bold text-emerald-400 mt-1">0</h3>
                     </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                        <span class="text-xs text-slate-400 font-medium">Em Comodato</span>
-                        <h3 id="relatorio-comodato" class="text-2xl font-bold text-sky-400 mt-1">0</h3>
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-[11px] text-slate-400 font-medium">Em Comodato</span>
+                        <h3 id="relatorio-comodato" class="text-xl font-bold text-sky-400 mt-1">0</h3>
                     </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                        <span class="text-xs text-slate-400 font-medium">Ciclo Crítico (≥5 Anos)</span>
-                        <h3 id="relatorio-5-anos" class="text-2xl font-bold text-red-400 mt-1">0</h3>
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-[11px] text-slate-400 font-medium">🛡️ Revisados (≥5 anos)</span>
+                        <h3 id="relatorio-revisados" class="text-xl font-bold text-sky-300 mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-[11px] text-slate-400 font-medium">⚠️ Críticos (Sem Revisão)</span>
+                        <h3 id="relatorio-criticos" class="text-xl font-bold text-red-400 mt-1">0</h3>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl">
+                        <span class="text-[11px] text-slate-400 font-medium">⚡ Ciclo Crítico (≥5 Anos)</span>
+                        <h3 id="relatorio-5-anos" class="text-xl font-bold text-amber-400 mt-1">0</h3>
                     </div>
                 </div>
 
@@ -491,8 +527,11 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 no-print">
                     <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Assistente Inteligente (Gemini)</h2>
                     <div class="flex flex-wrap gap-3">
-                        <button onclick="gerarEstudoIA()" class="bg-amber-950/60 text-amber-300 border border-amber-800/60 hover:bg-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition">Gerar Relatório Executivo</button>
-                        <button onclick="auditarESugerirRecursosIA()" class="bg-amber-950/60 text-amber-300 border border-amber-800/60 hover:bg-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition">Auditoria de Inventário</button>
+                        <button onclick="gerarEstudoIA()" class="bg-amber-950/60 text-amber-300 border border-amber-800/60 hover:bg-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Gerar Relatório Executivo</button>
+                        <button onclick="auditarESugerirRecursosIA()" class="bg-amber-950/60 text-amber-300 border border-amber-800/60 hover:bg-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Auditoria de Inventário</button>
+                        <button onclick="gerarPlanoAcaoCriticosIA()" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-file-shield"></i> Gerar Plano de Ação (Equipamentos Críticos)
+                        </button>
                     </div>
                     <div id="resultado-ia-container" class="hidden bg-slate-950 border border-slate-800 p-4 rounded-xl text-xs text-slate-200">
                         <div id="conteudo-ia-analise"></div>
@@ -502,14 +541,22 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                         <h2 class="text-sm font-bold text-white">Relatório Dinâmico Filtrado</h2>
-                        <div class="flex items-center gap-3 no-print">
+                        <div class="flex flex-wrap items-center gap-3 no-print">
                             <select id="rel-filtro-setor" onchange="renderizarRelatorioFiltrado()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                                 <option value="">Todos os Setores</option>
                             </select>
                             <select id="rel-filtro-tipo" onchange="renderizarRelatorioFiltrado()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                                 <option value="">Todos os Tipos</option>
                             </select>
-                            <button onclick="imprimirRelatorio()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                            <!-- FILTRO DE CICLO DE VIDA NOS RELATÓRIOS -->
+                            <select id="rel-filtro-ciclo" onchange="renderizarRelatorioFiltrado()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <option value="">Todos os Ciclos</option>
+                                <option value="revisado">🛡️ Revisados / Seguros (≥5 anos)</option>
+                                <option value="critico">⚠️ Críticos / Sem Revisão (≥5 anos)</option>
+                                <option value="atencao">⚡ 4 Anos (Atenção)</option>
+                                <option value="normal">✅ Ativos (<4 anos)</option>
+                            </select>
+                            <button onclick="imprimirRelatorio()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-print"></i> Imprimir PDF
                             </button>
                         </div>
@@ -542,7 +589,7 @@
                         <h2 class="text-sm font-bold text-white">Gerenciamento de Usuários e Perfis</h2>
                         <p class="text-xs text-slate-400">Controle permissões e status de acesso ao sistema.</p>
                     </div>
-                    <button onclick="abrirModalUsuario()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md">
+                    <button onclick="abrirModalUsuario()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md cursor-pointer">
                         <i class="fa-solid fa-plus mr-1"></i> Novo Usuário
                     </button>
                 </div>
@@ -590,7 +637,7 @@
                             <label class="block text-slate-300 font-medium mb-1">Texto de Rodapé (Copyright)</label>
                             <input type="text" id="config-copyright" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary">
                         </div>
-                        <button onclick="salvarConfiguracoes()" class="bg-primary hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-semibold transition shadow-md">
+                        <button onclick="salvarConfiguracoes()" class="bg-primary hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-semibold transition shadow-md cursor-pointer">
                             Salvar Alterações
                         </button>
                     </div>
@@ -660,8 +707,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-3">
-                <button onclick="fecharModalEquipamento()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="salvarEquipamento()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                <button onclick="fecharModalEquipamento()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarEquipamento()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Salvar</button>
             </div>
         </div>
     </div>
@@ -672,10 +719,10 @@
             <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-circle-info text-primary"></i> Ficha Técnica do Ativo</h3>
             <div id="ficha-tecnica-conteudo" class="bg-slate-950 p-4 rounded-xl border border-slate-800"></div>
             <div class="flex flex-col gap-2 pt-2">
-                <button onclick="abrirHelpdeskDireto()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                <button onclick="abrirHelpdeskDireto()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-headset"></i> Abrir Chamado Técnico
                 </button>
-                <button onclick="fecharModalDetalhesCelular()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">
+                <button onclick="fecharModalDetalhesCelular()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer">
                     Fechar / Voltar ao Início
                 </button>
             </div>
@@ -714,8 +761,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-3">
-                <button onclick="fecharModalManutencao()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="salvarManutencao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                <button onclick="fecharModalManutencao()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarManutencao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Salvar</button>
             </div>
         </div>
     </div>
@@ -748,8 +795,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-3">
-                <button onclick="fecharModalValidacao()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="salvarValidacao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                <button onclick="fecharModalValidacao()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarValidacao()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Salvar</button>
             </div>
         </div>
     </div>
@@ -792,8 +839,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-3">
-                <button onclick="fecharModalChamado()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="salvarChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                <button onclick="fecharModalChamado()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Salvar</button>
             </div>
         </div>
     </div>
@@ -821,8 +868,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-3">
-                <button onclick="fecharModalComodato()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="salvarComodato()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                <button onclick="fecharModalComodato()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarComodato()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Salvar</button>
             </div>
         </div>
     </div>
@@ -850,8 +897,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-3">
-                <button onclick="fecharModalTransferencia()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="salvarTransferencia()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Confirmar</button>
+                <button onclick="fecharModalTransferencia()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarTransferencia()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Confirmar</button>
             </div>
         </div>
     </div>
@@ -890,8 +937,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-3">
-                <button onclick="fecharModalUsuario()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="salvarUsuarioModal()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                <button onclick="fecharModalUsuario()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarUsuarioModal()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Salvar</button>
             </div>
         </div>
     </div>
@@ -899,7 +946,6 @@
     <!-- GERENCIADOR DE ETIQUETAS DINÂMICO -->
     <div id="modal-qr" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden shadow-2xl">
-            
             <div class="w-full md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-slate-800 space-y-5 overflow-y-auto max-h-[90vh]">
                 <div>
                     <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-print text-primary"></i> Gerenciador de Etiqueta</h3>
@@ -944,8 +990,8 @@
                 </div>
 
                 <div class="flex gap-2 pt-4 border-t border-slate-800">
-                    <button onclick="fecharModalQR()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                    <button onclick="imprimirEtiquetaGerenciador()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20">
+                    <button onclick="fecharModalQR()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                    <button onclick="imprimirEtiquetaGerenciador()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20 cursor-pointer">
                         <i class="fa-solid fa-print"></i> Imprimir
                     </button>
                 </div>
@@ -1029,8 +1075,9 @@
         let chartPosseInstance = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            inicializarDadosLocais();
             verificarSessao();
-            await inicializarFirebase().catch(err => console.log('Firebase offline:', err));
+            await inicializarFirebase().catch(err => console.log('Firebase offline, usando dados locais:', err));
             
             const urlParams = new URLSearchParams(window.location.search);
             const eqIdParam = urlParams.get('eq');
@@ -1041,6 +1088,32 @@
                 }, 800);
             }
         });
+
+        function inicializarDadosLocais() {
+            db.setores = [...dadosCompletosPasteur.setores];
+            db.tipos = [...dadosCompletosPasteur.tipos];
+            db.usuarios = [...dadosCompletosPasteur.usuarios];
+            db.config = { ...dadosCompletosPasteur.config };
+            db.equipamentos = dadosCompletosPasteur.equipamentos.map(e => {
+                e._buscaNome = (e.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                return e;
+            });
+            aplicarConfiguracoes();
+            filtrarTabela();
+            renderizarMonitoramento();
+            renderizarManutencao();
+            renderizarValidacao();
+            renderizarChamados();
+            renderizarFinanceiro();
+            renderizarRastreabilidade();
+            renderizarSetores();
+            renderizarTipos();
+            renderizarUsuarios();
+            atualizarRelatorios();
+            popularSelects();
+            verificarAlertaCriticos();
+        }
 
         async function inicializarFirebase() {
             if (typeof firebase === 'undefined') return;
@@ -1076,49 +1149,34 @@
                     db.setores = data.setores || dadosCompletosPasteur.setores;
                     db.tipos = data.tipos || dadosCompletosPasteur.tipos;
                     db.config = { ...dadosCompletosPasteur.config, ...(data.config || {}) };
-                } else {
-                    db.setores = dadosCompletosPasteur.setores;
-                    db.tipos = dadosCompletosPasteur.tipos;
-                    await salvarConfiguracoesFirebase();
                 }
 
-                db.equipamentos = eqSnap.docs.map(doc => {
+                const eqsCloud = eqSnap.docs.map(doc => {
                     const data = doc.data();
                     data._buscaNome = (data.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
                     data._buscaCodigo = (data.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
                     return { id: doc.id, ...data };
                 });
 
-                if (db.equipamentos.length === 0) {
-                    const promessas = [];
-                    for (let e of dadosCompletosPasteur.equipamentos) {
-                        e._buscaNome = (e.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                        e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                        promessas.push(firestoreDb.collection('equipamentos').doc(String(e.id)).set(e));
-                    }
-                    await Promise.all(promessas);
-                    db.equipamentos = [...dadosCompletosPasteur.equipamentos].map(e => {
-                        e._buscaNome = (e.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                        e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-                        return e;
-                    });
-                }
+                if (eqsCloud.length > 0) db.equipamentos = eqsCloud;
+                
+                const manCloud = manSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (manCloud.length > 0) db.manutencoes = manCloud;
 
-                db.manutencoes = manSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                db.validacoes = valSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                db.chamados = chamSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                db.comodatos = comSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                db.transferencias = trSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                db.usuarios = usrSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const valCloud = valSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (valCloud.length > 0) db.validacoes = valCloud;
 
-                if (db.usuarios.length === 0) {
-                    const promessasUsr = [];
-                    for (let u of dadosCompletosPasteur.usuarios) {
-                        promessasUsr.push(firestoreDb.collection('usuarios').doc(u.usuario).set(u));
-                    }
-                    await Promise.all(promessasUsr);
-                    db.usuarios = [...dadosCompletosPasteur.usuarios];
-                }
+                const chamCloud = chamSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (chamCloud.length > 0) db.chamados = chamCloud;
+
+                const comCloud = comSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (comCloud.length > 0) db.comodatos = comCloud;
+
+                const trCloud = trSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (trCloud.length > 0) db.transferencias = trCloud;
+
+                const usrCloud = usrSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (usrCloud.length > 0) db.usuarios = usrCloud;
 
                 db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
 
@@ -1135,6 +1193,7 @@
                 renderizarUsuarios();
                 atualizarRelatorios();
                 popularSelects();
+                verificarAlertaCriticos();
 
             } catch (e) {
                 console.error('Erro ao carregar coleções do Firebase:', e);
@@ -1186,9 +1245,14 @@
         }
 
         function fazerLogin() {
-            const u = document.getElementById('login-usuario').value.trim();
-            const s = document.getElementById('login-senha').value.trim();
+            const uInput = document.getElementById('login-usuario');
+            const sInput = document.getElementById('login-senha');
             const erroDiv = document.getElementById('login-erro');
+
+            if (!uInput || !sInput) return;
+
+            const u = uInput.value.trim();
+            const s = sInput.value.trim();
 
             const userFound = db.usuarios.find(usr => usr.usuario === u && usr.senha === s);
 
@@ -1261,12 +1325,12 @@
                 const el = document.getElementById(`aba-${a}`);
                 const btn = document.getElementById(`btn-${a}`);
                 if (el) el.classList.add('hidden');
-                if (btn) btn.className = "px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition";
+                if (btn) btn.className = "px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer";
             });
             const abaEl = document.getElementById(`aba-${aba}`);
             const btnEl = document.getElementById(`btn-${aba}`);
             if (abaEl) abaEl.classList.remove('hidden');
-            if (btnEl) btnEl.className = "px-3 py-2 text-xs font-medium rounded-xl bg-primary text-white transition shadow-sm";
+            if (btnEl) btnEl.className = "px-3 py-2 text-xs font-medium rounded-xl bg-primary text-white transition shadow-sm cursor-pointer";
             
             if (aba === 'monitoramento') {
                 renderizarMonitoramento();
@@ -1296,8 +1360,8 @@
                             <td class="p-3.5 text-slate-300">${v.responsavel || '-'}</td>
                             <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${v.status}</span></td>
                             <td class="p-3.5 text-center space-x-2">
-                                <button onclick="editarValidacao('${v.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="excluirValidacao('${v.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="editarValidacao('${v.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="excluirValidacao('${v.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
@@ -1396,10 +1460,10 @@
                         <td class="p-3.5 font-mono text-xs text-sky-400">${ip}</td>
                         <td class="p-3.5"><span id="badge-rede-${eq.id}" class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgeRede}">${statusRede}</span></td>
                         <td class="p-3.5 text-center space-x-2">
-                            <button onclick="testarConexaoEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-3 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5">
+                            <button onclick="testarConexaoEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-3 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-satellite-dish"></i> Testar IP
                             </button>
-                            <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'IP: ${ip} - Status: ${statusRede}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition" title="Enviar Alerta WhatsApp">
+                            <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'IP: ${ip} - Status: ${statusRede}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer" title="Enviar Alerta WhatsApp">
                                 <i class="fa-brands fa-whatsapp"></i>
                             </button>
                         </td>
@@ -1482,8 +1546,8 @@
                         <td class="p-3.5"><span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-950/60 text-indigo-300 border border-indigo-800/60">${usr.perfil}</span></td>
                         <td class="p-3.5"><span class="px-3.5 py-1 rounded-full text-xs font-semibold ${badgePag}">${statusPag}</span></td>
                         <td class="p-3.5 text-center space-x-3">
-                            <button onclick="abrirModalUsuario('${usr.id}')" class="text-sky-400 hover:underline text-xs"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
-                            ${db.usuarios.length > 1 ? `<button onclick="excluirUsuario('${usr.id}')" class="text-red-400 hover:underline text-xs"><i class="fa-solid fa-trash mr-1"></i>Remover</button>` : ''}
+                            <button onclick="abrirModalUsuario('${usr.id}')" class="text-sky-400 hover:underline text-xs cursor-pointer"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
+                            ${db.usuarios.length > 1 ? `<button onclick="excluirUsuario('${usr.id}')" class="text-red-400 hover:underline text-xs cursor-pointer"><i class="fa-solid fa-trash mr-1"></i>Remover</button>` : ''}
                         </td>
                     </tr>
                 `;
@@ -1574,36 +1638,67 @@
         }
 
         function calcularCiclo(eqId, dataEntrada) {
-    if (!dataEntrada) return { texto: 'Sem data', classe: 'bg-slate-800 text-slate-300' };
-    
-    const entrada = new Date(dataEntrada);
-    const hoje = new Date();
-    let anos = hoje.getFullYear() - entrada.getFullYear();
-    const m = hoje.getMonth() - entrada.getMonth();
-    if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
+            if (!dataEntrada) return { texto: 'Sem data', classe: 'bg-slate-800 text-slate-300' };
+            
+            const entrada = new Date(dataEntrada);
+            const hoje = new Date();
+            let anos = hoje.getFullYear() - entrada.getFullYear();
+            const m = hoje.getMonth() - entrada.getMonth();
+            if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
 
-    // Verifica se existe alguma manutenção/revisão cadastrada para este equipamento
-    const manutencoesEq = db.manutencoes.filter(m => m.equipamentoId == eqId);
-    const temManutencaoRecente = manutencoesEq.length > 0; // Você também pode refinar por data se preferir
+            const temManutencao = db.manutencoes && db.manutencoes.some(m => m.equipamentoId == eqId);
 
-    if (anos >= 5) {
-        if (temManutencaoRecente) {
-            return { 
-                texto: `🛡️ ${anos} anos (Revisado / Seguro)`, 
-                classe: 'bg-sky-950/60 text-sky-300 border border-sky-800/60' 
-            };
-        } else {
-            return { 
-                texto: `⚠️ ${anos} anos (Crítico / Sem Revisão)`, 
-                classe: 'bg-red-950/60 text-red-300 border border-red-800/60' 
-            };
+            if (anos >= 5) {
+                if (temManutencao) {
+                    return { 
+                        texto: `🛡️ ${anos} anos (Revisado / Seguro)`, 
+                        classe: 'bg-sky-950/60 text-sky-300 border border-sky-800/60' 
+                    };
+                } else {
+                    return { 
+                        texto: `⚠️ ${anos} anos (Crítico / Sem Revisão)`, 
+                        classe: 'bg-red-950/60 text-red-300 border border-red-800/60' 
+                    };
+                }
+            } else if (anos === 4) {
+                return { texto: `⚡ 4 anos (Revisão)`, classe: 'bg-amber-950/60 text-amber-300 border border-amber-800/60' };
+            } else {
+                return { texto: `✅ ${anos} anos (Ativo)`, classe: 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' };
+            }
         }
-    } else if (anos === 4) {
-        return { texto: `⚡ 4 anos (Revisão)`, classe: 'bg-amber-950/60 text-amber-300 border border-amber-800/60' };
-    } else {
-        return { texto: `✅ ${anos} anos (Ativo)`, classe: 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' };
-    }
-}
+
+        function verificarAlertaCriticos() {
+            const banner = document.getElementById('banner-alerta-criticos');
+            const textoBanner = document.getElementById('texto-alerta-criticos');
+            if (!banner || !textoBanner) return;
+
+            let criticosCount = 0;
+            db.equipamentos.forEach(eq => {
+                if (eq.dataEntrada) {
+                    const entrada = new Date(eq.dataEntrada);
+                    const hoje = new Date();
+                    let anos = hoje.getFullYear() - entrada.getFullYear();
+                    const m = hoje.getMonth() - entrada.getMonth();
+                    if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
+
+                    if (anos >= 5) {
+                        const cicloObj = calcularCiclo(eq.id, eq.dataEntrada);
+                        if (!cicloObj.texto.includes("Revisado")) {
+                            criticosCount++;
+                        }
+                    }
+                }
+            });
+
+            if (criticosCount > 0) {
+                textoBanner.innerText = `Existem ${criticosCount} ativo(s) com 5 anos ou mais sem histórico de manutenção registrada.`;
+                banner.classList.remove('hidden');
+                banner.style.display = 'flex';
+            } else {
+                banner.classList.add('hidden');
+                banner.style.display = 'none';
+            }
+        }
 
         function renderizarTabelaPaginada() {
             const tbody = document.getElementById('tabela-equipamentos-body');
@@ -1623,15 +1718,15 @@
             } else {
                 let html = '';
                 paginaItens.forEach(eq => {
-                    const ciclo = calcularCiclo(eq.dataEntrada);
+                    const ciclo = calcularCiclo(eq.id, eq.dataEntrada);
                     const badgeStatus = obterBadgeStatus(eq.status || 'Ativo');
                     const badgePosse = obterBadgePosse(eq.posse || 'Próprio');
                     
                     const acoesHtml = `
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick="abrirModalQR('${eq.id}')" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1" title="Gerenciar e Imprimir QR Code"><i class="fa-solid fa-qrcode"></i> QR</button>
-                            <button onclick="editarEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar"><i class="fa-solid fa-pen"></i> Editar</button>
-                            <button onclick="excluirEquipamento('${eq.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir"><i class="fa-solid fa-trash"></i> Excluir</button>
+                            <button onclick="abrirModalQR('${eq.id}')" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1 cursor-pointer" title="Gerenciar e Imprimir QR Code"><i class="fa-solid fa-qrcode"></i> QR</button>
+                            <button onclick="editarEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Editar"><i class="fa-solid fa-pen"></i> Editar</button>
+                            <button onclick="excluirEquipamento('${eq.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Excluir"><i class="fa-solid fa-trash"></i> Excluir</button>
                         </div>
                     `;
 
@@ -1661,48 +1756,44 @@
         function filtrarTabelaComDebounce() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => filtrarTabela(), 300); }
         
         function filtrarTabela() {
-    const busca = document.getElementById('filtro-busca').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-    const setorFiltro = document.getElementById('filtro-setor').value;
-    const posseFiltro = document.getElementById('filtro-posse').value;
-    const statusFiltro = document.getElementById('filtro-status').value;
-    const ordenacao = document.getElementById('filtro-ordenacao') ? document.getElementById('filtro-ordenacao').value : 'nome';
+            const buscaInput = document.getElementById('filtro-busca');
+            const busca = buscaInput ? buscaInput.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "") : "";
+            const setorFiltro = document.getElementById('filtro-setor').value;
+            const posseFiltro = document.getElementById('filtro-posse').value;
+            const statusFiltro = document.getElementById('filtro-status').value;
+            const ordenacao = document.getElementById('filtro-ordenacao') ? document.getElementById('filtro-ordenacao').value : 'nome';
 
-    // 1. Filtragem
-    listaEquipamentosFiltradaCache = db.equipamentos.filter(eq => {
-        const bn = eq._buscaNome || (eq.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        const bc = eq._buscaCodigo || (eq.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        
-        return (bn.includes(busca) || bc.includes(busca)) &&
-               (setorFiltro === "" || eq.setor === setorFiltro) &&
-               (posseFiltro === "" || (eq.posse || 'Próprio') === posseFiltro) &&
-               (statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro);
-    });
+            listaEquipamentosFiltradaCache = db.equipamentos.filter(eq => {
+                const bn = eq._buscaNome || (eq.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                const bc = eq._buscaCodigo || (eq.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+                
+                return (bn.includes(busca) || bc.includes(busca)) &&
+                       (setorFiltro === "" || eq.setor === setorFiltro) &&
+                       (posseFiltro === "" || (eq.posse || 'Próprio') === posseFiltro) &&
+                       (statusFiltro === "" || (eq.status || 'Ativo') === statusFiltro);
+            });
 
-    // 2. Ordenação
-    listaEquipamentosFiltradaCache.sort((a, b) => {
-        if (ordenacao === 'codigo-num') {
-            // Extrai apenas os números do código (ex: "ESTERI-04" vira 4, "CENTRI-13" vira 13)
-            const numA = parseInt((a.codigo || '').replace(/\D/g, '')) || 0;
-            const numB = parseInt((b.codigo || '').replace(/\D/g, '')) || 0;
-            if (numA !== numB) return numA - numB;
-            // Se os números forem iguais, ordena pelo código completo alfabeticamente
-            return (a.codigo || '').localeCompare(b.codigo || '');
-        } 
-        else if (ordenacao === 'tipo') {
-            const tipoA = (a.tipo || '').toLowerCase();
-            const tipoB = (b.tipo || '').toLowerCase();
-            if (tipoA !== tipoB) return tipoA.localeCompare(tipoB);
-            return (a.nome || '').localeCompare(b.nome || '');
-        } 
-        else {
-            // Padrão: Nome do equipamento (A-Z)
-            return (a.nome || '').localeCompare(b.nome || '');
+            listaEquipamentosFiltradaCache.sort((a, b) => {
+                if (ordenacao === 'codigo-num') {
+                    const numA = parseInt((a.codigo || '').replace(/\D/g, '')) || 0;
+                    const numB = parseInt((b.codigo || '').replace(/\D/g, '')) || 0;
+                    if (numA !== numB) return numA - numB;
+                    return (a.codigo || '').localeCompare(b.codigo || '');
+                } 
+                else if (ordenacao === 'tipo') {
+                    const tipoA = (a.tipo || '').toLowerCase();
+                    const tipoB = (b.tipo || '').toLowerCase();
+                    if (tipoA !== tipoB) return tipoA.localeCompare(tipoB);
+                    return (a.nome || '').localeCompare(b.nome || '');
+                } 
+                else {
+                    return (a.nome || '').localeCompare(b.nome || '');
+                }
+            });
+
+            paginaAtual = 1;
+            renderizarTabelaPaginada();
         }
-    });
-
-    paginaAtual = 1; // Reseta para a primeira página ao filtrar/ordenar
-    renderizarTabelaPaginada();
-}
 
         function exportarCSV() {
             let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;IP;Serial;Posse;Data Entrada;Data Saida;Status\n";
@@ -1746,9 +1837,9 @@
                             <td class="p-3.5 text-slate-400 font-mono text-xs">${m.laudo || '-'}</td>
                             <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${m.status}</span></td>
                             <td class="p-3.5 text-center space-x-2">
-                                <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'Calibração Programada: ${m.proxima || 'Pendente'}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
-                                <button onclick="editarManutencao('${m.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="excluirManutencao('${m.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'Calibração Programada: ${m.proxima || 'Pendente'}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+                                <button onclick="editarManutencao('${m.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="excluirManutencao('${m.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
@@ -1807,6 +1898,8 @@
 
             fecharModalManutencao();
             renderizarManutencao();
+            filtrarTabela();
+            verificarAlertaCriticos();
         }
 
         function editarManutencao(id) { abrirModalManutencao(id); }
@@ -1818,6 +1911,8 @@
                 }
                 db.manutencoes = db.manutencoes.filter(m => m.id != id);
                 renderizarManutencao();
+                filtrarTabela();
+                verificarAlertaCriticos();
             }
         }
 
@@ -1851,8 +1946,8 @@
                             <td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-950/60 text-amber-300 border border-amber-800/60">${c.prioridade}</span></td>
                             <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgeStatus}">${c.status || 'Aberto'}</span></td>
                             <td class="p-3.5 text-center space-x-2">
-                                <button onclick="abrirModalChamado('${c.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="excluirChamado('${c.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="abrirModalChamado('${c.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="excluirChamado('${c.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
@@ -1935,7 +2030,7 @@
             if (!tbody) return;
             
             if (db.comodatos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum comodato.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-500">Nenhum comodato.</td></tr>`;
             } else {
                 let html = '';
                 let total = 0;
@@ -1981,7 +2076,7 @@
             const tbody = document.getElementById('tabela-rastreio-body');
             if (!tbody) return;
             if (db.transferencias.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum registro.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhum registro.</td></tr>`;
             } else {
                 let html = '';
                 db.transferencias.forEach(t => {
@@ -2042,7 +2137,7 @@
 
         function exibirModalDetalhesCelular(eq) {
             equipamentoAtualQR = eq;
-            const ciclo = calcularCiclo(eq.dataEntrada);
+            const ciclo = calcularCiclo(eq.id, eq.dataEntrada);
             document.getElementById('ficha-tecnica-conteudo').innerHTML = `
                 <div class="space-y-1.5 font-mono text-xs text-slate-200">
                     <p><strong>Cód. Ref:</strong> <span class="text-sky-400 font-bold">${eq.codigo || '-'}</span></p>
@@ -2110,16 +2205,17 @@
             if (!tbody) return;
             let html = '';
             [...db.setores].sort().forEach((s, i) => {
-                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${s}</td><td class="p-3.5 text-center"><button onclick="excluirSetor(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
+                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${s}</td><td class="p-3.5 text-center"><button onclick="excluirSetor(${i})" class="text-red-400 text-xs cursor-pointer">Remover</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
         
         async function salvarSetor() {
-            const val = document.getElementById('novo-setor-nome').value.trim().toUpperCase();
+            const valInput = document.getElementById('novo-setor-nome');
+            const val = valInput ? valInput.value.trim().toUpperCase() : "";
             if (val && !db.setores.includes(val)) {
                 db.setores.push(val);
-                document.getElementById('novo-setor-nome').value = '';
+                valInput.value = '';
                 await salvarConfiguracoesFirebase();
                 renderizarSetores(); popularSelects(); atualizarRelatorios();
             }
@@ -2137,16 +2233,17 @@
             if (!tbody) return;
             let html = '';
             [...db.tipos].sort().forEach((t, i) => {
-                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${t}</td><td class="p-3.5 text-center"><button onclick="excluirTipo(${i})" class="text-red-400 text-xs">Remover</button></td></tr>`;
+                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${t}</td><td class="p-3.5 text-center"><button onclick="excluirTipo(${i})" class="text-red-400 text-xs cursor-pointer">Remover</button></td></tr>`;
             });
             tbody.innerHTML = html;
         }
         
         async function salvarTipo() {
-            const val = document.getElementById('novo-tipo-nome').value.trim();
+            const valInput = document.getElementById('novo-tipo-nome');
+            const val = valInput ? valInput.value.trim() : "";
             if (val && !db.tipos.includes(val)) {
                 db.tipos.push(val);
-                document.getElementById('novo-tipo-nome').value = '';
+                valInput.value = '';
                 await salvarConfiguracoesFirebase();
                 renderizarTipos(); popularSelects(); atualizarRelatorios();
             }
@@ -2225,6 +2322,7 @@
             filtrarTabela();
             renderizarMonitoramento();
             atualizarRelatorios();
+            verificarAlertaCriticos();
         }
 
         async function excluirEquipamento(id) {
@@ -2236,6 +2334,7 @@
                 filtrarTabela();
                 renderizarMonitoramento();
                 atualizarRelatorios();
+                verificarAlertaCriticos();
             }
         }
         function editarEquipamento(id) { abrirModalEquipamento(id); }
@@ -2243,12 +2342,24 @@
         function renderizarRelatorioFiltrado() {
             const setorFiltro = document.getElementById('rel-filtro-setor') ? document.getElementById('rel-filtro-setor').value : "";
             const tipoFiltro = document.getElementById('rel-filtro-tipo') ? document.getElementById('rel-filtro-tipo').value : "";
+            const cicloFiltro = document.getElementById('rel-filtro-ciclo') ? document.getElementById('rel-filtro-ciclo').value : "";
             const tabDetalhada = document.getElementById('tabela-relatorio-detalhado-body');
             if (!tabDetalhada) return;
 
             const filtrados = db.equipamentos.filter(eq => {
-                return (setorFiltro === "" || eq.setor === setorFiltro) &&
-                       (tipoFiltro === "" || eq.tipo === tipoFiltro);
+                const matchSetor = (setorFiltro === "" || eq.setor === setorFiltro);
+                const matchTipo = (tipoFiltro === "" || eq.tipo === tipoFiltro);
+                if (!matchSetor || !matchTipo) return false;
+
+                if (cicloFiltro !== "") {
+                    const cicloObj = calcularCiclo(eq.id, eq.dataEntrada);
+                    const textoCiclo = cicloObj.texto.toLowerCase();
+                    if (cicloFiltro === "revisado" && !textoCiclo.includes("revisado")) return false;
+                    if (cicloFiltro === "critico" && !textoCiclo.includes("crítico")) return false;
+                    if (cicloFiltro === "atencao" && !textoCiclo.includes("4 anos")) return false;
+                    if (cicloFiltro === "normal" && !textoCiclo.includes("ativo")) return false;
+                }
+                return true;
             });
 
             if (filtrados.length === 0) {
@@ -2256,7 +2367,15 @@
             } else {
                 let html = '';
                 filtrados.forEach(eq => {
-                    const ciclo = calcularCiclo(eq.dataEntrada);
+                    const ciclo = calcularCiclo(eq.id, eq.dataEntrada);
+                    
+                    let estiloDestaqueCiclo = ciclo.classe;
+                    if (ciclo.texto.includes("Crítico")) {
+                        estiloDestaqueCiclo = "bg-red-600 text-white font-bold border border-red-700";
+                    } else if (ciclo.texto.includes("Revisado")) {
+                        estiloDestaqueCiclo = "bg-sky-600 text-white font-semibold border border-sky-700";
+                    }
+
                     html += `
                         <tr class="hover:bg-slate-800/40 transition border-b border-slate-700/50">
                             <td class="p-3.5 font-mono text-xs text-slate-300">${eq.codigo || '-'}</td>
@@ -2267,7 +2386,7 @@
                             <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgePosse(eq.posse)}">${eq.posse || 'Próprio'}</span></td>
                             <td class="p-3.5 text-slate-300">${eq.dataEntrada || '-'}</td>
                             <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgeStatus(eq.status)}">${eq.status || 'Ativo'}</span></td>
-                            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${ciclo.classe}">${ciclo.texto}</span></td>
+                            <td class="p-3.5"><span class="px-3 py-1 rounded-lg text-xs ${estiloDestaqueCiclo}">${ciclo.texto}</span></td>
                         </tr>
                     `;
                 });
@@ -2289,8 +2408,9 @@
 
             let proprioCount = 0;
             let comodatoCount = 0;
-            let alerta4Anos = 0;
-            let alerta5Anos = 0;
+            let alerta5AnosTotal = 0;
+            let revisadosCount = 0;
+            let criticosSemRevisaoCount = 0;
 
             const porSetor = {};
             const porPosse = { 'Próprio': 0, 'Comodato': 0 };
@@ -2311,12 +2431,21 @@
                     const m = hoje.getMonth() - entrada.getMonth();
                     if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
 
-                    if (anos >= 5) alerta5Anos++;
-                    else if (anos === 4) alerta4Anos++;
+                    if (anos >= 5) {
+                        alerta5AnosTotal++;
+                        const cicloObj = calcularCiclo(eq.id, eq.dataEntrada);
+                        if (cicloObj.texto.includes("Revisado")) {
+                            revisadosCount++;
+                        } else {
+                            criticosSemRevisaoCount++;
+                        }
+                    }
                 }
             });
 
-            document.getElementById('relatorio-5-anos').innerText = alerta5Anos;
+            document.getElementById('relatorio-5-anos').innerText = alerta5AnosTotal;
+            document.getElementById('relatorio-revisados').innerText = revisadosCount;
+            document.getElementById('relatorio-criticos').innerText = criticosSemRevisaoCount;
             document.getElementById('relatorio-proprio').innerText = proprioCount;
             document.getElementById('relatorio-comodato').innerText = comodatoCount;
 
@@ -2416,31 +2545,29 @@
         }
 
         async function chamarGeminiComRetry(promptText, maxTentativas = 3) {
-    const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
-    if (!apiKey) throw new Error('Chave da API do Gemini não configurada nas Configurações.');
-    
-    const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // ATUALIZE AQUI: mude de "gemini-2.5-flash" para "gemini-3.8-flash"
-    const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
+            const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
+            if (!apiKey) throw new Error('Chave da API do Gemini não configurada nas Configurações.');
+            
+            const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
-    let tentativa = 0;
-    while (tentativa < maxTentativas) {
-        try {
-            const result = await model.generateContent(promptText);
-            const response = await result.response;
-            return response.text();
-        } catch (err) {
-            tentativa++;
-            if ((err.message.includes('503') || err.message.includes('high demand')) && tentativa < maxTentativas) {
-                await new Promise(resolve => setTimeout(resolve, 2000 * tentativa));
-                continue;
+            let tentativa = 0;
+            while (tentativa < maxTentativas) {
+                try {
+                    const result = await model.generateContent(promptText);
+                    const response = await result.response;
+                    return response.text();
+                } catch (err) {
+                    tentativa++;
+                    if ((err.message.includes('503') || err.message.includes('high demand')) && tentativa < maxTentativas) {
+                        await new Promise(resolve => setTimeout(resolve, 2000 * tentativa));
+                        continue;
+                    }
+                    throw err;
+                }
             }
-            throw err;
         }
-    }
-}
 
         async function gerarEstudoIA() {
             const container = document.getElementById('resultado-ia-container');
@@ -2468,9 +2595,67 @@
             }
         }
 
-        // ==============================================================
-        // LÓGICA DO GERENCIADOR DE ETIQUETAS E IMPRESSÃO DINÂMICA
-        // ==============================================================
+        async function gerarPlanoAcaoCriticosIA() {
+            const container = document.getElementById('resultado-ia-container');
+            const conteudo = document.getElementById('conteudo-ia-analise');
+            container.classList.remove('hidden');
+            conteudo.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin text-amber-300"></i> Analisando ativos críticos e redigindo plano de ação com o Gemini...</div>';
+
+            const equipamentosCriticos = [];
+            db.equipamentos.forEach(eq => {
+                if (eq.dataEntrada) {
+                    const entrada = new Date(eq.dataEntrada);
+                    const hoje = new Date();
+                    let anos = hoje.getFullYear() - entrada.getFullYear();
+                    const m = hoje.getMonth() - entrada.getMonth();
+                    if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
+
+                    if (anos >= 5) {
+                        const cicloObj = calcularCiclo(eq.id, eq.dataEntrada);
+                        if (!cicloObj.texto.includes("Revisado")) {
+                            equipamentosCriticos.push({
+                                codigo: eq.codigo || 'S/C',
+                                nome: eq.nome,
+                                setor: eq.setor,
+                                tipo: eq.tipo,
+                                anosUso: anos,
+                                posse: eq.posse || 'Próprio'
+                            });
+                        }
+                    }
+                }
+            });
+
+            if (equipamentosCriticos.length === 0) {
+                conteudo.innerHTML = `<span class="text-emerald-300 font-medium">✨ Excelente notícia! Não há equipamentos críticos sem revisão pendentes no momento. Todos os ativos com mais de 5 anos possuem manutenções registradas ou estão dentro dos limites.</span>`;
+                return;
+            }
+
+            let listaTexto = "";
+            equipamentosCriticos.forEach((eq, index) => {
+                listaTexto += `${index + 1}. [Cód: ${eq.codigo}] ${eq.nome} | Setor: ${eq.setor} | Tipo: ${eq.tipo} | Tempo de Uso: ${eq.anosUso} anos | Posse: ${eq.posse}\n`;
+            });
+
+            const prompt = `Atue como um Engenheiro Biomédico Sênior e Auditor de Qualidade Laboratorial. 
+Analise a seguinte lista de equipamentos críticos (com 5 anos ou mais de uso e sem histórico de revisão/manutenção cadastrada) do Laboratório Pasteur:
+
+${listaTexto}
+
+Com base nesses dados, elabore um **Plano de Ação Corretiva e Preventiva** estruturado em HTML limpo contendo:
+1. **Resumo da Situação de Risco**: Impacto potencial na confiabilidade dos laudos analíticos e conformidade regulatória.
+2. **Priorização de Intervenções**: Quais equipamentos devem passar por calibração ou perícia técnica com urgência (ordem de prioridade).
+3. **Diretrizes para Laudos e Calibração**: Recomendações técnicas específicas para validação ou eventual substituição desses ativos.
+4. **Cronograma Sugerido**: Metas de curto prazo para regularizar a situação.
+
+Responda em formato HTML estilizado utilizando tags limpas (como <h4>, <p>, <ul>, <li>, <strong>) e cores compatíveis com temas escuros (tons de vermelho, âmbar e cinza claro).`;
+
+            try {
+                const resultadoHTML = await chamarGeminiComRetry(prompt);
+                conteudo.innerHTML = resultadoHTML;
+            } catch (err) {
+                conteudo.innerHTML = `<span class="text-red-300">Erro ao gerar plano de ação via IA: ${err.message}</span>`;
+            }
+        }
 
         function abrirModalQR(id) {
             equipamentoGerenciadorQR = db.equipamentos.find(e => e.id == id);
