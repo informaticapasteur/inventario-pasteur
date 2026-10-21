@@ -1623,7 +1623,7 @@
             } else {
                 let html = '';
                 paginaItens.forEach(eq => {
-                    const ciclo = calcularCiclo(eq.id, eq.dataEntrada);
+                    const ciclo = calcularCiclo(eq.dataEntrada);
                     const badgeStatus = obterBadgeStatus(eq.status || 'Ativo');
                     const badgePosse = obterBadgePosse(eq.posse || 'Próprio');
                     
@@ -2042,7 +2042,7 @@
 
         function exibirModalDetalhesCelular(eq) {
             equipamentoAtualQR = eq;
-            const ciclo = calcularCiclo(eq.id, eq.dataEntrada);
+            const ciclo = calcularCiclo(eq.dataEntrada);
             document.getElementById('ficha-tecnica-conteudo').innerHTML = `
                 <div class="space-y-1.5 font-mono text-xs text-slate-200">
                     <p><strong>Cód. Ref:</strong> <span class="text-sky-400 font-bold">${eq.codigo || '-'}</span></p>
@@ -2256,7 +2256,7 @@
             } else {
                 let html = '';
                 filtrados.forEach(eq => {
-                    const ciclo = calcularCiclo(eq.id, eq.dataEntrada);
+                    const ciclo = calcularCiclo(eq.dataEntrada);
                     html += `
                         <tr class="hover:bg-slate-800/40 transition border-b border-slate-700/50">
                             <td class="p-3.5 font-mono text-xs text-slate-300">${eq.codigo || '-'}</td>
@@ -2304,19 +2304,16 @@
                 const setor = eq.setor || 'Não definido';
                 porSetor[setor] = (porSetor[setor] || 0) + 1;
 
-                // Dentro do loop do atualizarRelatorios():
-if (eq.dataEntrada) {
-    const entrada = new Date(eq.dataEntrada);
-    const hoje = new Date();
-    let anos = hoje.getFullYear() - entrada.getFullYear();
-    const m = hoje.getMonth() - entrada.getMonth();
-    if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
+                if (eq.dataEntrada) {
+                    const entrada = new Date(eq.dataEntrada);
+                    const hoje = new Date();
+                    let anos = hoje.getFullYear() - entrada.getFullYear();
+                    const m = hoje.getMonth() - entrada.getMonth();
+                    if (m < 0 || (m === 0 && hoje.getDate() < entrada.getDate())) anos--;
 
-    const temManutencao = db.manutencoes.some(m => m.equipamentoId == eq.id);
-
-    if (anos >= 5 && !temManutencao) {
-        alerta5Anos++; // Só conta como crítico se tiver >= 5 anos E NÃO tiver manutenção registrada
-    }
+                    if (anos >= 5) alerta5Anos++;
+                    else if (anos === 4) alerta4Anos++;
+                }
             });
 
             document.getElementById('relatorio-5-anos').innerText = alerta5Anos;
