@@ -2539,7 +2539,7 @@
             
             const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
             let tentativa = 0;
             while (tentativa < maxTentativas) {
