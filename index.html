@@ -29,7 +29,7 @@
     <style>
         :root { --cor-primaria: #0284c7; }
         
-        /* CORREÇÃO DEFINITIVA PARA IMPRESSORAS TÉRMICAS (vindas do index1) */
+        /* CORREÇÃO DEFINITIVA PARA IMPRESSORAS TÉRMICAS */
         @media print {
             body > :not(#area-impressao) {
                 display: none !important;
@@ -932,7 +932,7 @@
         </div>
     </div>
 
-    <!-- GERENCIADOR DE ETIQUETAS DINÂMICO (código otimizado do index1) -->
+    <!-- GERENCIADOR DE ETIQUETAS DINÂMICO -->
     <div id="modal-qr" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden shadow-2xl">
             <div class="w-full md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-slate-800 space-y-5 overflow-y-auto max-h-[90vh]">
@@ -1627,6 +1627,10 @@
         }
 
         function calcularCiclo(eqId, dataEntrada) {
+            const eq = db.equipamentos.find(e => e.id == eqId);
+            if (eq && (eq.status === 'Descartado' || eq.status === 'Inativo')) {
+                return { texto: `📦 Fora de Operação (${eq.status})`, classe: 'bg-slate-800 text-slate-400 border border-slate-700' };
+            }
             if (!dataEntrada) return { texto: 'Sem data', classe: 'bg-slate-800 text-slate-300' };
             
             const entrada = new Date(dataEntrada);
@@ -1663,6 +1667,7 @@
 
             let criticosCount = 0;
             db.equipamentos.forEach(eq => {
+                if (eq.status === 'Descartado' || eq.status === 'Inativo') return;
                 if (eq.dataEntrada) {
                     const entrada = new Date(eq.dataEntrada);
                     const hoje = new Date();
@@ -2413,6 +2418,8 @@
                 const setor = eq.setor || 'Não definido';
                 porSetor[setor] = (porSetor[setor] || 0) + 1;
 
+                if (eq.status === 'Descartado' || eq.status === 'Inativo') return;
+
                 if (eq.dataEntrada) {
                     const entrada = new Date(eq.dataEntrada);
                     const hoje = new Date();
@@ -2592,6 +2599,7 @@
 
             const equipamentosCriticos = [];
             db.equipamentos.forEach(eq => {
+                if (eq.status === 'Descartado' || eq.status === 'Inativo') return;
                 if (eq.dataEntrada) {
                     const entrada = new Date(eq.dataEntrada);
                     const hoje = new Date();
@@ -2616,7 +2624,7 @@
             });
 
             if (equipamentosCriticos.length === 0) {
-                conteudo.innerHTML = `<span class="text-emerald-300 font-medium">✨ Excelente notícia! Não há equipamentos críticos sem revisão pendentes no momento. Todos os ativos com mais de 5 anos possuem manutenções registradas ou estão dentro dos limites.</span>`;
+                conteudo.innerHTML = `<span class="text-emerald-300 font-medium">✨ Excelente notícia! Não há equipamentos críticos ativos sem revisão pendentes no momento. Todos os ativos ativos com mais de 5 anos possuem manutenções registradas.</span>`;
                 return;
             }
 
@@ -2626,7 +2634,7 @@
             });
 
             const prompt = `Atue como um Engenheiro Biomédico Sênior e Auditor de Qualidade Laboratorial. 
-Analise a seguinte lista de equipamentos críticos (com 5 anos ou mais de uso e sem histórico de revisão/manutenção cadastrada) do Laboratório Pasteur:
+Analise a seguinte lista de equipamentos críticos ativos (com 5 anos ou mais de uso e sem histórico de revisão/manutenção cadastrada) do Laboratório Pasteur:
 
 ${listaTexto}
 
@@ -2647,7 +2655,7 @@ Responda em formato HTML estilizado utilizando tags limpas (como <h4>, <p>, <ul>
         }
 
         // ==============================================================
-        // LÓGICA DO GERENCIADOR DE ETIQUETAS E IMPRESSÃO (do index1.html)
+        // LÓGICA DO GERENCIADOR DE ETIQUETAS E IMPRESSÃO
         // ==============================================================
 
         function abrirModalQR(id) {
