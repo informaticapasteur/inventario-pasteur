@@ -392,23 +392,27 @@
         </section>
 
         <section id="aba-helpdesk" class="hidden space-y-6">
-            <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+            <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
                 <div>
-                    <h2 class="text-sm font-bold text-white">Central de Chamados e Suporte Técnico</h2>
-                    <p class="text-xs text-slate-400">Acompanhe solicitações e ocorrências nas unidades.</p>
+                    <h2 id="helpdesk-titulo" class="text-sm font-bold text-white">Central de Chamados e Suporte Técnico</h2>
+                    <p id="helpdesk-subtitulo" class="text-xs text-slate-400">Abra uma solicitação e acompanhe o atendimento.</p>
                 </div>
-                <button onclick="abrirModalChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md cursor-pointer">
-                    <i class="fa-solid fa-plus"></i> Abrir Chamado
+                <button id="btn-abrir-chamado" onclick="abrirModalChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md cursor-pointer">
+                    <i class="fa-solid fa-plus"></i> Novo Chamado
                 </button>
             </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                <table class="w-full text-left border-collapse text-xs">
+            <div id="helpdesk-aviso-solicitante" class="hidden rounded-xl border border-sky-800/60 bg-sky-950/30 p-4 text-xs text-sky-200">
+                <strong>Área do solicitante:</strong> você pode abrir chamados e acompanhar somente as solicitações feitas pela sua conta. O andamento e o encerramento são realizados pela equipe técnica.
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-x-auto shadow-xl">
+                <table class="w-full min-w-[850px] text-left border-collapse text-xs">
                     <thead>
                         <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
-                            <th class="p-3.5">ID</th>
+                            <th class="p-3.5">Ticket / abertura</th>
+                            <th class="p-3.5">Solicitante</th>
                             <th class="p-3.5">Equipamento</th>
                             <th class="p-3.5">Unidade / Setor</th>
-                            <th class="p-3.5">Descrição</th>
+                            <th class="p-3.5">Problema / andamento</th>
                             <th class="p-3.5">Prioridade</th>
                             <th class="p-3.5">Status</th>
                             <th class="p-3.5 text-center">Ações</th>
@@ -940,44 +944,71 @@
 
 <!-- MODAL CHAMADO -->
 <div id="modal-chamado" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-        <h3 id="modal-chamado-titulo" class="text-sm font-bold text-white">Abrir Chamado Técnico</h3>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+        <div>
+            <h3 id="modal-chamado-titulo" class="text-sm font-bold text-white">Abrir chamado</h3>
+            <p id="modal-chamado-ajuda" class="text-xs text-slate-400 mt-1">Informe os dados do problema. A equipe técnica atualizará o atendimento.</p>
+        </div>
         <input type="hidden" id="chamado-id">
-        <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+                <label class="block text-slate-300 mb-1">Solicitante</label>
+                <input type="text" id="chamado-solicitante" readonly class="w-full bg-slate-800/60 border border-slate-700 rounded-xl px-3 py-2 text-slate-300">
+            </div>
+            <div>
+                <label class="block text-slate-300 mb-1">Telefone ou e-mail para contato</label>
+                <input type="text" id="chamado-contato" maxlength="160" placeholder="Ramal, telefone ou e-mail" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            </div>
             <div>
                 <label class="block text-slate-300 mb-1">Equipamento</label>
                 <select id="chamado-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
             </div>
             <div>
-                <label class="block text-slate-300 mb-1">Unidade / Setor</label>
+                <label class="block text-slate-300 mb-1">Unidade / Setor / Localização</label>
                 <select id="chamado-unidade" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+            </div>
+            <div>
+                <label class="block text-slate-300 mb-1">Categoria</label>
+                <select id="chamado-categoria" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <option>Hardware</option><option>Software</option><option>Rede / Internet</option><option>Elétrica</option><option>Impressora</option><option>Outro</option>
+                </select>
             </div>
             <div>
                 <label class="block text-slate-300 mb-1">Prioridade</label>
                 <select id="chamado-prioridade" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                    <option value="Baixa">Baixa</option>
-                    <option value="Média" selected>Média</option>
-                    <option value="Alta">Alta</option>
-                    <option value="Urgente">Urgente</option>
+                    <option value="Baixa">Baixa</option><option value="Média" selected>Média</option><option value="Alta">Alta</option><option value="Crítica">Crítica</option>
                 </select>
             </div>
-            <div>
-                <label class="block text-slate-300 mb-1">Status</label>
-                <select id="chamado-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                    <option value="Aberto">Aberto</option>
-                    <option value="Em Andamento">Em Andamento</option>
-                    <option value="Resolvido">Resolvido</option>
-                    <option value="Fechado">Fechado</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-slate-300 mb-1">Descrição do Problema</label>
-                <textarea id="chamado-descricao" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-primary"></textarea>
+            <div class="sm:col-span-2">
+                <label class="block text-slate-300 mb-1">Descrição do problema</label>
+                <textarea id="chamado-descricao" rows="3" maxlength="3000" placeholder="Conte o que aconteceu e quando começou..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-primary"></textarea>
             </div>
         </div>
-        <div class="flex justify-end gap-2 pt-3">
+        <div id="chamado-area-tecnica" class="hidden border-t border-slate-700 pt-4 space-y-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-slate-300 mb-1">Status do atendimento</label>
+                    <select id="chamado-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Aberto">Aberto</option><option value="Em Andamento">Em Andamento</option><option value="Aguardando peça">Aguardando peça</option><option value="Resolvido">Resolvido</option><option value="Fechado">Fechado</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Técnico responsável</label>
+                    <input type="text" id="chamado-tecnico" placeholder="Nome do técnico ou equipe" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-slate-300 mb-1">Adicionar andamento / diagnóstico / solução</label>
+                    <textarea id="chamado-andamento" rows="3" maxlength="3000" placeholder="Descreva a análise, ação realizada, peças utilizadas ou solução..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
+                </div>
+                <div class="sm:col-span-2" id="chamado-historico-wrap">
+                    <p class="text-slate-400 mb-1">Histórico do atendimento</p>
+                    <div id="chamado-historico" class="max-h-32 overflow-y-auto space-y-2 rounded-xl bg-slate-950/60 p-3 text-slate-300"></div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
             <button onclick="fecharModalChamado()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Cancelar</button>
-            <button onclick="salvarChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Salvar</button>
+            <button id="btn-salvar-chamado" onclick="salvarChamado()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Enviar chamado</button>
         </div>
     </div>
 </div>
@@ -1061,8 +1092,9 @@
             <div>
                 <label class="block text-slate-300 mb-1">Perfil</label>
                 <select id="usr-perfil" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                    <option value="Tecnico">Técnico</option>
-                    <option value="Admin">Admin</option>
+                    <option value="Solicitante">Solicitante (abre e acompanha chamados)</option>
+                    <option value="Tecnico">Técnico (atende chamados)</option>
+                    <option value="Admin">Administrador</option>
                 </select>
             </div>
             <div>
@@ -1450,6 +1482,14 @@
         window.location.href = window.location.pathname;
     }
 
+    function ehEquipeTecnica() {
+        return !!usuarioLogado && ['Admin', 'Tecnico'].includes(usuarioLogado.perfil);
+    }
+
+    function ehSolicitante() {
+        return !!usuarioLogado && !ehEquipeTecnica();
+    }
+
     function aplicarPermissoesPerfil() {
         if (!usuarioLogado) return;
         const perfil = usuarioLogado.perfil;
@@ -1466,9 +1506,23 @@
             adminElements.forEach(el => el.style.display = 'none');
             writeElements.forEach(el => el.style.display = 'none');
         }
+
+        const somenteHelpdesk = ehSolicitante();
+        document.querySelectorAll('nav button').forEach(btn => {
+            if (somenteHelpdesk && btn.id !== 'btn-helpdesk') btn.style.display = 'none';
+            else if (btn.id !== 'btn-usuarios' && btn.id !== 'btn-configuracoes' && btn.id !== 'btn-backup') btn.style.display = '';
+        });
+        ['inventario', 'monitoramento', 'manutencao', 'validacao', 'financeiro', 'rastreabilidade', 'setores', 'relatorios', 'usuarios', 'configuracoes', 'backup'].forEach(a => {
+            const sec = document.getElementById(`aba-${a}`);
+            if (sec && somenteHelpdesk) sec.style.display = 'none';
+            else if (sec && !sec.classList.contains('hidden')) sec.style.display = '';
+        });
+        if (somenteHelpdesk) mudarAba('helpdesk');
+        renderizarChamados();
     }
 
     function mudarAba(aba) {
+        if (ehSolicitante() && aba !== 'helpdesk') aba = 'helpdesk';
         ['inventario', 'monitoramento', 'manutencao', 'helpdesk', 'validacao', 'financeiro', 'rastreabilidade', 'setores', 'relatorios', 'usuarios', 'configuracoes', 'backup'].forEach(a => {
             const el = document.getElementById(`aba-${a}`);
             const btn = document.getElementById(`btn-${a}`);
@@ -2398,107 +2452,149 @@
         switch(status) {
             case 'Aberto': return 'bg-amber-950/60 text-amber-300 border border-amber-800/60';
             case 'Em Andamento': return 'bg-sky-950/60 text-sky-300 border border-sky-800/60';
+            case 'Aguardando peça': return 'bg-orange-950/60 text-orange-300 border border-orange-800/60';
             case 'Resolvido': return 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60';
             case 'Fechado': return 'bg-slate-800 text-slate-300 border border-slate-700';
             default: return 'bg-slate-800 text-slate-300';
         }
     }
 
+    function escaparTextoChamado(valor) {
+        return String(valor || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
     function renderizarChamados() {
         const tbody = document.getElementById('tabela-chamados-body');
         if (!tbody) return;
-        
-        if (db.chamados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum chamado registrado.</td></tr>`;
-        } else {
-            let html = '';
-            db.chamados.forEach(c => {
-                const eq = db.equipamentos.find(e => e.id == c.equipamentoId) || { codigo: 'S/C', nome: 'Equipamento Removido' };
-                const badgeStatus = obterBadgeChamadoStatus(c.status || 'Aberto');
-                html += `
-                    <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
-                        <td class="p-3.5 font-mono text-xs font-semibold text-slate-300">#${c.id}</td>
-                        <td class="p-3.5 font-medium text-white"><span class="font-mono text-xs text-sky-400 mr-1">[${eq.codigo}]</span> ${eq.nome}</td>
-                        <td class="p-3.5 text-slate-300 font-semibold">${c.unidade}</td>
-                        <td class="p-3.5 text-slate-300">${c.descricao}</td>
-                        <td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-950/60 text-amber-300 border border-amber-800/60">${c.prioridade}</span></td>
-                        <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${badgeStatus}">${c.status || 'Aberto'}</span></td>
-                        <td class="p-3.5 text-center space-x-2">
-                            <button onclick="abrirModalChamado('${c.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="excluirChamado('${c.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
+        const equipe = ehEquipeTecnica();
+        const meusChamados = equipe ? db.chamados : db.chamados.filter(c => String(c.solicitanteId || '') === String(usuarioLogado?.id || usuarioLogado?.usuario || ''));
+        const titulo = document.getElementById('helpdesk-titulo');
+        const subtitulo = document.getElementById('helpdesk-subtitulo');
+        const aviso = document.getElementById('helpdesk-aviso-solicitante');
+        if (titulo) titulo.textContent = equipe ? 'Central de Atendimento Técnico' : 'Abertura e acompanhamento de chamados';
+        if (subtitulo) subtitulo.textContent = equipe ? 'Fila de chamados: registre o andamento e encerre após concluir.' : 'Abra uma solicitação e consulte o andamento dos seus chamados.';
+        if (aviso) aviso.classList.toggle('hidden', equipe);
+        if (meusChamados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">${equipe ? 'Nenhum chamado registrado.' : 'Você ainda não abriu chamados.'}</td></tr>`;
+            return;
         }
+        tbody.innerHTML = meusChamados.slice().sort((a,b) => Number(b.dataAberturaMs || 0) - Number(a.dataAberturaMs || 0)).map(c => {
+            const eq = db.equipamentos.find(e => String(e.id) === String(c.equipamentoId)) || { codigo: 'S/C', nome: c.equipamentoNome || 'Não informado' };
+            const badgeStatus = obterBadgeChamadoStatus(c.status || 'Aberto');
+            const dataAbertura = c.dataAbertura ? new Date(c.dataAbertura).toLocaleString('pt-BR') : '-';
+            const ult = Array.isArray(c.historico) && c.historico.length ? c.historico[c.historico.length - 1] : null;
+            const trecho = ult ? `<div class="mt-1 text-[10px] text-sky-300"><strong>${escaparTextoChamado(ult.autor || 'Equipe')}:</strong> ${escaparTextoChamado(ult.texto)}</div>` : '';
+            const acao = equipe ? `<button onclick="abrirModalChamado('${escaparTextoChamado(c.id)}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold" title="Atualizar atendimento"><i class="fa-solid fa-clipboard-check"></i> Atender</button>` : `<span class="text-slate-500">Somente consulta</span>`;
+            return `<tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
+                <td class="p-3.5"><div class="font-mono font-semibold text-slate-200">#${escaparTextoChamado(c.id)}</div><div class="mt-1 text-[10px] text-slate-500">${escaparTextoChamado(dataAbertura)}</div></td>
+                <td class="p-3.5 text-slate-300">${escaparTextoChamado(c.solicitanteNome || '-')}<div class="text-[10px] text-slate-500">${escaparTextoChamado(c.contato || '')}</div></td>
+                <td class="p-3.5 font-medium text-white"><span class="font-mono text-xs text-sky-400 mr-1">[${escaparTextoChamado(eq.codigo)}]</span> ${escaparTextoChamado(eq.nome)}</td>
+                <td class="p-3.5 text-slate-300 font-semibold">${escaparTextoChamado(c.unidade)}</td>
+                <td class="p-3.5 text-slate-300"><span class="text-[10px] text-slate-500">${escaparTextoChamado(c.categoria || 'Geral')}</span><br>${escaparTextoChamado(c.descricao)}${trecho}</td>
+                <td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-950/60 text-amber-300 border border-amber-800/60">${escaparTextoChamado(c.prioridade || 'Média')}</span></td>
+                <td class="p-3.5"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${badgeStatus}">${escaparTextoChamado(c.status || 'Aberto')}</span></td>
+                <td class="p-3.5 text-center">${acao}</td>
+            </tr>`;
+        }).join('');
     }
 
     function abrirModalChamado(id = null, preSelecionarEqId = null) {
+        const equipe = ehEquipeTecnica();
+        if (!usuarioLogado) return alert('Entre no sistema para abrir um chamado.');
+        if (id !== null && !equipe) return alert('Você pode consultar seus chamados, mas somente a equipe técnica pode atualizar o atendimento.');
         const selectEq = document.getElementById('chamado-eq-select');
-        let eqHtml = '';
-        db.equipamentos.forEach(e => eqHtml += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
-        selectEq.innerHTML = eqHtml;
+        selectEq.innerHTML = '<option value="">Não informado</option>' + db.equipamentos.map(e => `<option value="${escaparTextoChamado(e.id)}">[${escaparTextoChamado(e.codigo || 'S/C')}] ${escaparTextoChamado(e.nome)} (${escaparTextoChamado(e.setor)})</option>`).join('');
         if (preSelecionarEqId) selectEq.value = preSelecionarEqId;
-
         const selectUnidade = document.getElementById('chamado-unidade');
-        let unHtml = '';
-        [...db.setores].sort().forEach(s => unHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`);
-        selectUnidade.innerHTML = unHtml;
-
+        selectUnidade.innerHTML = '<option value="">Selecione</option>' + [...new Set(db.setores || [])].sort().map(x => `<option value="${escaparTextoChamado(x)}">${escaparTextoChamado(x)}</option>`).join('');
+        const c = id !== null ? db.chamados.find(item => String(item.id) === String(id)) : null;
+        if (id !== null && !c) return alert('Chamado não encontrado.');
+        const formSolicitante = document.getElementById('chamado-solicitante');
+        const areaTecnica = document.getElementById('chamado-area-tecnica');
+        const contato = document.getElementById('chamado-contato');
+        const descricao = document.getElementById('chamado-descricao');
+        const btnSalvar = document.getElementById('btn-salvar-chamado');
         document.getElementById('modal-chamado').classList.remove('hidden');
-        if (id !== null) {
-            const c = db.chamados.find(item => item.id == id);
-            if (c) {
-                document.getElementById('modal-chamado-titulo').innerText = 'Editar Chamado';
-                document.getElementById('chamado-id').value = c.id;
-                document.getElementById('chamado-eq-select').value = c.equipamentoId;
-                document.getElementById('chamado-unidade').value = c.unidade;
-                document.getElementById('chamado-prioridade').value = c.prioridade;
-                document.getElementById('chamado-status').value = c.status || 'Aberto';
-                document.getElementById('chamado-descricao').value = c.descricao;
-            }
-        } else {
-            document.getElementById('modal-chamado-titulo').innerText = 'Abrir Chamado Técnico';
-            document.getElementById('chamado-id').value = '';
-            document.getElementById('chamado-status').value = 'Aberto';
-            document.getElementById('chamado-descricao').value = '';
-        }
+        document.getElementById('chamado-id').value = c ? c.id : '';
+        formSolicitante.value = c?.solicitanteNome || usuarioLogado.nome || usuarioLogado.usuario || '';
+        contato.value = c?.contato || '';
+        contato.readOnly = !!c;
+        selectEq.value = c?.equipamentoId || preSelecionarEqId || '';
+        selectEq.disabled = !!c;
+        selectUnidade.value = c?.unidade || '';
+        selectUnidade.disabled = !!c;
+        document.getElementById('chamado-categoria').value = c?.categoria || 'Hardware';
+        document.getElementById('chamado-categoria').disabled = !!c;
+        document.getElementById('chamado-prioridade').value = c?.prioridade || 'Média';
+        document.getElementById('chamado-prioridade').disabled = !!c;
+        descricao.value = c?.descricao || '';
+        descricao.readOnly = !!c;
+        areaTecnica.classList.toggle('hidden', !equipe || !c);
+        document.getElementById('chamado-status').value = c?.status || 'Aberto';
+        document.getElementById('chamado-tecnico').value = c?.tecnico || (equipe ? usuarioLogado.nome : '');
+        document.getElementById('chamado-andamento').value = '';
+        document.getElementById('chamado-historico').innerHTML = (c?.historico || []).map(h => `<div class="border-b border-slate-800 pb-2"><strong>${escaparTextoChamado(h.autor)} · ${escaparTextoChamado(h.data ? new Date(h.data).toLocaleString('pt-BR') : '')}</strong><div>${escaparTextoChamado(h.texto)}</div></div>`).join('') || '<p class="text-slate-500">Ainda sem atualizações técnicas.</p>';
+        document.getElementById('modal-chamado-titulo').textContent = c ? `Atendimento do chamado #${c.id}` : 'Abrir novo chamado';
+        document.getElementById('modal-chamado-ajuda').textContent = c ? 'Revise o status e registre a atualização do atendimento. Para concluir, marque como Resolvido ou Fechado.' : 'Informe o problema e um contato para retorno. O sistema registra solicitante e horário automaticamente.';
+        btnSalvar.textContent = c ? 'Salvar andamento' : 'Enviar chamado';
     }
 
     function fecharModalChamado() { document.getElementById('modal-chamado').classList.add('hidden'); }
 
     async function salvarChamado() {
+        if (!usuarioLogado) return alert('Entre no sistema antes de continuar.');
+        const equipe = ehEquipeTecnica();
         const id = document.getElementById('chamado-id').value;
-        const chamadoId = id ? String(id) : String(Date.now()).slice(-6);
-        const dados = {
-            id: chamadoId,
-            equipamentoId: document.getElementById('chamado-eq-select').value,
-            unidade: document.getElementById('chamado-unidade').value,
-            prioridade: document.getElementById('chamado-prioridade').value,
-            status: document.getElementById('chamado-status').value,
-            descricao: document.getElementById('chamado-descricao').value.trim()
-        };
-
-        if (!dados.descricao) return alert('Descreva o problema.');
-        if (firestoreDb) {
-            await firestoreDb.collection('chamados').doc(chamadoId).set(dados);
+        const agora = new Date().toISOString();
+        if (id && !equipe) return alert('Somente a equipe técnica pode atualizar chamados.');
+        let dados;
+        if (id) {
+            const existente = db.chamados.find(c => String(c.id) === String(id));
+            if (!existente) return alert('Chamado não encontrado.');
+            const andamento = document.getElementById('chamado-andamento').value.trim();
+            const historico = Array.isArray(existente.historico) ? [...existente.historico] : [];
+            if (andamento) historico.push({ texto: andamento, autor: usuarioLogado.nome || usuarioLogado.usuario, autorId: String(usuarioLogado.id || usuarioLogado.usuario), data: agora });
+            const status = document.getElementById('chamado-status').value;
+            if (!andamento && status === existente.status && document.getElementById('chamado-tecnico').value.trim() === (existente.tecnico || '')) return alert('Adicione uma atualização ou altere o status/responsável.');
+            dados = { ...existente, status, tecnico: document.getElementById('chamado-tecnico').value.trim(), historico, dataAtualizacao: agora };
+            if (['Resolvido', 'Fechado'].includes(status)) dados.dataFechamento = existente.dataFechamento || agora;
+            else dados.dataFechamento = '';
+        } else {
+            const descricao = document.getElementById('chamado-descricao').value.trim();
+            const unidade = document.getElementById('chamado-unidade').value;
+            if (!descricao) return alert('Descreva o problema.');
+            if (!unidade) return alert('Selecione a unidade ou setor.');
+            const contato = document.getElementById('chamado-contato').value.trim();
+            if (!contato) return alert('Informe um telefone, e-mail ou ramal para contato.');
+            const equipamentoId = document.getElementById('chamado-eq-select').value;
+            const eq = db.equipamentos.find(e => String(e.id) === String(equipamentoId));
+            const chamadoId = `${Date.now()}`;
+            dados = {
+                id: chamadoId, equipamentoId: equipamentoId || '', equipamentoNome: eq?.nome || 'Não informado',
+                unidade, categoria: document.getElementById('chamado-categoria').value,
+                prioridade: document.getElementById('chamado-prioridade').value, status: 'Aberto', descricao, contato,
+                solicitanteId: String(usuarioLogado.id || usuarioLogado.usuario), solicitanteNome: usuarioLogado.nome || usuarioLogado.usuario,
+                dataAbertura: agora, dataAberturaMs: Date.now(), dataFechamento: '', tecnico: '', historico: []
+            };
         }
-
-        const idx = db.chamados.findIndex(c => c.id == chamadoId);
-        if (idx !== -1) db.chamados[idx] = dados;
-        else db.chamados.push(dados);
-
-        fecharModalChamado();
-        renderizarChamados();
+        try {
+            if (firestoreDb) await firestoreDb.collection('chamados').doc(String(dados.id)).set(dados);
+            const idx = db.chamados.findIndex(c => String(c.id) === String(dados.id));
+            if (idx !== -1) db.chamados[idx] = dados;
+            else db.chamados.push(dados);
+            fecharModalChamado();
+            renderizarChamados();
+        } catch (e) {
+            console.error('Não foi possível salvar o chamado:', e);
+            alert('Não foi possível salvar o chamado. Verifique a conexão e as permissões do sistema.');
+        }
     }
 
     async function excluirChamado(id) {
+        if (!ehEquipeTecnica()) return alert('Somente a equipe técnica pode administrar chamados.');
         if (confirm('Deseja excluir este chamado?')) {
-            if (firestoreDb) {
-                await firestoreDb.collection('chamados').doc(String(id)).delete();
-            }
-            db.chamados = db.chamados.filter(c => c.id != id);
+            if (firestoreDb) await firestoreDb.collection('chamados').doc(String(id)).delete();
+            db.chamados = db.chamados.filter(c => String(c.id) !== String(id));
             renderizarChamados();
         }
     }
