@@ -404,11 +404,20 @@
             <div id="helpdesk-aviso-solicitante" class="hidden rounded-xl border border-sky-800/60 bg-sky-950/30 p-4 text-xs text-sky-200">
                 <strong>Área do solicitante:</strong> você pode abrir chamados e acompanhar somente as solicitações feitas pela sua conta. O andamento e o encerramento são realizados pela equipe técnica.
             </div>
+            <section id="helpdesk-gerenciar-cadastros" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3"><div><h3 class="text-sm font-bold text-white">Cadastros do Helpdesk</h3><p class="text-[11px] text-slate-400 mt-1">Disponível para todos os perfis autenticados. Alterações compartilhadas com a equipe.</p></div><button type="button" onclick="abrirModalEquipamento()" class="bg-primary hover:bg-sky-600 text-white px-3 py-2 rounded-xl text-xs font-semibold"><i class="fa-solid fa-plus mr-1"></i>Novo equipamento</button></div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
+                    <div class="rounded-xl border border-slate-800 p-3 space-y-2"><label for="helpdesk-equipamento-editar" class="block text-slate-300 font-semibold">Editar equipamento existente</label><div class="flex gap-2"><select id="helpdesk-equipamento-editar" class="min-w-0 flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select><button type="button" onclick="editarEquipamentoHelpdesk()" class="bg-sky-900 text-sky-200 px-3 py-2 rounded-xl">Editar</button></div></div>
+                    <div class="rounded-xl border border-slate-800 p-3 space-y-2"><label for="helpdesk-nova-categoria" class="block text-slate-300 font-semibold">Categorias dos chamados</label><div class="flex gap-2"><input id="helpdesk-nova-categoria" maxlength="60" placeholder="Nova categoria" class="min-w-0 flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"><button type="button" onclick="adicionarCategoriaHelpdesk()" class="bg-primary text-white px-3 py-2 rounded-xl">Adicionar</button></div><div id="helpdesk-lista-categorias" class="max-h-40 overflow-y-auto space-y-1"></div></div>
+                    <div class="rounded-xl border border-slate-800 p-3 space-y-2"><label for="helpdesk-novo-setor" class="block text-slate-300 font-semibold">Setores</label><div class="flex gap-2"><input id="helpdesk-novo-setor" maxlength="80" placeholder="Novo setor" class="min-w-0 flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"><button type="button" onclick="adicionarSetorHelpdesk()" class="bg-primary text-white px-3 py-2 rounded-xl">Adicionar</button></div><div id="helpdesk-lista-setores" class="max-h-40 overflow-y-auto space-y-1"></div></div>
+                </div>
+            </section>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-x-auto shadow-xl">
                 <table class="w-full min-w-[850px] text-left border-collapse text-xs">
                     <thead>
                         <tr class="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
                             <th class="p-3.5">Ticket / abertura</th>
+                            <th class="p-3.5">Início do evento</th>
                             <th class="p-3.5">Solicitante</th>
                             <th class="p-3.5">Equipamento</th>
                             <th class="p-3.5">Unidade / Setor</th>
@@ -969,9 +978,7 @@
             </div>
             <div>
                 <label class="block text-slate-300 mb-1">Categoria</label>
-                <select id="chamado-categoria" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                    <option>Hardware</option><option>Software</option><option>Rede / Internet</option><option>Elétrica</option><option>Impressora</option><option>Outro</option>
-                </select>
+                <select id="chamado-categoria" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
             </div>
             <div>
                 <label class="block text-slate-300 mb-1">Prioridade</label>
@@ -980,7 +987,12 @@
                 </select>
             </div>
             <div class="sm:col-span-2">
-                <label class="block text-slate-300 mb-1">Descrição do problema</label>
+                <div>
+                    <label for="chamado-inicio-evento" class="block text-slate-300 mb-1">Data e hora de início do evento</label>
+                    <input type="datetime-local" id="chamado-inicio-evento" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <p class="text-[10px] text-slate-500 mt-1">Preenchimento disponível para todos os perfis.</p>
+                </div>
+                <div class="sm:col-span-2"><label class="block text-slate-300 mb-1">Descrição do problema</label>
                 <textarea id="chamado-descricao" rows="3" maxlength="3000" placeholder="Conte o que aconteceu e quando começou..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-primary"></textarea>
             </div>
         </div>
@@ -1204,6 +1216,7 @@
             urlPublica: 'https://inventario-60bf7.web.app',
             copyright: '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.',
             geminiKey: '',
+            categoriasChamado: ['Hardware', 'Software', 'Rede / Internet', 'Elétrica', 'Impressora', 'Outro'],
             firebaseApiKey: 'AIzaSyDpdHmcIY-bWRpbRgJKW0snPfLtqrI_QtA',
             firebaseAuthDomain: 'inventario-60bf7.firebaseapp.com',
             firebaseProjectId: 'inventario-60bf7',
@@ -2466,6 +2479,7 @@
     function renderizarChamados() {
         const tbody = document.getElementById('tabela-chamados-body');
         if (!tbody) return;
+        renderizarCadastrosHelpdesk();
         const equipe = ehEquipeTecnica();
         const meusChamados = equipe ? db.chamados : db.chamados.filter(c => String(c.solicitanteId || '') === String(usuarioLogado?.id || usuarioLogado?.usuario || ''));
         const titulo = document.getElementById('helpdesk-titulo');
@@ -2475,18 +2489,20 @@
         if (subtitulo) subtitulo.textContent = equipe ? 'Fila de chamados: registre o andamento e encerre após concluir.' : 'Abra uma solicitação e consulte o andamento dos seus chamados.';
         if (aviso) aviso.classList.toggle('hidden', equipe);
         if (meusChamados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">${equipe ? 'Nenhum chamado registrado.' : 'Você ainda não abriu chamados.'}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">${equipe ? 'Nenhum chamado registrado.' : 'Você ainda não abriu chamados.'}</td></tr>`;
             return;
         }
         tbody.innerHTML = meusChamados.slice().sort((a,b) => Number(b.dataAberturaMs || 0) - Number(a.dataAberturaMs || 0)).map(c => {
             const eq = db.equipamentos.find(e => String(e.id) === String(c.equipamentoId)) || { codigo: 'S/C', nome: c.equipamentoNome || 'Não informado' };
             const badgeStatus = obterBadgeChamadoStatus(c.status || 'Aberto');
             const dataAbertura = c.dataAbertura ? new Date(c.dataAbertura).toLocaleString('pt-BR') : '-';
+            const inicioEvento = c.dataInicioEvento ? new Date(c.dataInicioEvento).toLocaleString('pt-BR') : 'Não informado';
             const ult = Array.isArray(c.historico) && c.historico.length ? c.historico[c.historico.length - 1] : null;
             const trecho = ult ? `<div class="mt-1 text-[10px] text-sky-300"><strong>${escaparTextoChamado(ult.autor || 'Equipe')}:</strong> ${escaparTextoChamado(ult.texto)}</div>` : '';
             const acao = equipe ? `<button onclick="abrirModalChamado('${escaparTextoChamado(c.id)}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold" title="Atualizar atendimento"><i class="fa-solid fa-clipboard-check"></i> Atender</button>` : `<span class="text-slate-500">Somente consulta</span>`;
             return `<tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
                 <td class="p-3.5"><div class="font-mono font-semibold text-slate-200">#${escaparTextoChamado(c.id)}</div><div class="mt-1 text-[10px] text-slate-500">${escaparTextoChamado(dataAbertura)}</div></td>
+                <td class="p-3.5 text-sky-200">${escaparTextoChamado(inicioEvento)}</td>
                 <td class="p-3.5 text-slate-300">${escaparTextoChamado(c.solicitanteNome || '-')}<div class="text-[10px] text-slate-500">${escaparTextoChamado(c.contato || '')}</div></td>
                 <td class="p-3.5 font-medium text-white"><span class="font-mono text-xs text-sky-400 mr-1">[${escaparTextoChamado(eq.codigo)}]</span> ${escaparTextoChamado(eq.nome)}</td>
                 <td class="p-3.5 text-slate-300 font-semibold">${escaparTextoChamado(c.unidade)}</td>
@@ -2523,8 +2539,11 @@
         selectEq.disabled = !!c;
         selectUnidade.value = c?.unidade || '';
         selectUnidade.disabled = !!c;
-        document.getElementById('chamado-categoria').value = c?.categoria || 'Hardware';
+        popularCategoriasChamado(c?.categoria || 'Hardware');
         document.getElementById('chamado-categoria').disabled = !!c;
+        const campoInicioEvento = document.getElementById('chamado-inicio-evento');
+        campoInicioEvento.value = c?.dataInicioEvento ? paraDataHoraLocal(c.dataInicioEvento) : paraDataHoraLocal(new Date());
+        campoInicioEvento.readOnly = !!c && !equipe;
         document.getElementById('chamado-prioridade').value = c?.prioridade || 'Média';
         document.getElementById('chamado-prioridade').disabled = !!c;
         descricao.value = c?.descricao || '';
@@ -2551,15 +2570,21 @@
         if (id) {
             const existente = db.chamados.find(c => String(c.id) === String(id));
             if (!existente) return alert('Chamado não encontrado.');
+            const inicioEventoTexto = document.getElementById('chamado-inicio-evento').value;
+            if (!inicioEventoTexto) return alert('Informe a data e a hora de início do evento.');
+            const dataInicioEvento = new Date(inicioEventoTexto).toISOString();
             const andamento = document.getElementById('chamado-andamento').value.trim();
             const historico = Array.isArray(existente.historico) ? [...existente.historico] : [];
             if (andamento) historico.push({ texto: andamento, autor: usuarioLogado.nome || usuarioLogado.usuario, autorId: String(usuarioLogado.id || usuarioLogado.usuario), data: agora });
             const status = document.getElementById('chamado-status').value;
-            if (!andamento && status === existente.status && document.getElementById('chamado-tecnico').value.trim() === (existente.tecnico || '')) return alert('Adicione uma atualização ou altere o status/responsável.');
-            dados = { ...existente, status, tecnico: document.getElementById('chamado-tecnico').value.trim(), historico, dataAtualizacao: agora };
+            if (!andamento && status === existente.status && document.getElementById('chamado-tecnico').value.trim() === (existente.tecnico || '') && dataInicioEvento === (existente.dataInicioEvento || '')) return alert('Adicione uma atualização, altere o status/responsável ou ajuste o início do evento.');
+            dados = { ...existente, dataInicioEvento, status, tecnico: document.getElementById('chamado-tecnico').value.trim(), historico, dataAtualizacao: agora };
             if (['Resolvido', 'Fechado'].includes(status)) dados.dataFechamento = existente.dataFechamento || agora;
             else dados.dataFechamento = '';
         } else {
+            const inicioEventoTexto = document.getElementById('chamado-inicio-evento').value;
+            if (!inicioEventoTexto) return alert('Informe a data e a hora de início do evento.');
+            const dataInicioEvento = new Date(inicioEventoTexto).toISOString();
             const descricao = document.getElementById('chamado-descricao').value.trim();
             const unidade = document.getElementById('chamado-unidade').value;
             if (!descricao) return alert('Descreva o problema.');
@@ -2572,7 +2597,7 @@
             dados = {
                 id: chamadoId, equipamentoId: equipamentoId || '', equipamentoNome: eq?.nome || 'Não informado',
                 unidade, categoria: document.getElementById('chamado-categoria').value,
-                prioridade: document.getElementById('chamado-prioridade').value, status: 'Aberto', descricao, contato,
+                prioridade: document.getElementById('chamado-prioridade').value, status: 'Aberto', descricao, contato, dataInicioEvento,
                 solicitanteId: String(usuarioLogado.id || usuarioLogado.usuario), solicitanteNome: usuarioLogado.nome || usuarioLogado.usuario,
                 dataAbertura: agora, dataAberturaMs: Date.now(), dataFechamento: '', tecnico: '', historico: []
             };
@@ -2746,6 +2771,78 @@
         abrirModalChamado(null, equipamentoAtualQR.id);
     }
 
+    function podeGerenciarCadastrosHelpdesk() {
+        if (!usuarioLogado) { alert('Entre no sistema para gerenciar os cadastros.'); return false; }
+        return true;
+    }
+
+    function paraDataHoraLocal(valor) {
+        const data = valor instanceof Date ? valor : new Date(valor);
+        if (Number.isNaN(data.getTime())) return '';
+        return new Date(data.getTime() - data.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+
+    function categoriasHelpdesk() {
+        if (!Array.isArray(db.config.categoriasChamado) || !db.config.categoriasChamado.length) db.config.categoriasChamado = [...dadosCompletosPasteur.config.categoriasChamado];
+        return db.config.categoriasChamado;
+    }
+
+    function popularCategoriasChamado(selecionada = '') {
+        const select = document.getElementById('chamado-categoria');
+        if (!select) return;
+        const categorias = [...new Set([...categoriasHelpdesk(), ...(selecionada ? [selecionada] : [])])];
+        select.innerHTML = categorias.map(c => `<option value="${escaparTextoChamado(c)}">${escaparTextoChamado(c)}</option>`).join('');
+        select.value = selecionada || categorias[0] || '';
+    }
+
+    function renderizarCadastrosHelpdesk() {
+        const sel = document.getElementById('helpdesk-equipamento-editar');
+        if (sel) sel.innerHTML = '<option value="">Selecione um equipamento</option>' + [...db.equipamentos].sort((a,b) => (a.nome || '').localeCompare(b.nome || '')).map(e => `<option value="${escaparTextoChamado(e.id)}">[${escaparTextoChamado(e.codigo || 'S/C')}] ${escaparTextoChamado(e.nome || '')}</option>`).join('');
+        const categorias = document.getElementById('helpdesk-lista-categorias');
+        if (categorias) categorias.innerHTML = categoriasHelpdesk().map((c,i) => `<div class="flex items-center justify-between gap-2 rounded-lg bg-slate-950/50 px-2 py-1.5"><span class="text-slate-200">${escaparTextoChamado(c)}</span><button type="button" onclick="editarCategoriaHelpdesk(${i})" class="text-sky-300 hover:text-sky-200">Editar</button></div>`).join('') || '<p class="text-slate-500">Nenhuma categoria cadastrada.</p>';
+        const setores = document.getElementById('helpdesk-lista-setores');
+        if (setores) setores.innerHTML = [...db.setores].sort().map((s,i) => `<div class="flex items-center justify-between gap-2 rounded-lg bg-slate-950/50 px-2 py-1.5"><span class="text-slate-200">${escaparTextoChamado(s)}</span><button type="button" onclick="editarSetor(${i})" class="text-sky-300 hover:text-sky-200">Editar</button></div>`).join('') || '<p class="text-slate-500">Nenhum setor cadastrado.</p>';
+    }
+
+    function editarEquipamentoHelpdesk() {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
+        const id = document.getElementById('helpdesk-equipamento-editar')?.value;
+        if (!id) return alert('Selecione um equipamento para editar.');
+        abrirModalEquipamento(id);
+    }
+
+    async function adicionarCategoriaHelpdesk() {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
+        const input = document.getElementById('helpdesk-nova-categoria');
+        const nome = input.value.trim();
+        if (!nome) return alert('Informe o nome da categoria.');
+        if (categoriasHelpdesk().some(c => c.toLocaleLowerCase('pt-BR') === nome.toLocaleLowerCase('pt-BR'))) return alert('Essa categoria já está cadastrada.');
+        db.config.categoriasChamado.push(nome);
+        try { await salvarConfiguracoesFirebase(); input.value = ''; popularCategoriasChamado(nome); renderizarCadastrosHelpdesk(); }
+        catch (erro) { db.config.categoriasChamado.pop(); alert('Não foi possível salvar a categoria. Verifique a conexão e as permissões.'); }
+    }
+
+    async function editarCategoriaHelpdesk(indice) {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
+        const categorias = categoriasHelpdesk(); const antiga = categorias[indice]; if (!antiga) return;
+        const resposta = prompt('Digite o novo nome da categoria:', antiga); if (resposta === null) return;
+        const nova = resposta.trim(); if (!nova) return alert('Informe um nome para a categoria.');
+        if (categorias.some((c,i) => i !== indice && c.toLocaleLowerCase('pt-BR') === nova.toLocaleLowerCase('pt-BR'))) return alert('Essa categoria já está cadastrada.');
+        categorias[indice] = nova;
+        try { await salvarConfiguracoesFirebase(); popularCategoriasChamado(nova); renderizarCadastrosHelpdesk(); }
+        catch (erro) { categorias[indice] = antiga; alert('Não foi possível salvar a categoria. Verifique a conexão e as permissões.'); }
+    }
+
+    async function adicionarSetorHelpdesk() {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
+        const input = document.getElementById('helpdesk-novo-setor'); const nome = input.value.trim().toUpperCase();
+        if (!nome) return alert('Informe o nome do setor.');
+        if (db.setores.some(s => s.toLocaleLowerCase('pt-BR') === nome.toLocaleLowerCase('pt-BR'))) return alert('Esse setor já está cadastrado.');
+        const anterior = [...db.setores]; db.setores.push(nome);
+        try { await salvarConfiguracoesFirebase(); input.value = ''; renderizarSetores(); popularSelects(); renderizarCadastrosHelpdesk(); }
+        catch (erro) { db.setores = anterior; alert('Não foi possível salvar o setor. Verifique a conexão e as permissões.'); }
+    }
+
     function popularSelects() {
         const sf = document.getElementById('filtro-setor');
         const sm = document.getElementById('eq-setor');
@@ -2791,6 +2888,7 @@
     }
     
     async function editarSetor(i) {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
         const setoresOrdenados = [...db.setores].sort();
         const setorAntigo = setoresOrdenados[i];
         if (!setorAntigo) return;
@@ -2832,6 +2930,7 @@
     }
 
     async function salvarSetor() {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
         const valInput = document.getElementById('novo-setor-nome');
         const val = valInput ? valInput.value.trim().toUpperCase() : "";
         if (val && !db.setores.includes(val)) {
@@ -2878,6 +2977,7 @@
     }
 
     function abrirModalEquipamento(id = null) {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
         document.getElementById('modal-equipamento').classList.remove('hidden');
         popularSelects();
         if (id !== null) {
@@ -2910,12 +3010,15 @@
     function fecharModalEquipamento() { document.getElementById('modal-equipamento').classList.add('hidden'); }
 
     async function salvarEquipamento() {
+        if (!podeGerenciarCadastrosHelpdesk()) return;
         const id = document.getElementById('eq-id').value;
         const eqId = id ? String(id) : String(Date.now());
+        const nomeEquipamento = document.getElementById('eq-nome').value.trim();
+        if (!nomeEquipamento) return alert('Informe o nome do equipamento.');
         const dados = {
             id: eqId,
             codigo: document.getElementById('eq-codigo').value.toUpperCase(),
-            nome: document.getElementById('eq-nome').value.toUpperCase(),
+            nome: nomeEquipamento.toUpperCase(),
             tipo: document.getElementById('eq-tipo').value,
             setor: document.getElementById('eq-setor').value,
             ip: document.getElementById('eq-ip').value.trim(),
@@ -2930,8 +3033,11 @@
         dados._buscaNome = dados.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
         dados._buscaCodigo = dados.codigo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
-        if (firestoreDb) {
-            await firestoreDb.collection('equipamentos').doc(eqId).set(dados);
+        try {
+            if (firestoreDb) await firestoreDb.collection('equipamentos').doc(eqId).set(dados);
+        } catch (erro) {
+            console.error('Não foi possível salvar o equipamento:', erro);
+            return alert('Não foi possível salvar o equipamento. Verifique a conexão e as permissões.');
         }
 
         const idx = db.equipamentos.findIndex(e => e.id == eqId);
@@ -2944,6 +3050,8 @@
         renderizarMonitoramento();
         atualizarRelatorios();
         verificarAlertaCriticos();
+        renderizarCadastrosHelpdesk();
+        renderizarChamados();
     }
 
     async function excluirEquipamento(id) {
