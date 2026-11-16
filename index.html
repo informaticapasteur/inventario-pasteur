@@ -217,7 +217,7 @@
             <i class="fa-solid fa-route mr-1.5"></i> Rastreabilidade
         </button>
         <button onclick="mudarAba('setores')" id="btn-setores" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
-            <i class="fa-solid fa-building mr-1.5"></i> Setores / Tipos
+            <i class="fa-solid fa-building mr-1.5"></i> Cadastros Gerais
         </button>
         <button onclick="mudarAba('relatorios')" id="btn-relatorios" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-300 hover:bg-slate-800 transition cursor-pointer">
             <i class="fa-solid fa-chart-pie mr-1.5"></i> Relatórios & IA
@@ -543,6 +543,10 @@
         </section>
 
         <section id="aba-setores" class="hidden space-y-6">
+            <div>
+                <h2 class="text-lg font-bold text-white">Cadastros Gerais</h2>
+                <p class="text-xs text-slate-400 mt-1">Gerencie setores, tipos de equipamentos e empresas usadas nos cadastros.</p>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
                     <h2 class="text-sm font-bold text-white">Gerenciar Setores</h2>
@@ -575,6 +579,19 @@
                     </div>
                     <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl">
                         <table class="w-full text-left border-collapse"><tbody id="tabela-empresas-comodato-body" class="divide-y divide-slate-800"></tbody></table>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Empresas de Suporte</h2>
+                        <p class="text-[11px] text-slate-400 mt-1">Cadastre as empresas de suporte para selecioná-las no equipamento.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="nova-empresa-suporte" maxlength="120" placeholder="Nome da empresa..." class="min-w-0 flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                        <button type="button" onclick="salvarEmpresaSuporte()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Adicionar</button>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl">
+                        <table class="w-full text-left border-collapse"><tbody id="tabela-empresas-suporte-body" class="divide-y divide-slate-800"></tbody></table>
                     </div>
                 </div>
             </div>
@@ -1272,6 +1289,7 @@
             urlPublica: 'https://inventario-60bf7.web.app',
             copyright: '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.',
             empresasComodato: [],
+            empresasSuporte: [],
             geminiKey: '',
             firebaseApiKey: 'AIzaSyDpdHmcIY-bWRpbRgJKW0snPfLtqrI_QtA',
             firebaseAuthDomain: 'inventario-60bf7.firebaseapp.com',
@@ -1336,6 +1354,7 @@
         db.usuarios = [...dadosCompletosPasteur.usuarios];
         db.config = { ...dadosCompletosPasteur.config };
         db.config.empresasComodato = carregarEmpresasComodatoLocal();
+        db.config.empresasSuporte = carregarEmpresasSuporteLocal();
         try {
             db.config.helpdeskResponsaveis = JSON.parse(localStorage.getItem('helpdeskResponsaveis') || '[]');
             db.config.helpdeskTipos = JSON.parse(localStorage.getItem('helpdeskTiposResponsaveis') || '["Empresa","Prestador"]');
@@ -1345,6 +1364,7 @@
             e._buscaCodigo = (e.codigo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
             return e;
         });
+        if (localStorage.getItem('empresasSuporte') === null) migrarEmpresasSuporteLegadas();
         aplicarConfiguracoes();
         aplicarModulosSistema();
         filtrarTabela();
@@ -1357,7 +1377,7 @@
         renderizarRastreabilidade();
         renderizarSetores();
         renderizarTipos();
-        renderizarEmpresasComodato();
+        renderizarEmpresasComodato(); renderizarEmpresasSuporte();
         renderizarUsuarios();
         atualizarRelatorios();
         popularSelects();
@@ -1394,12 +1414,16 @@
                 firestoreDb.collection('usuarios').get()
             ]);
 
+            const configFirebase = configDoc.exists ? configDoc.data() : {};
+            const listaSuporteExisteNoFirebase = Array.isArray(configFirebase.config?.empresasSuporte);
+            const listaSuporteExisteLocalmente = localStorage.getItem('empresasSuporte') !== null;
             if (configDoc.exists) {
-                const data = configDoc.data();
+                const data = configFirebase;
                 db.setores = data.setores || dadosCompletosPasteur.setores;
                 db.tipos = data.tipos || dadosCompletosPasteur.tipos;
                 db.config = { ...dadosCompletosPasteur.config, ...(data.config || {}) };
                 if (!Array.isArray(db.config.empresasComodato)) db.config.empresasComodato = carregarEmpresasComodatoLocal();
+                if (!listaSuporteExisteNoFirebase) db.config.empresasSuporte = carregarEmpresasSuporteLocal();
                 if (!Array.isArray(db.config.helpdeskResponsaveis)) db.config.helpdeskResponsaveis = [];
                 if (!Array.isArray(db.config.helpdeskTipos)) db.config.helpdeskTipos = ['Empresa', 'Prestador'];
             }
@@ -1432,6 +1456,10 @@
             if (usrCloud.length > 0) db.usuarios = usrCloud;
 
             db.equipamentos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+            if (!listaSuporteExisteNoFirebase && !listaSuporteExisteLocalmente) migrarEmpresasSuporteLegadas();
+            if (!listaSuporteExisteNoFirebase && db.config.empresasSuporte.length && firestoreDb) {
+                salvarConfiguracoesFirebase().catch(erro => console.warn('Não foi possível salvar a migração das empresas de suporte:', erro));
+            }
 
             aplicarConfiguracoes();
             aplicarModulosSistema();
@@ -1444,7 +1472,7 @@
             renderizarRastreabilidade();
             renderizarSetores();
             renderizarTipos();
-            renderizarEmpresasComodato();
+            renderizarEmpresasComodato(); renderizarEmpresasSuporte();
             renderizarUsuarios();
             atualizarRelatorios();
             popularSelects();
@@ -1462,8 +1490,32 @@
         } catch (_) { return []; }
     }
 
+    function carregarEmpresasSuporteLocal() {
+        try {
+            const empresas = JSON.parse(localStorage.getItem('empresasSuporte') || '[]');
+            return Array.isArray(empresas) ? empresas.filter(nome => typeof nome === 'string' && nome.trim()).map(nome => nome.trim()) : [];
+        } catch (_) { return []; }
+    }
+
+    function migrarEmpresasSuporteLegadas() {
+        if (!db.config) db.config = { ...dadosCompletosPasteur.config };
+        const legadas = [
+            ...(Array.isArray(db.config.empresasSuporte) ? db.config.empresasSuporte : []),
+            ...(Array.isArray(db.config.helpdeskResponsaveis) ? db.config.helpdeskResponsaveis.filter(r => (r.tipo || 'Empresa') === 'Empresa').map(r => r.nome) : []),
+            ...(Array.isArray(db.equipamentos) ? db.equipamentos.map(eq => eq.empresaSuporte) : [])
+        ];
+        const unicas = new Map();
+        legadas.filter(nome => typeof nome === 'string' && nome.trim()).forEach(nome => {
+            const texto = nome.trim();
+            const chave = texto.toLocaleLowerCase('pt-BR');
+            if (!unicas.has(chave)) unicas.set(chave, texto);
+        });
+        db.config.empresasSuporte = [...unicas.values()];
+    }
+
     async function salvarConfiguracoesFirebase() {
         try { localStorage.setItem('empresasComodato', JSON.stringify(db.config.empresasComodato || [])); } catch (_) {}
+        try { localStorage.setItem('empresasSuporte', JSON.stringify(db.config.empresasSuporte || [])); } catch (_) {}
         if (!firestoreDb) return;
         await firestoreDb.collection('configuracoes').doc('geral').set({
             setores: db.setores,
@@ -1651,7 +1703,7 @@
                 validacao: 'Qualificação / Validação',
                 financeiro: 'Financeiro / Comodatos',
                 rastreabilidade: 'Rastreabilidade / Histórico',
-                setores: 'Setores e Tipos',
+                setores: 'Cadastros Gerais',
                 relatorios: 'Relatórios & IA'
             };
 
@@ -2335,7 +2387,7 @@
             aplicarConfiguracoes(); aplicarModulosSistema();
             filtrarTabela(); renderizarMonitoramento(); renderizarManutencao(); renderizarValidacao();
             renderizarChamados(); renderizarFinanceiro(); renderizarRastreabilidade();
-            renderizarSetores(); renderizarTipos(); renderizarEmpresasComodato(); renderizarUsuarios(); atualizarBackupRelatorios();
+            renderizarSetores(); renderizarTipos(); renderizarEmpresasComodato(); renderizarEmpresasSuporte(); renderizarUsuarios(); atualizarBackupRelatorios();
             alert('Restauração concluída para os módulos selecionados.');
         } catch (erro) {
             console.error('Falha ao restaurar backup:', erro);
@@ -3063,7 +3115,11 @@
         const selectSuporte = document.getElementById('eq-empresa-suporte');
         if (selectSuporte) {
             const anterior = selectSuporte.value;
-            const empresas = obterResponsaveisHelpdesk().filter(r => (r.tipo || 'Empresa') === 'Empresa').map(r => r.nome).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            if (!db.config) db.config = { ...dadosCompletosPasteur.config };
+            if (!Array.isArray(db.config.empresasSuporte)) db.config.empresasSuporte = carregarEmpresasSuporteLocal();
+            const empresasConfiguradas = db.config.empresasSuporte;
+            const valoresExistentes = (db.equipamentos || []).map(eq => eq.empresaSuporte).filter(Boolean);
+            const empresas = [...new Set([...empresasConfiguradas, ...valoresExistentes])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
             selectSuporte.innerHTML = '<option value="">Não informado</option>' + empresas.map(nome => `<option value="${escaparTextoChamado(nome)}">${escaparTextoChamado(nome)}</option>`).join('');
             if (empresas.includes(anterior)) selectSuporte.value = anterior;
         }
@@ -3077,14 +3133,24 @@
         }
     }
 
+    async function atualizarCampoEquipamentosFirebase(equipamentos, campo, valor) {
+        if (!firestoreDb || !equipamentos.length) return;
+        for (let inicio = 0; inicio < equipamentos.length; inicio += 450) {
+            const lote = firestoreDb.batch();
+            equipamentos.slice(inicio, inicio + 450).forEach(eq => {
+                lote.update(firestoreDb.collection('equipamentos').doc(String(eq.id)), { [campo]: valor });
+            });
+            await lote.commit();
+        }
+    }
+
     function renderizarSetores() {
         const tbody = document.getElementById('tabela-setores-body');
         if (!tbody) return;
-        let html = '';
-        [...db.setores].sort().forEach((s, i) => {
-            html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${s}</td><td class="p-3.5 text-center whitespace-nowrap"><button onclick="editarSetor(${i})" class="text-sky-300 hover:text-sky-200 text-xs cursor-pointer mr-3"><i class="fa-solid fa-pen"></i> Renomear</button><button onclick="excluirSetor(${i})" class="text-red-400 text-xs cursor-pointer">Remover</button></td></tr>`;
-        });
-        tbody.innerHTML = html;
+        const setoresOrdenados = [...db.setores].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        tbody.innerHTML = setoresOrdenados.length ? setoresOrdenados.map((setor, i) =>
+            `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${escaparTextoChamado(setor)}</td><td class="p-3.5 text-center whitespace-nowrap"><button type="button" onclick="editarSetor(${i})" class="text-sky-300 hover:text-sky-200 text-xs cursor-pointer mr-3"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="excluirSetor(${i})" class="text-red-400 hover:text-red-300 text-xs cursor-pointer"><i class="fa-solid fa-trash mr-1"></i>Excluir</button></td></tr>`
+        ).join('') : '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum setor cadastrado.</td></tr>';
     }
     
     async function editarSetor(i) {
@@ -3131,29 +3197,78 @@
     async function salvarSetor() {
         const valInput = document.getElementById('novo-setor-nome');
         const val = valInput ? valInput.value.trim().toUpperCase() : "";
-        if (val && !db.setores.includes(val)) {
-            db.setores.push(val);
-            valInput.value = '';
+        if (!val) return alert('Informe o nome do setor.');
+        if (db.setores.some(setor => setor.toLocaleLowerCase('pt-BR') === val.toLocaleLowerCase('pt-BR'))) return alert('Esse setor já está cadastrado.');
+        db.setores.push(val);
+        valInput.value = '';
+        try {
             await salvarConfiguracoesFirebase();
             renderizarSetores(); popularSelects(); atualizarRelatorios();
+        } catch (erro) {
+            db.setores = db.setores.filter(setor => setor !== val);
+            renderizarSetores();
+            console.error('Erro ao salvar setor:', erro);
+            alert('Não foi possível salvar o setor. Verifique a conexão e tente novamente.');
         }
     }
     
     async function excluirSetor(i) {
+        const setoresOrdenados = [...db.setores].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        const setor = setoresOrdenados[i];
+        if (!setor) return;
         if (db.setores.length <= 1) return alert('Mantenha pelo menos um setor.');
-        db.setores.splice(i, 1);
-        await salvarConfiguracoesFirebase();
-        renderizarSetores(); popularSelects(); atualizarRelatorios();
+        if (db.equipamentos.some(eq => eq.setor === setor) || db.transferencias.some(t => t.origem === setor || t.destino === setor)) {
+            return alert('Este setor está vinculado a equipamentos ou transferências. Reatribua esses registros antes de excluí-lo.');
+        }
+        if (!confirm(`Excluir o setor "${setor}"?`)) return;
+        const anteriores = db.setores;
+        db.setores = db.setores.filter(item => item !== setor);
+        try {
+            await salvarConfiguracoesFirebase();
+            renderizarSetores(); popularSelects(); atualizarRelatorios();
+        } catch (erro) {
+            db.setores = anteriores;
+            renderizarSetores();
+            console.error('Erro ao excluir setor:', erro);
+            alert('Não foi possível salvar a exclusão. Verifique a conexão e tente novamente.');
+        }
     }
 
     function renderizarTipos() {
         const tbody = document.getElementById('tabela-tipos-body');
         if (!tbody) return;
-        let html = '';
-        [...db.tipos].sort().forEach((t, i) => {
-            html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${t}</td><td class="p-3.5 text-center"><button onclick="excluirTipo(${i})" class="text-red-400 text-xs cursor-pointer">Remover</button></td></tr>`;
-        });
-        tbody.innerHTML = html;
+        const tiposOrdenados = [...db.tipos].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        tbody.innerHTML = tiposOrdenados.length ? tiposOrdenados.map((tipo, i) =>
+            `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${escaparTextoChamado(tipo)}</td><td class="p-3.5 text-center whitespace-nowrap"><button type="button" onclick="editarTipo(${i})" class="text-sky-300 hover:text-sky-200 text-xs cursor-pointer mr-3"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="excluirTipo(${i})" class="text-red-400 hover:text-red-300 text-xs cursor-pointer"><i class="fa-solid fa-trash mr-1"></i>Excluir</button></td></tr>`
+        ).join('') : '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhum tipo cadastrado.</td></tr>';
+    }
+
+    async function editarTipo(i) {
+        const tiposOrdenados = [...db.tipos].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        const tipoAntigo = tiposOrdenados[i];
+        if (!tipoAntigo) return;
+        const resposta = prompt('Digite o novo nome do tipo de equipamento:', tipoAntigo);
+        if (resposta === null) return;
+        const tipoNovo = resposta.trim();
+        if (!tipoNovo) return alert('Informe um nome para o tipo.');
+        if (tipoNovo === tipoAntigo) return;
+        if (db.tipos.some(tipo => tipo !== tipoAntigo && tipo.toLocaleLowerCase('pt-BR') === tipoNovo.toLocaleLowerCase('pt-BR'))) return alert('Já existe um tipo com esse nome.');
+        if (!confirm(`Alterar "${tipoAntigo}" para "${tipoNovo}"? Os equipamentos vinculados também serão atualizados.`)) return;
+        const equipamentosAfetados = db.equipamentos.filter(eq => eq.tipo === tipoAntigo);
+        const tiposAnteriores = db.tipos;
+        try {
+            await atualizarCampoEquipamentosFirebase(equipamentosAfetados, 'tipo', tipoNovo);
+            db.tipos = db.tipos.map(tipo => tipo === tipoAntigo ? tipoNovo : tipo);
+            equipamentosAfetados.forEach(eq => { eq.tipo = tipoNovo; });
+            await salvarConfiguracoesFirebase();
+            renderizarTipos(); popularSelects(); filtrarTabela(); atualizarRelatorios();
+        } catch (erro) {
+            db.tipos = tiposAnteriores;
+            equipamentosAfetados.forEach(eq => { eq.tipo = tipoAntigo; });
+            renderizarTipos();
+            console.error('Erro ao editar tipo:', erro);
+            alert('Não foi possível salvar a alteração. Verifique a conexão e tente novamente.');
+        }
     }
     
     function renderizarEmpresasComodato() {
@@ -3162,8 +3277,114 @@
         const empresas = Array.isArray(db.config.empresasComodato) ? db.config.empresasComodato : [];
         tbody.innerHTML = empresas.length ? empresas.slice().sort((a, b) => a.localeCompare(b, 'pt-BR')).map(nome => {
             const indice = empresas.indexOf(nome);
-            return `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${escaparTextoChamado(nome)}</td><td class="p-3.5 text-center"><button type="button" onclick="excluirEmpresaComodato(${indice})" class="text-red-400 text-xs cursor-pointer"><i class="fa-solid fa-trash mr-1"></i>Remover</button></td></tr>`;
+            return `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${escaparTextoChamado(nome)}</td><td class="p-3.5 text-center whitespace-nowrap"><button type="button" onclick="editarEmpresaComodato(${indice})" class="text-sky-300 hover:text-sky-200 text-xs cursor-pointer mr-3"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="excluirEmpresaComodato(${indice})" class="text-red-400 hover:text-red-300 text-xs cursor-pointer"><i class="fa-solid fa-trash mr-1"></i>Excluir</button></td></tr>`;
         }).join('') : '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhuma empresa cadastrada.</td></tr>';
+    }
+
+    function renderizarEmpresasSuporte() {
+        const tbody = document.getElementById('tabela-empresas-suporte-body');
+        if (!tbody) return;
+        const empresas = Array.isArray(db.config.empresasSuporte) ? db.config.empresasSuporte : [];
+        tbody.innerHTML = empresas.length ? empresas.slice().sort((a, b) => a.localeCompare(b, 'pt-BR')).map(nome => {
+            const indice = empresas.indexOf(nome);
+            return `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${escaparTextoChamado(nome)}</td><td class="p-3.5 text-center whitespace-nowrap"><button type="button" onclick="editarEmpresaSuporte(${indice})" class="text-sky-300 hover:text-sky-200 text-xs cursor-pointer mr-3"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="excluirEmpresaSuporte(${indice})" class="text-red-400 hover:text-red-300 text-xs cursor-pointer"><i class="fa-solid fa-trash mr-1"></i>Excluir</button></td></tr>`;
+        }).join('') : '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhuma empresa cadastrada.</td></tr>';
+    }
+
+    async function editarEmpresaSuporte(indice) {
+        const empresas = Array.isArray(db.config.empresasSuporte) ? db.config.empresasSuporte : [];
+        const nomeAntigo = empresas[indice];
+        if (!nomeAntigo) return;
+        const resposta = prompt('Digite o novo nome da empresa de suporte:', nomeAntigo);
+        if (resposta === null) return;
+        const nomeNovo = resposta.trim();
+        if (!nomeNovo) return alert('Informe o nome da empresa de suporte.');
+        if (nomeNovo === nomeAntigo) return;
+        if (empresas.some(nome => nome !== nomeAntigo && nome.toLocaleLowerCase('pt-BR') === nomeNovo.toLocaleLowerCase('pt-BR'))) return alert('Essa empresa já está cadastrada.');
+        const equipamentosAfetados = db.equipamentos.filter(eq => eq.empresaSuporte === nomeAntigo);
+        const empresasAnteriores = empresas.slice();
+        try {
+            await atualizarCampoEquipamentosFirebase(equipamentosAfetados, 'empresaSuporte', nomeNovo);
+            db.config.empresasSuporte = empresas.map(nome => nome === nomeAntigo ? nomeNovo : nome);
+            equipamentosAfetados.forEach(eq => { eq.empresaSuporte = nomeNovo; });
+            await salvarConfiguracoesFirebase();
+            renderizarEmpresasSuporte(); popularSelects();
+        } catch (erro) {
+            db.config.empresasSuporte = empresasAnteriores;
+            equipamentosAfetados.forEach(eq => { eq.empresaSuporte = nomeAntigo; });
+            renderizarEmpresasSuporte();
+            console.error('Erro ao editar empresa de suporte:', erro);
+            alert('Não foi possível salvar a alteração. Verifique a conexão e tente novamente.');
+        }
+    }
+
+    async function salvarEmpresaSuporte() {
+        if (!db.config) db.config = { ...dadosCompletosPasteur.config };
+        if (!Array.isArray(db.config.empresasSuporte)) db.config.empresasSuporte = carregarEmpresasSuporteLocal();
+        const input = document.getElementById('nova-empresa-suporte');
+        const nome = String(input?.value || '').trim();
+        if (!nome) return alert('Informe o nome da empresa de suporte.');
+        if (db.config.empresasSuporte.some(empresa => empresa.toLocaleLowerCase('pt-BR') === nome.toLocaleLowerCase('pt-BR'))) return alert('Essa empresa já está cadastrada.');
+        db.config.empresasSuporte.push(nome);
+        if (input) input.value = '';
+        try {
+            await salvarConfiguracoesFirebase();
+            renderizarEmpresasSuporte();
+            popularSelects();
+        } catch (erro) {
+            db.config.empresasSuporte = db.config.empresasSuporte.filter(empresa => empresa !== nome);
+            try { localStorage.setItem('empresasSuporte', JSON.stringify(db.config.empresasSuporte)); } catch (_) {}
+            renderizarEmpresasSuporte();
+            console.error('Erro ao salvar empresa de suporte:', erro);
+            alert('Não foi possível sincronizar a empresa com o Firebase. Verifique a conexão e tente novamente.');
+        }
+    }
+
+    async function excluirEmpresaSuporte(indice) {
+        const empresas = Array.isArray(db.config.empresasSuporte) ? db.config.empresasSuporte : [];
+        const nome = empresas[indice];
+        if (!nome) return;
+        if (db.equipamentos.some(eq => eq.empresaSuporte === nome)) return alert('Esta empresa está vinculada a um ou mais equipamentos e não pode ser removida.');
+        if (!confirm(`Remover a empresa "${nome}" do cadastro?`)) return;
+        db.config.empresasSuporte = empresas.filter((_, i) => i !== indice);
+        try {
+            await salvarConfiguracoesFirebase();
+            renderizarEmpresasSuporte();
+            popularSelects();
+        } catch (erro) {
+            db.config.empresasSuporte = empresas;
+            try { localStorage.setItem('empresasSuporte', JSON.stringify(empresas)); } catch (_) {}
+            renderizarEmpresasSuporte();
+            console.error('Erro ao remover empresa de suporte:', erro);
+            alert('Não foi possível sincronizar a remoção com o Firebase.');
+        }
+    }
+
+    async function editarEmpresaComodato(indice) {
+        const empresas = Array.isArray(db.config.empresasComodato) ? db.config.empresasComodato : [];
+        const nomeAntigo = empresas[indice];
+        if (!nomeAntigo) return;
+        const resposta = prompt('Digite o novo nome da empresa de comodato:', nomeAntigo);
+        if (resposta === null) return;
+        const nomeNovo = resposta.trim();
+        if (!nomeNovo) return alert('Informe o nome da empresa de comodato.');
+        if (nomeNovo === nomeAntigo) return;
+        if (empresas.some(nome => nome !== nomeAntigo && nome.toLocaleLowerCase('pt-BR') === nomeNovo.toLocaleLowerCase('pt-BR'))) return alert('Essa empresa já está cadastrada.');
+        const equipamentosAfetados = db.equipamentos.filter(eq => eq.empresaComodante === nomeAntigo);
+        const empresasAnteriores = empresas.slice();
+        try {
+            await atualizarCampoEquipamentosFirebase(equipamentosAfetados, 'empresaComodante', nomeNovo);
+            db.config.empresasComodato = empresas.map(nome => nome === nomeAntigo ? nomeNovo : nome);
+            equipamentosAfetados.forEach(eq => { eq.empresaComodante = nomeNovo; });
+            await salvarConfiguracoesFirebase();
+            renderizarEmpresasComodato(); popularSelects();
+        } catch (erro) {
+            db.config.empresasComodato = empresasAnteriores;
+            equipamentosAfetados.forEach(eq => { eq.empresaComodante = nomeAntigo; });
+            renderizarEmpresasComodato();
+            console.error('Erro ao editar empresa de comodato:', erro);
+            alert('Não foi possível salvar a alteração. Verifique a conexão e tente novamente.');
+        }
     }
 
     async function salvarEmpresaComodato() {
@@ -3177,12 +3398,12 @@
         if (input) input.value = '';
         try {
             await salvarConfiguracoesFirebase();
-            renderizarEmpresasComodato();
+            renderizarEmpresasComodato(); renderizarEmpresasSuporte();
             popularSelects();
         } catch (erro) {
             db.config.empresasComodato = db.config.empresasComodato.filter(empresa => empresa !== nome);
             try { localStorage.setItem('empresasComodato', JSON.stringify(db.config.empresasComodato)); } catch (_) {}
-            renderizarEmpresasComodato();
+            renderizarEmpresasComodato(); renderizarEmpresasSuporte();
             console.error('Erro ao salvar empresa de comodato:', erro);
             alert('Não foi possível sincronizar a empresa com o Firebase. Verifique a conexão e tente novamente.');
         }
@@ -3197,12 +3418,12 @@
         db.config.empresasComodato = empresas.filter((_, i) => i !== indice);
         try {
             await salvarConfiguracoesFirebase();
-            renderizarEmpresasComodato();
+            renderizarEmpresasComodato(); renderizarEmpresasSuporte();
             popularSelects();
         } catch (erro) {
             db.config.empresasComodato = empresas;
             try { localStorage.setItem('empresasComodato', JSON.stringify(empresas)); } catch (_) {}
-            renderizarEmpresasComodato();
+            renderizarEmpresasComodato(); renderizarEmpresasSuporte();
             console.error('Erro ao remover empresa de comodato:', erro);
             alert('Não foi possível sincronizar a remoção com o Firebase.');
         }
@@ -3210,20 +3431,40 @@
 
     async function salvarTipo() {
         const valInput = document.getElementById('novo-tipo-nome');
-        const val = valInput ? valInput.value.trim() : "";
-        if (val && !db.tipos.includes(val)) {
-            db.tipos.push(val);
-            valInput.value = '';
+        const val = valInput ? valInput.value.trim() : '';
+        if (!val) return alert('Informe o nome do tipo.');
+        if (db.tipos.some(tipo => tipo.toLocaleLowerCase('pt-BR') === val.toLocaleLowerCase('pt-BR'))) return alert('Esse tipo já está cadastrado.');
+        db.tipos.push(val);
+        if (valInput) valInput.value = '';
+        try {
             await salvarConfiguracoesFirebase();
             renderizarTipos(); popularSelects(); atualizarRelatorios();
+        } catch (erro) {
+            db.tipos = db.tipos.filter(tipo => tipo !== val);
+            renderizarTipos();
+            console.error('Erro ao salvar tipo:', erro);
+            alert('Não foi possível salvar o tipo. Verifique a conexão e tente novamente.');
         }
     }
-    
+
     async function excluirTipo(i) {
+        const tiposOrdenados = [...db.tipos].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        const tipo = tiposOrdenados[i];
+        if (!tipo) return;
         if (db.tipos.length <= 1) return alert('Mantenha pelo menos um tipo.');
-        db.tipos.splice(i, 1);
-        await salvarConfiguracoesFirebase();
-        renderizarTipos(); popularSelects(); atualizarRelatorios();
+        if (db.equipamentos.some(eq => eq.tipo === tipo)) return alert('Este tipo está vinculado a um ou mais equipamentos. Altere o tipo nesses equipamentos antes de excluí-lo.');
+        if (!confirm(`Excluir o tipo "${tipo}"?`)) return;
+        const anteriores = db.tipos;
+        db.tipos = db.tipos.filter(item => item !== tipo);
+        try {
+            await salvarConfiguracoesFirebase();
+            renderizarTipos(); popularSelects(); atualizarRelatorios();
+        } catch (erro) {
+            db.tipos = anteriores;
+            renderizarTipos();
+            console.error('Erro ao excluir tipo:', erro);
+            alert('Não foi possível salvar a exclusão. Verifique a conexão e tente novamente.');
+        }
     }
 
     function abrirModalEquipamento(id = null) {
