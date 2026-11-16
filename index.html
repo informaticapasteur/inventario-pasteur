@@ -112,20 +112,20 @@
         <div id="login-erro" class="hidden mb-4 p-3 rounded-xl bg-red-950/60 border border-red-800/60 text-red-300 text-xs text-center font-medium"></div>
         <div id="login-sucesso" class="hidden mb-4 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-xs text-center font-medium"></div>
 
-        <div id="form-login" class="space-y-4">
+        <form id="form-login" class="space-y-4" onsubmit="fazerLogin(); return false;">
             <div>
                 <label class="block text-xs font-medium text-slate-300 mb-1">Usuário</label>
-                <input type="text" id="login-usuario" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="Digite seu usuário" value="">
+                <input type="text" id="login-usuario" autocomplete="username" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="Digite seu usuário" value="">
             </div>
             <div>
                 <label class="block text-xs font-medium text-slate-300 mb-1">Senha</label>
-                <input type="password" id="login-senha" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="••••••••" value="">
+                <input type="password" id="login-senha" autocomplete="current-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary" placeholder="••••••••" value="">
             </div>
-            <button type="button" onclick="fazerLogin()" class="w-full bg-primary hover:bg-sky-600 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-900/30 cursor-pointer">
+            <button type="submit" class="w-full bg-primary hover:bg-sky-600 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-sky-900/30 cursor-pointer">
                 Entrar no Sistema
             </button>
             <div class="text-center mt-4 text-xs text-slate-500">Novos acessos devem ser criados por um administrador autenticado.</div>
-        </div>
+        </form>
 
         <div id="form-cadastro" class="hidden space-y-4">
             <div>
@@ -564,6 +564,19 @@
                         <table class="w-full text-left border-collapse"><tbody id="tabela-tipos-body" class="divide-y divide-slate-800"></tbody></table>
                     </div>
                 </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Empresas de Comodato</h2>
+                        <p class="text-[11px] text-slate-400 mt-1">Cadastre as empresas para selecioná-las no equipamento.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="nova-empresa-comodato" maxlength="120" placeholder="Nome da empresa..." class="min-w-0 flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                        <button type="button" onclick="salvarEmpresaComodato()" class="bg-primary hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">Adicionar</button>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl">
+                        <table class="w-full text-left border-collapse"><tbody id="tabela-empresas-comodato-body" class="divide-y divide-slate-800"></tbody></table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -837,6 +850,10 @@
                 <input type="text" id="eq-nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
             </div>
             <div>
+                <label class="block text-slate-300 mb-1">Nome no Scola</label>
+                <input type="text" id="eq-nome-scola" placeholder="Nome utilizado no Scola" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            </div>
+            <div>
                 <label class="block text-slate-300 mb-1">Tipo</label>
                 <select id="eq-tipo" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
             </div>
@@ -858,6 +875,14 @@
                     <option value="Próprio">Próprio</option>
                     <option value="Comodato">Comodato</option>
                 </select>
+            </div>
+            <div>
+                <label class="block text-slate-300 mb-1">Empresa Suporte</label>
+                <select id="eq-empresa-suporte" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+            </div>
+            <div>
+                <label class="block text-slate-300 mb-1">Empresa Comodante</label>
+                <select id="eq-empresa-comodante" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
             </div>
             <div>
                 <label class="block text-slate-300 mb-1">Status</label>
@@ -908,8 +933,12 @@
         <input type="hidden" id="man-id">
         <div class="space-y-3 text-xs">
             <div>
-                <label class="block text-slate-300 mb-1">Equipamento</label>
-                <select id="man-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+                <label for="man-eq-search" class="block text-slate-300 mb-1">Pesquisar equipamento</label>
+                <input type="search" id="man-eq-search" oninput="filtrarEquipamentosManutencao()" placeholder="Digite nome, código ou setor..." autocomplete="off" class="w-full mb-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder-slate-500">
+                <label for="man-eq-select" class="sr-only">Selecionar equipamento</label>
+                <select id="man-eq-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <option value="">Selecione um equipamento</option>
+                </select>
             </div>
             <div>
                 <label class="block text-slate-300 mb-1">Tipo de Manutenção</label>
@@ -1242,6 +1271,7 @@
             logo: '',
             urlPublica: 'https://inventario-60bf7.web.app',
             copyright: '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.',
+            empresasComodato: [],
             geminiKey: '',
             firebaseApiKey: 'AIzaSyDpdHmcIY-bWRpbRgJKW0snPfLtqrI_QtA',
             firebaseAuthDomain: 'inventario-60bf7.firebaseapp.com',
@@ -1305,6 +1335,7 @@
         db.tipos = [...dadosCompletosPasteur.tipos];
         db.usuarios = [...dadosCompletosPasteur.usuarios];
         db.config = { ...dadosCompletosPasteur.config };
+        db.config.empresasComodato = carregarEmpresasComodatoLocal();
         try {
             db.config.helpdeskResponsaveis = JSON.parse(localStorage.getItem('helpdeskResponsaveis') || '[]');
             db.config.helpdeskTipos = JSON.parse(localStorage.getItem('helpdeskTiposResponsaveis') || '["Empresa","Prestador"]');
@@ -1326,6 +1357,7 @@
         renderizarRastreabilidade();
         renderizarSetores();
         renderizarTipos();
+        renderizarEmpresasComodato();
         renderizarUsuarios();
         atualizarRelatorios();
         popularSelects();
@@ -1367,6 +1399,7 @@
                 db.setores = data.setores || dadosCompletosPasteur.setores;
                 db.tipos = data.tipos || dadosCompletosPasteur.tipos;
                 db.config = { ...dadosCompletosPasteur.config, ...(data.config || {}) };
+                if (!Array.isArray(db.config.empresasComodato)) db.config.empresasComodato = carregarEmpresasComodatoLocal();
                 if (!Array.isArray(db.config.helpdeskResponsaveis)) db.config.helpdeskResponsaveis = [];
                 if (!Array.isArray(db.config.helpdeskTipos)) db.config.helpdeskTipos = ['Empresa', 'Prestador'];
             }
@@ -1411,6 +1444,7 @@
             renderizarRastreabilidade();
             renderizarSetores();
             renderizarTipos();
+            renderizarEmpresasComodato();
             renderizarUsuarios();
             atualizarRelatorios();
             popularSelects();
@@ -1421,7 +1455,15 @@
         }
     }
 
+    function carregarEmpresasComodatoLocal() {
+        try {
+            const empresas = JSON.parse(localStorage.getItem('empresasComodato') || '[]');
+            return Array.isArray(empresas) ? empresas.filter(nome => typeof nome === 'string' && nome.trim()).map(nome => nome.trim()) : [];
+        } catch (_) { return []; }
+    }
+
     async function salvarConfiguracoesFirebase() {
+        try { localStorage.setItem('empresasComodato', JSON.stringify(db.config.empresasComodato || [])); } catch (_) {}
         if (!firestoreDb) return;
         await firestoreDb.collection('configuracoes').doc('geral').set({
             setores: db.setores,
@@ -1674,8 +1716,8 @@
                     <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
                         <td class="p-3.5 font-medium text-white"><span class="font-mono font-semibold text-xs text-sky-400 mr-1">[${eq.codigo}]</span> ${eq.nome}</td>
                         <td class="p-3.5 text-slate-300">${v.tipo}</td>
-                        <td class="p-3.5 text-slate-300">${v.data}</td>
-                        <td class="p-3.5 text-slate-300">${v.proxima || '-'}</td>
+                        <td class="p-3.5 text-slate-300">${formatarDataBrasileira(v.data)}</td>
+                        <td class="p-3.5 text-slate-300">${formatarDataBrasileira(v.proxima)}</td>
                         <td class="p-3.5 text-slate-300">${v.responsavel || '-'}</td>
                         <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${v.status}</span></td>
                         <td class="p-3.5 text-center space-x-2">
@@ -1950,6 +1992,9 @@
 
     function calcularCiclo(eqId, dataEntrada) {
         const eq = db.equipamentos.find(e => e.id == eqId);
+        if (eq && eq.status === 'Devolvido') {
+            return { texto: '📦 Fora de Operação (Devolvido)', classe: 'bg-slate-800 text-slate-400 border border-slate-700' };
+        }
         if (eq && (eq.status === 'Descartado' || eq.status === 'Inativo')) {
             return { texto: `📦 Fora de Operação (${eq.status})`, classe: 'bg-slate-800 text-slate-400 border border-slate-700' };
         }
@@ -1987,7 +2032,7 @@
 
         let criticosCount = 0;
         db.equipamentos.forEach(eq => {
-            if (eq.status === 'Descartado' || eq.status === 'Inativo') return;
+            if (eq.status === 'Descartado' || eq.status === 'Inativo' || eq.status === 'Devolvido') return;
             if (eq.dataEntrada) {
                 const entrada = new Date(eq.dataEntrada);
                 const hoje = new Date();
@@ -2039,7 +2084,6 @@
                 const acoesHtml = `
                     <div class="flex items-center justify-center gap-2">
                         <button onclick="abrirModalQR('${eq.id}')" class="bg-indigo-950/60 text-indigo-300 border border-indigo-800/60 hover:bg-indigo-900 px-2.5 py-1.5 rounded-xl text-xs font-medium transition inline-flex items-center gap-1 cursor-pointer" title="Gerenciar e Imprimir QR Code"><i class="fa-solid fa-qrcode"></i> QR</button>
-                        <button onclick="renomearEquipamento('${eq.id}')" class="bg-violet-950/60 text-violet-300 border border-violet-800/60 hover:bg-violet-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Alterar somente o nome"><i class="fa-solid fa-i-cursor"></i> Nome</button>
                         <button onclick="editarEquipamento('${eq.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Editar"><i class="fa-solid fa-pen"></i> Editar</button>
                         <button onclick="excluirEquipamento('${eq.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Excluir"><i class="fa-solid fa-trash"></i> Excluir</button>
                     </div>
@@ -2113,7 +2157,7 @@
     function exportarCSV() {
         let csvContent = "\uFEFF" + "Cod Ref;Equipamento;Tipo;Setor;IP;Serial;Posse;Data Entrada;Data Saida;Status\n";
         listaEquipamentosFiltradaCache.forEach(eq => {
-            csvContent += `"${eq.codigo || ''}";"${eq.nome || ''}";"${eq.tipo || ''}";"${eq.setor || ''}";"${eq.ip || ''}";"${eq.serial || ''}";"${eq.posse || 'Próprio'}";"${eq.dataEntrada || ''}";"${eq.dataSaida || ''}";"${eq.status || 'Ativo'}"\n`;
+            csvContent += `"${eq.codigo || ''}";"${eq.nome || ''}";"${eq.tipo || ''}";"${eq.setor || ''}";"${eq.ip || ''}";"${eq.serial || ''}";"${eq.posse || 'Próprio'}";"${formatarDataBrasileira(eq.dataEntrada)}";"${formatarDataBrasileira(eq.dataSaida)}";"${eq.status || 'Ativo'}"\n`;
         });
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -2291,7 +2335,7 @@
             aplicarConfiguracoes(); aplicarModulosSistema();
             filtrarTabela(); renderizarMonitoramento(); renderizarManutencao(); renderizarValidacao();
             renderizarChamados(); renderizarFinanceiro(); renderizarRastreabilidade();
-            renderizarSetores(); renderizarTipos(); renderizarUsuarios(); atualizarBackupRelatorios();
+            renderizarSetores(); renderizarTipos(); renderizarEmpresasComodato(); renderizarUsuarios(); atualizarBackupRelatorios();
             alert('Restauração concluída para os módulos selecionados.');
         } catch (erro) {
             console.error('Falha ao restaurar backup:', erro);
@@ -2303,6 +2347,36 @@
 
     function atualizarBackupRelatorios() {
         popularSelects(); atualizarRelatorios(); verificarAlertaCriticos();
+    }
+
+    function obterStatusManutencao(manutencao) {
+        const realizada = String(manutencao.data || '').slice(0, 10);
+        const proxima = String(manutencao.proxima || '').slice(0, 10);
+        const agora = new Date();
+        const hoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+
+        if (!realizada) return { texto: 'Pendente', classes: 'bg-slate-800/60 text-slate-300 border border-slate-700' };
+        if (!proxima) return { texto: 'Realizada · sem próxima data', classes: 'bg-sky-950/60 text-sky-300 border border-sky-800/60' };
+        if (proxima < hoje) return { texto: 'Atrasada', classes: 'bg-red-950/60 text-red-300 border border-red-800/60' };
+        if (proxima === hoje) return { texto: 'Vence hoje', classes: 'bg-amber-950/60 text-amber-300 border border-amber-800/60' };
+        return { texto: 'Em dia', classes: 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' };
+    }
+
+    function formatarDataBrasileira(data) {
+        if (data === null || data === undefined || data === '') return '-';
+        const texto = String(data).trim();
+        const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+        const isoDataHora = texto.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:?\d{2})?$/);
+        if (isoDataHora) {
+            if (isoDataHora[7]) {
+                const instante = new Date(texto);
+                if (!Number.isNaN(instante.getTime())) return instante.toLocaleString('pt-BR');
+            }
+            return `${isoDataHora[3]}/${isoDataHora[2]}/${isoDataHora[1]} ${isoDataHora[4]}:${isoDataHora[5]}${isoDataHora[6] ? `:${isoDataHora[6]}` : ''}`;
+        }
+        if (/^\d{2}\/\d{2}\/\d{4}(?:\b|$)/.test(texto)) return texto;
+        return texto.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, (_, ano, mes, dia) => `${dia}/${mes}/${ano}`);
     }
 
     function renderizarManutencao() {
@@ -2319,14 +2393,14 @@
                     <tr class="border-b border-slate-700/50 hover:bg-slate-800/40 transition">
                         <td class="p-3.5 font-medium text-white"><span class="font-mono font-semibold text-xs text-sky-400 mr-1">[${eq.codigo}]</span> ${eq.nome}</td>
                         <td class="p-3.5 text-slate-300">${m.tipo}</td>
-                        <td class="p-3.5 text-slate-300">${m.data}</td>
-                        <td class="p-3.5 text-slate-300">${m.proxima || '-'}</td>
+                        <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.data)}</td>
+                        <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.proxima)}</td>
                         <td class="p-3.5 text-slate-400 text-xs">${m.laudoNome || m.laudo || (m.laudoStoragePath ? 'Laudo anexado' : '-')}
                             ${m.laudoStoragePath ? `<button onclick="baixarLaudo('${m.id}')" class="ml-2 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button>` : (typeof m.laudo === 'string' && /^https?:\/\//i.test(m.laudo) ? `<a href="${m.laudo}" target="_blank" rel="noopener noreferrer" class="ml-2 text-sky-300 underline">Abrir</a>` : '')}
                         </td>
-                        <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${m.status}</span></td>
+                        <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${obterStatusManutencao(m).classes}">${obterStatusManutencao(m).texto}</span></td>
                         <td class="p-3.5 text-center space-x-2">
-                            <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'Calibração Programada: ${m.proxima || 'Pendente'}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+                            <button onclick="enviarWhatsAppManutencao('${eq.nome}', 'Calibração Programada: ${m.proxima ? formatarDataBrasileira(m.proxima) : 'Pendente'}')" class="bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
                             <button onclick="editarManutencao('${m.id}')" class="bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Editar"><i class="fa-solid fa-pen"></i></button>
                             <button onclick="excluirManutencao('${m.id}')" class="bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                         </td>
@@ -2337,11 +2411,27 @@
         }
     }
 
-    function abrirModalManutencao(id = null) {
+    function filtrarEquipamentosManutencao() {
+        const busca = document.getElementById('man-eq-search').value
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
         const select = document.getElementById('man-eq-select');
-        let html = '';
-        db.equipamentos.forEach(e => html += `<option value="${e.id}" class="bg-slate-900">[${e.codigo || 'S/C'}] ${e.nome} (${e.setor})</option>`);
-        select.innerHTML = html;
+        const selecaoAnterior = select.value;
+        const equipamentos = (db.equipamentos || []).filter(e => {
+            const dados = [e.nome, e.codigo, e.setor].map(valor => String(valor || ''))
+                .join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            return !busca || dados.includes(busca);
+        });
+        select.replaceChildren(new Option('Selecione um equipamento', ''));
+        equipamentos.forEach(e => {
+            const opcao = new Option(`[${e.codigo || 'S/C'}] ${e.nome || 'Sem nome'} (${e.setor || 'Sem setor'})`, e.id);
+            select.add(opcao);
+        });
+        if (equipamentos.some(e => String(e.id) === selecaoAnterior)) select.value = selecaoAnterior;
+    }
+
+    function abrirModalManutencao(id = null) {
+        document.getElementById('man-eq-search').value = '';
+        filtrarEquipamentosManutencao();
         document.getElementById('modal-manutencao').classList.remove('hidden');
 
         if (id !== null) {
@@ -2377,6 +2467,7 @@
         } else {
             document.getElementById('modal-manutencao-titulo').innerText = 'Registar Calibração / Manutenção';
             document.getElementById('man-id').value = '';
+            document.getElementById('man-eq-select').value = '';
             document.getElementById('man-data').value = new Date().toISOString().slice(0,10);
             document.getElementById('man-proxima').value = '';
             arquivoLaudoSelecionado = null;
@@ -2431,15 +2522,24 @@
         const id = document.getElementById('man-id').value;
         const manId = id ? String(id) : String(Date.now());
         const manutencaoAnterior = db.manutencoes.find(m => String(m.id) === manId);
+        const equipamentoId = document.getElementById('man-eq-select').value;
+        const dataRealizada = document.getElementById('man-data').value;
+        const proximaManutencao = document.getElementById('man-proxima').value;
+        const agora = new Date();
+        const hoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+        if (!equipamentoId) return alert('Selecione o equipamento.');
+        if (!dataRealizada) return alert('Informe a data em que a manutenção foi realizada.');
+        if (dataRealizada > hoje) return alert('A data realizada não pode ser futura.');
+        if (proximaManutencao && proximaManutencao < dataRealizada) return alert('A próxima manutenção não pode ser anterior à data realizada.');
         const dados = {
             ...(manutencaoAnterior || {}),
             id: manId,
-            equipamentoId: document.getElementById('man-eq-select').value,
+            equipamentoId,
             tipo: document.getElementById('man-tipo').value,
-            data: document.getElementById('man-data').value,
-            proxima: document.getElementById('man-proxima').value,
+            data: dataRealizada,
+            proxima: proximaManutencao,
             laudo: manutencaoAnterior?.laudo || '',
-            status: 'Em dia'
+            status: obterStatusManutencao({ data: dataRealizada, proxima: proximaManutencao }).texto
         };
         let novoLaudoRef = null;
         if (arquivoLaudoSelecionado) {
@@ -2791,7 +2891,7 @@
             let total = 0;
             db.comodatos.forEach(com => {
                 total += Number(com.custo || 0);
-                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-white">${com.fornecedor}</td><td class="p-3.5 text-slate-300">${com.vigencia}</td><td class="p-3.5 text-slate-300">R$ ${com.custo}</td></tr>`;
+                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-white">${com.fornecedor}</td><td class="p-3.5 text-slate-300">${formatarDataBrasileira(com.vigencia)}</td><td class="p-3.5 text-slate-300">R$ ${com.custo}</td></tr>`;
             });
             tbody.innerHTML = html;
         }
@@ -2836,7 +2936,7 @@
         } else {
             let html = '';
             db.transferencias.forEach(t => {
-                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${t.data}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td></tr>`;
+                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${formatarDataBrasileira(t.data)}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td></tr>`;
             });
             tbody.innerHTML = html;
         }
@@ -2959,6 +3059,22 @@
             if (st) st.innerHTML = stHtml;
             if (relTipo) relTipo.innerHTML = relTipoHtml;
         }
+
+        const selectSuporte = document.getElementById('eq-empresa-suporte');
+        if (selectSuporte) {
+            const anterior = selectSuporte.value;
+            const empresas = obterResponsaveisHelpdesk().filter(r => (r.tipo || 'Empresa') === 'Empresa').map(r => r.nome).filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            selectSuporte.innerHTML = '<option value="">Não informado</option>' + empresas.map(nome => `<option value="${escaparTextoChamado(nome)}">${escaparTextoChamado(nome)}</option>`).join('');
+            if (empresas.includes(anterior)) selectSuporte.value = anterior;
+        }
+
+        const selectComodante = document.getElementById('eq-empresa-comodante');
+        if (selectComodante) {
+            const anterior = selectComodante.value;
+            const empresas = Array.isArray(db.config.empresasComodato) ? db.config.empresasComodato : [];
+            selectComodante.innerHTML = '<option value="">Não informado</option>' + empresas.slice().sort((a, b) => a.localeCompare(b, 'pt-BR')).map(nome => `<option value="${escaparTextoChamado(nome)}">${escaparTextoChamado(nome)}</option>`).join('');
+            if (empresas.includes(anterior)) selectComodante.value = anterior;
+        }
     }
 
     function renderizarSetores() {
@@ -3040,6 +3156,58 @@
         tbody.innerHTML = html;
     }
     
+    function renderizarEmpresasComodato() {
+        const tbody = document.getElementById('tabela-empresas-comodato-body');
+        if (!tbody) return;
+        const empresas = Array.isArray(db.config.empresasComodato) ? db.config.empresasComodato : [];
+        tbody.innerHTML = empresas.length ? empresas.slice().sort((a, b) => a.localeCompare(b, 'pt-BR')).map(nome => {
+            const indice = empresas.indexOf(nome);
+            return `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-sm text-slate-200">${escaparTextoChamado(nome)}</td><td class="p-3.5 text-center"><button type="button" onclick="excluirEmpresaComodato(${indice})" class="text-red-400 text-xs cursor-pointer"><i class="fa-solid fa-trash mr-1"></i>Remover</button></td></tr>`;
+        }).join('') : '<tr><td colspan="2" class="p-4 text-center text-slate-500">Nenhuma empresa cadastrada.</td></tr>';
+    }
+
+    async function salvarEmpresaComodato() {
+        if (!db.config) db.config = { ...dadosCompletosPasteur.config };
+        if (!Array.isArray(db.config.empresasComodato)) db.config.empresasComodato = [];
+        const input = document.getElementById('nova-empresa-comodato');
+        const nome = String(input?.value || '').trim();
+        if (!nome) return alert('Informe o nome da empresa de comodato.');
+        if (db.config.empresasComodato.some(empresa => empresa.toLocaleLowerCase('pt-BR') === nome.toLocaleLowerCase('pt-BR'))) return alert('Essa empresa já está cadastrada.');
+        db.config.empresasComodato.push(nome);
+        if (input) input.value = '';
+        try {
+            await salvarConfiguracoesFirebase();
+            renderizarEmpresasComodato();
+            popularSelects();
+        } catch (erro) {
+            db.config.empresasComodato = db.config.empresasComodato.filter(empresa => empresa !== nome);
+            try { localStorage.setItem('empresasComodato', JSON.stringify(db.config.empresasComodato)); } catch (_) {}
+            renderizarEmpresasComodato();
+            console.error('Erro ao salvar empresa de comodato:', erro);
+            alert('Não foi possível sincronizar a empresa com o Firebase. Verifique a conexão e tente novamente.');
+        }
+    }
+
+    async function excluirEmpresaComodato(indice) {
+        const empresas = Array.isArray(db.config.empresasComodato) ? db.config.empresasComodato : [];
+        const nome = empresas[indice];
+        if (!nome) return;
+        if (db.equipamentos.some(eq => eq.empresaComodante === nome)) return alert('Esta empresa está vinculada a um ou mais equipamentos e não pode ser removida.');
+        if (!confirm(`Remover a empresa "${nome}" do cadastro?`)) return;
+        db.config.empresasComodato = empresas.filter((_, i) => i !== indice);
+        try {
+            await salvarConfiguracoesFirebase();
+            renderizarEmpresasComodato();
+            popularSelects();
+        } catch (erro) {
+            db.config.empresasComodato = empresas;
+            try { localStorage.setItem('empresasComodato', JSON.stringify(empresas)); } catch (_) {}
+            renderizarEmpresasComodato();
+            console.error('Erro ao remover empresa de comodato:', erro);
+            alert('Não foi possível sincronizar a remoção com o Firebase.');
+        }
+    }
+
     async function salvarTipo() {
         const valInput = document.getElementById('novo-tipo-nome');
         const val = valInput ? valInput.value.trim() : "";
@@ -3068,10 +3236,13 @@
                 document.getElementById('eq-id').value = eq.id;
                 document.getElementById('eq-codigo').value = eq.codigo || '';
                 document.getElementById('eq-nome').value = eq.nome || '';
+                document.getElementById('eq-nome-scola').value = eq.nomeScola || '';
                 document.getElementById('eq-tipo').value = eq.tipo || '';
                 document.getElementById('eq-setor').value = eq.setor || '';
                 document.getElementById('eq-ip').value = eq.ip || '';
                 document.getElementById('eq-serial').value = eq.serial || '';
+                document.getElementById('eq-empresa-suporte').value = eq.empresaSuporte || '';
+                document.getElementById('eq-empresa-comodante').value = eq.empresaComodante || '';
                 document.getElementById('eq-posse').value = eq.posse || 'Próprio';
                 document.getElementById('eq-status').value = eq.status || 'Ativo';
                 document.getElementById('eq-data').value = eq.dataEntrada || '';
@@ -3082,8 +3253,11 @@
             document.getElementById('eq-id').value = '';
             document.getElementById('eq-codigo').value = '';
             document.getElementById('eq-nome').value = '';
+            document.getElementById('eq-nome-scola').value = '';
             document.getElementById('eq-ip').value = '';
             document.getElementById('eq-serial').value = '';
+            document.getElementById('eq-empresa-suporte').value = '';
+            document.getElementById('eq-empresa-comodante').value = '';
             document.getElementById('eq-data').value = new Date().toISOString().slice(0,10);
             document.getElementById('eq-data-saida').value = '';
         }
@@ -3097,10 +3271,13 @@
             id: eqId,
             codigo: document.getElementById('eq-codigo').value.toUpperCase(),
             nome: document.getElementById('eq-nome').value.toUpperCase(),
+            nomeScola: document.getElementById('eq-nome-scola').value.trim(),
             tipo: document.getElementById('eq-tipo').value,
             setor: document.getElementById('eq-setor').value,
             ip: document.getElementById('eq-ip').value.trim(),
             serial: document.getElementById('eq-serial').value,
+            empresaSuporte: document.getElementById('eq-empresa-suporte').value,
+            empresaComodante: document.getElementById('eq-empresa-comodante').value,
             posse: document.getElementById('eq-posse').value,
             status: document.getElementById('eq-status').value,
             dataEntrada: document.getElementById('eq-data').value || new Date().toISOString().slice(0,10),
@@ -3183,7 +3360,7 @@
                 if (cicloFiltro === "normal") {
                     const entrada = eq.dataEntrada ? new Date(`${eq.dataEntrada}T00:00:00`) : null;
                     const hoje = new Date();
-                    if (!entrada || Number.isNaN(entrada.getTime()) || eq.status === 'Inativo' || eq.status === 'Descartado') return false;
+                    if (!entrada || Number.isNaN(entrada.getTime()) || eq.status === 'Inativo' || eq.status === 'Descartado' || eq.status === 'Devolvido') return false;
                     let anos = hoje.getFullYear() - entrada.getFullYear();
                     if (hoje.getMonth() < entrada.getMonth() || (hoje.getMonth() === entrada.getMonth() && hoje.getDate() < entrada.getDate())) anos--;
                     if (anos < 0 || anos >= 4) return false;
@@ -3213,7 +3390,7 @@
                         <td class="p-3.5 text-slate-300">${eq.setor}</td>
                         <td class="p-3.5 text-slate-400 font-mono text-xs">${eq.serial || '-'}</td>
                         <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgePosse(eq.posse)}">${eq.posse || 'Próprio'}</span></td>
-                        <td class="p-3.5 text-slate-300">${eq.dataEntrada || '-'}</td>
+                        <td class="p-3.5 text-slate-300">${formatarDataBrasileira(eq.dataEntrada)}</td>
                         <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${obterBadgeStatus(eq.status)}">${eq.status || 'Ativo'}</span></td>
                         <td class="p-3.5"><span class="px-3 py-1 rounded-lg text-xs ${estiloDestaqueCiclo}">${ciclo.texto}</span></td>
                     </tr>
@@ -3253,7 +3430,7 @@
             const setor = eq.setor || 'Não definido';
             porSetor[setor] = (porSetor[setor] || 0) + 1;
 
-            if (eq.status === 'Descartado' || eq.status === 'Inativo') return;
+            if (eq.status === 'Descartado' || eq.status === 'Inativo' || eq.status === 'Devolvido') return;
 
             if (eq.dataEntrada) {
                 const entrada = new Date(eq.dataEntrada);
@@ -3822,7 +3999,7 @@ DADOS DE CONTEXTO (JSON, registros podem estar limitados): ${JSON.stringify(cont
 
         const equipamentosCriticos = [];
         db.equipamentos.forEach(eq => {
-            if (eq.status === 'Descartado' || eq.status === 'Inativo') return;
+            if (eq.status === 'Descartado' || eq.status === 'Inativo' || eq.status === 'Devolvido') return;
             if (eq.dataEntrada) {
                 const entrada = new Date(eq.dataEntrada);
                 const hoje = new Date();
