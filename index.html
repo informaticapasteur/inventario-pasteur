@@ -535,6 +535,7 @@
                             <th class="p-3.5">Origem</th>
                             <th class="p-3.5">Destino</th>
                             <th class="p-3.5">Motivo</th>
+                            <th class="p-3.5">Laudo</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-rastreio-body" class="divide-y divide-slate-800"></tbody>
@@ -1145,7 +1146,13 @@
                 <select id="tr-destino" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
             </div>
             <div>
-                <label class="block text-slate-300 mb-1">Motivo / Observação</label>
+                <label for="tr-laudo-arquivo" class="block text-slate-300 mb-1">Laudo / documento (PDF, até 20 MB)</label>
+                <input type="file" id="tr-laudo-arquivo" accept=".pdf,application/pdf" onchange="selecionarArquivoLaudoRastreabilidade(this)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200">
+                <p id="tr-laudo-info" class="mt-1 text-[11px] text-slate-400">Nenhum arquivo selecionado.</p>
+                <p class="mt-1 text-[10px] text-slate-500">Os PDFs ficam no Firebase Storage, na pasta rastreabilidade/.</p>
+            </div>
+            <div>
+                <label for="tr-motivo" class="block text-slate-300 mb-1">Motivo / Observação</label>
                 <input type="text" id="tr-motivo" placeholder="Ex: Remanejamento operacional" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
             </div>
         </div>
@@ -1327,6 +1334,7 @@
     let firestoreDb = null;
     let firebaseStorage = null;
     let arquivoLaudoSelecionado = null;
+    let arquivoLaudoRastreabilidadeSelecionado = null;
     let usuarioLogado = null;
     let equipamentoAtualQR = null;
     let equipamentoGerenciadorQR = null;
@@ -2448,7 +2456,7 @@
                         <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.data)}</td>
                         <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.proxima)}</td>
                         <td class="p-3.5 text-slate-400 text-xs">${m.laudoNome || m.laudo || (m.laudoStoragePath ? 'Laudo anexado' : '-')}
-                            ${m.laudoStoragePath ? `<button onclick="baixarLaudo('${m.id}')" class="ml-2 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button>` : (typeof m.laudo === 'string' && /^https?:\/\//i.test(m.laudo) ? `<a href="${m.laudo}" target="_blank" rel="noopener noreferrer" class="ml-2 text-sky-300 underline">Abrir</a>` : '')}
+                            ${m.laudoStoragePath ? `<button onclick="baixarLaudo('${m.id}')" class="ml-2 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><div class="mt-1 max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no Firebase Storage">Armazenado em: <code>${escaparTextoChamado(m.laudoStoragePath)}</code></div>` : (typeof m.laudo === 'string' && /^https?:\/\//i.test(m.laudo) ? `<a href="${m.laudo}" target="_blank" rel="noopener noreferrer" class="ml-2 text-sky-300 underline">Abrir</a>` : '')}
                         </td>
                         <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${obterStatusManutencao(m).classes}">${obterStatusManutencao(m).texto}</span></td>
                         <td class="p-3.5 text-center space-x-2">
@@ -2503,7 +2511,7 @@
                 if (m.laudoStoragePath) {
                     laudoExistente.classList.remove('hidden');
                     const nomeLaudo = document.createElement('span');
-                    nomeLaudo.textContent = `Laudo atual: ${m.laudoNome || m.laudo || 'arquivo anexado'} `;
+                    nomeLaudo.textContent = `Laudo atual: ${m.laudoNome || m.laudo || 'arquivo anexado'} — Firebase Storage: ${m.laudoStoragePath} `;
                     laudoExistente.appendChild(nomeLaudo);
                     const botaoBaixar = document.createElement('button');
                     botaoBaixar.type = 'button';
@@ -2550,22 +2558,39 @@
         info.textContent = `Novo laudo selecionado: ${arquivo.name} (${(arquivo.size / 1024 / 1024).toFixed(2)} MB).`;
     }
 
-    async function baixarLaudo(id) {
-        const manutencao = db.manutencoes.find(item => String(item.id) === String(id));
-        if (!manutencao || !manutencao.laudoStoragePath) return alert('Este registro não possui um arquivo de laudo armazenado.');
-        if (!firebaseStorage) return alert('O armazenamento de arquivos do Firebase não está disponível.');
+    async function baixarArquivoLaudo(storagePath, nomeArquivo) {
+        if (!firebaseStorage) return alert('O Firebase Storage não está conectado. Não é possível localizar o arquivo.');
+        if (!storagePath) return alert('Este registro ainda não possui um caminho de arquivo salvo.');
+        let url = '';
         try {
-            const url = await firebaseStorage.ref(manutencao.laudoStoragePath).getDownloadURL();
+            url = await firebaseStorage.ref(storagePath).getDownloadURL();
+            const resposta = await fetch(url);
+            if (!resposta.ok) throw new Error(`Falha ao obter o arquivo (HTTP ${resposta.status}).`);
+            const blob = await resposta.blob();
+            const urlTemporaria = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = url;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.download = manutencao.laudoNome || manutencao.laudo || 'laudo.pdf';
-            document.body.appendChild(link); link.click(); link.remove();
+            link.href = urlTemporaria;
+            link.download = nomeArquivo || 'laudo.pdf';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(urlTemporaria), 1000);
         } catch (erro) {
             console.error('Falha ao baixar laudo:', erro);
-            alert('Não foi possível baixar o laudo. Verifique as regras e permissões do Firebase Storage.');
+            if (url) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+                alert('O navegador abriu o PDF em outra aba. Use o botão de download do visualizador para salvá-lo.');
+            } else {
+                alert('Não foi possível localizar o laudo. Verifique o caminho exibido no registro e as regras/permissões do Firebase Storage.');
+            }
         }
+    }
+
+    async function baixarLaudo(id) {
+        const manutencao = db.manutencoes.find(item => String(item.id) === String(id));
+        if (!manutencao) return alert('Registro de manutenção não encontrado.');
+        if (!manutencao.laudoStoragePath) return alert('Este registro não possui arquivo armazenado no Firebase Storage.');
+        await baixarArquivoLaudo(manutencao.laudoStoragePath, manutencao.laudoNome || 'laudo.pdf');
     }
 
     function fecharModalManutencao() { document.getElementById('modal-manutencao').classList.add('hidden'); }
@@ -2600,7 +2625,7 @@
             const caminho = `laudos/${manId}/${Date.now()}_${nomeSeguro}`;
             novoLaudoRef = firebaseStorage.ref(caminho);
             try {
-                await novoLaudoRef.put(arquivoLaudoSelecionado, { contentType: 'application/pdf' });
+                await novoLaudoRef.put(arquivoLaudoSelecionado, { contentType: 'application/pdf', contentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(arquivoLaudoSelecionado.name)}` });
                 dados.laudoStoragePath = caminho;
                 dados.laudoNome = arquivoLaudoSelecionado.name;
                 dados.laudoContentType = 'application/pdf';
@@ -2980,15 +3005,44 @@
         atualizarRelatorios();
     }
 
+    function selecionarArquivoLaudoRastreabilidade(input) {
+        const arquivo = input.files && input.files[0];
+        const info = document.getElementById('tr-laudo-info');
+        arquivoLaudoRastreabilidadeSelecionado = null;
+        if (!arquivo) { info.textContent = 'Nenhum arquivo selecionado.'; return; }
+        if (!(arquivo.type === 'application/pdf' || arquivo.name.toLowerCase().endsWith('.pdf'))) {
+            input.value = '';
+            info.textContent = 'Formato inválido. Selecione um PDF.';
+            return alert('O documento deve estar em formato PDF.');
+        }
+        if (arquivo.size > 20 * 1024 * 1024) {
+            input.value = '';
+            info.textContent = 'Arquivo excede o limite de 20 MB.';
+            return alert('O PDF deve ter no máximo 20 MB.');
+        }
+        arquivoLaudoRastreabilidadeSelecionado = arquivo;
+        info.textContent = `Selecionado: ${arquivo.name} (${(arquivo.size / 1024 / 1024).toFixed(2)} MB).`;
+    }
+
+    async function baixarLaudoRastreabilidade(id) {
+        const transferencia = db.transferencias.find(item => String(item.id) === String(id));
+        if (!transferencia) return alert('Registro de rastreabilidade não encontrado.');
+        if (!transferencia.laudoStoragePath) return alert('Este registro não possui laudo armazenado.');
+        await baixarArquivoLaudo(transferencia.laudoStoragePath, transferencia.laudoNome || 'laudo.pdf');
+    }
+
     function renderizarRastreabilidade() {
         const tbody = document.getElementById('tabela-rastreio-body');
         if (!tbody) return;
         if (db.transferencias.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhum registro.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum registro.</td></tr>`;
         } else {
             let html = '';
             db.transferencias.forEach(t => {
-                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${formatarDataBrasileira(t.data)}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td></tr>`;
+                const laudo = t.laudoStoragePath
+                    ? `<div class="flex flex-col gap-1"><span class="text-slate-200">${escaparTextoChamado(t.laudoNome || 'PDF anexado')}</span><button type="button" onclick="baixarLaudoRastreabilidade('${t.id}')" class="w-fit bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><code class="max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no Firebase Storage">${escaparTextoChamado(t.laudoStoragePath)}</code></div>`
+                    : (t.laudo ? escaparTextoChamado(t.laudo) : '<span class="text-slate-500">—</span>');
+                html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${formatarDataBrasileira(t.data)}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td><td class="p-3.5 text-xs">${laudo}</td></tr>`;
             });
             tbody.innerHTML = html;
         }
@@ -3006,12 +3060,15 @@
         [...db.setores].sort().forEach(s => setorHtml += `<option value="${s}" class="bg-slate-900">${s}</option>`);
         selectOrig.innerHTML = setorHtml;
         selectDest.innerHTML = setorHtml;
-        
         select.onchange = () => {
-            const setorAtual = select.options[select.selectedIndex].getAttribute('data-setor');
+            const setorAtual = select.options[select.selectedIndex]?.getAttribute('data-setor');
             if (setorAtual) selectOrig.value = setorAtual;
         };
         if (select.options.length > 0) select.onchange();
+        document.getElementById('tr-laudo-arquivo').value = '';
+        document.getElementById('tr-laudo-info').textContent = 'Nenhum arquivo selecionado.';
+        arquivoLaudoRastreabilidadeSelecionado = null;
+        document.getElementById('tr-motivo').value = '';
         document.getElementById('modal-transferencia').classList.remove('hidden');
     }
 
@@ -3034,14 +3091,44 @@
             destino,
             motivo: document.getElementById('tr-motivo').value
         };
-        if (firestoreDb) {
-            const batch = firestoreDb.batch();
-            batch.set(firestoreDb.collection('transferencias').doc(trId), dados);
-            batch.update(firestoreDb.collection('equipamentos').doc(String(eq.id)), { setor: destino });
-            await batch.commit();
+
+        let novoLaudoRef = null;
+        const arquivo = arquivoLaudoRastreabilidadeSelecionado;
+        if (arquivo) {
+            if (!firestoreDb || !firebaseStorage) return alert('Para anexar um PDF à rastreabilidade, conecte o Firebase e habilite o Firebase Storage.');
+            const nomeSeguro = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120) || 'laudo.pdf';
+            const caminho = `laudos/rastreabilidade/${trId}/${Date.now()}_${nomeSeguro}`;
+            novoLaudoRef = firebaseStorage.ref(caminho);
+            try {
+                await novoLaudoRef.put(arquivo, { contentType: 'application/pdf', contentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(arquivo.name)}` });
+                dados.laudoStoragePath = caminho;
+                dados.laudoNome = arquivo.name;
+                dados.laudoContentType = 'application/pdf';
+                dados.laudoAtualizadoEm = new Date().toISOString();
+            } catch (erro) {
+                console.error('Falha ao enviar laudo da rastreabilidade:', erro);
+                return alert(`Não foi possível enviar o PDF. Verifique o Firebase Storage e as permissões. Caminho previsto: ${caminho}`);
+            }
         }
+
+        try {
+            if (firestoreDb) {
+                const batch = firestoreDb.batch();
+                batch.set(firestoreDb.collection('transferencias').doc(trId), dados);
+                batch.update(firestoreDb.collection('equipamentos').doc(String(eq.id)), { setor: destino });
+                await batch.commit();
+            } else if (arquivo) {
+                throw new Error('O banco de dados está desconectado.');
+            }
+        } catch (erro) {
+            if (novoLaudoRef) await novoLaudoRef.delete().catch(() => {});
+            console.error('Falha ao salvar transferência:', erro);
+            return alert('Não foi possível salvar a transferência. O PDF enviado foi removido para evitar arquivo órfão; tente novamente.');
+        }
+
         eq.setor = destino;
         db.transferencias.push(dados);
+        arquivoLaudoRastreabilidadeSelecionado = null;
         fecharModalTransferencia();
         renderizarRastreabilidade();
         atualizarRelatorios();
