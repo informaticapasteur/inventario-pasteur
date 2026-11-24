@@ -27,6 +27,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- Supabase Storage para laudos -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- QRCode Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Chart.js -->
@@ -812,6 +814,19 @@
                     </div>
 
                     <div class="pt-4 border-t border-slate-800 space-y-3">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider">Armazenamento dos laudos (Supabase)</h3>
+                        <p class="text-[11px] text-slate-400">Os PDFs de manutenção e rastreabilidade vão para o bucket privado “laudos”; o Firestore continua guardando os registros e o caminho do arquivo.</p>
+                        <div>
+                            <label for="config-supabase-url" class="block text-slate-300 font-medium mb-1">Project URL</label>
+                            <input type="url" id="config-supabase-url" placeholder="https://seu-projeto.supabase.co" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label for="config-supabase-anon-key" class="block text-slate-300 font-medium mb-1">Chave anon / publishable</label>
+                            <input type="password" id="config-supabase-anon-key" autocomplete="off" placeholder="sb_publishable_… ou chave anon" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary">
+                            <p class="mt-1 text-[10px] text-amber-300">Não informe a chave service_role/secret. A chave pública não substitui as políticas de acesso (RLS) do bucket.</p>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-slate-800 space-y-3">
                         <h3 class="text-xs font-bold text-white uppercase tracking-wider">Habilitar / Desabilitar Módulos (Multi-Segmento)</h3>
                         <p class="text-[11px] text-slate-400">Ative apenas os recursos necessários para o segmento do seu cliente atual.</p>
                         
@@ -1149,7 +1164,7 @@
                 <label for="tr-laudo-arquivo" class="block text-slate-300 mb-1">Laudo / documento (PDF, até 20 MB)</label>
                 <input type="file" id="tr-laudo-arquivo" accept=".pdf,application/pdf" onchange="selecionarArquivoLaudoRastreabilidade(this)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200">
                 <p id="tr-laudo-info" class="mt-1 text-[11px] text-slate-400">Nenhum arquivo selecionado.</p>
-                <p class="mt-1 text-[10px] text-slate-500">Os PDFs ficam no Firebase Storage, na pasta rastreabilidade/.</p>
+                <p class="mt-1 text-[10px] text-slate-500">Os PDFs são armazenados no bucket privado “laudos” do Supabase; o Firestore guarda somente o caminho e os metadados.</p>
             </div>
             <div>
                 <label for="tr-motivo" class="block text-slate-300 mb-1">Motivo / Observação</label>
@@ -1304,6 +1319,8 @@
             firebaseStorageBucket: 'inventario-60bf7.firebasestorage.app',
             firebaseMessagingSenderId: '702937148352',
             firebaseAppId: '1:702937148352:web:62099919ad5d397b4ab625',
+            supabaseUrl: '',
+            supabaseAnonKey: '',
             modulos: {
                 inventario: true,
                 monitoramento: true,
@@ -1333,6 +1350,8 @@
 
     let firestoreDb = null;
     let firebaseStorage = null;
+    let clienteSupabase = null;
+    const SUPABASE_BUCKET_LAUDOS = 'laudos';
     let arquivoLaudoSelecionado = null;
     let arquivoLaudoRastreabilidadeSelecionado = null;
     let usuarioLogado = null;
@@ -1407,6 +1426,22 @@
         firestoreDb = firebase.firestore();
         firebaseStorage = firebase.storage();
         await carregarDadosDasColecoes();
+        inicializarSupabase();
+    }
+
+    function inicializarSupabase() {
+        clienteSupabase = null;
+        const url = String(db.config?.supabaseUrl || '').trim();
+        const chave = String(db.config?.supabaseAnonKey || '').trim();
+        if (!url || !chave || !window.supabase?.createClient) return false;
+        try {
+            clienteSupabase = window.supabase.createClient(url, chave);
+            return true;
+        } catch (erro) {
+            console.error('Configuração do Supabase inválida:', erro);
+            clienteSupabase = null;
+            return false;
+        }
     }
 
     async function carregarDadosDasColecoes() {
@@ -2455,8 +2490,8 @@
                         <td class="p-3.5 text-slate-300">${m.tipo}</td>
                         <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.data)}</td>
                         <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.proxima)}</td>
-                        <td class="p-3.5 text-slate-400 text-xs">${m.laudoNome || m.laudo || (m.laudoStoragePath ? 'Laudo anexado' : '-')}
-                            ${m.laudoStoragePath ? `<button onclick="baixarLaudo('${m.id}')" class="ml-2 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><div class="mt-1 max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no Firebase Storage">Armazenado em: <code>${escaparTextoChamado(m.laudoStoragePath)}</code></div>` : (typeof m.laudo === 'string' && /^https?:\/\//i.test(m.laudo) ? `<a href="${m.laudo}" target="_blank" rel="noopener noreferrer" class="ml-2 text-sky-300 underline">Abrir</a>` : '')}
+                        <td class="p-3.5 text-slate-400 text-xs">${m.laudoNome || m.laudo || (temLaudoArmazenado(m) ? 'Laudo anexado' : '-')}
+                            ${temLaudoArmazenado(m) ? `<button onclick="baixarLaudo('${m.id}')" class="ml-2 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><div class="mt-1 max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no armazenamento de laudos">Armazenado em: <code>${escaparTextoChamado(caminhoLaudoRegistro(m))}</code></div>` : (typeof m.laudo === 'string' && /^https?:\/\//i.test(m.laudo) ? `<a href="${m.laudo}" target="_blank" rel="noopener noreferrer" class="ml-2 text-sky-300 underline">Abrir</a>` : '')}
                         </td>
                         <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${obterStatusManutencao(m).classes}">${obterStatusManutencao(m).texto}</span></td>
                         <td class="p-3.5 text-center space-x-2">
@@ -2508,10 +2543,10 @@
                 document.getElementById('man-laudo-info').textContent = 'Nenhum arquivo novo selecionado.';
                 const laudoExistente = document.getElementById('man-laudo-existente');
                 laudoExistente.replaceChildren();
-                if (m.laudoStoragePath) {
+                if (temLaudoArmazenado(m)) {
                     laudoExistente.classList.remove('hidden');
                     const nomeLaudo = document.createElement('span');
-                    nomeLaudo.textContent = `Laudo atual: ${m.laudoNome || m.laudo || 'arquivo anexado'} — Firebase Storage: ${m.laudoStoragePath} `;
+                    nomeLaudo.textContent = `Laudo atual: ${m.laudoNome || m.laudo || 'arquivo anexado'} — armazenado em: ${caminhoLaudoRegistro(m)} `;
                     laudoExistente.appendChild(nomeLaudo);
                     const botaoBaixar = document.createElement('button');
                     botaoBaixar.type = 'button';
@@ -2558,15 +2593,66 @@
         info.textContent = `Novo laudo selecionado: ${arquivo.name} (${(arquivo.size / 1024 / 1024).toFixed(2)} MB).`;
     }
 
-    async function baixarArquivoLaudo(storagePath, nomeArquivo) {
-        if (!firebaseStorage) return alert('O Firebase Storage não está conectado. Não é possível localizar o arquivo.');
+    function temLaudoArmazenado(registro) {
+        return !!(registro?.laudoSupabasePath || registro?.laudoStoragePath);
+    }
+
+    function caminhoLaudoRegistro(registro) {
+        return registro?.laudoSupabasePath || registro?.laudoStoragePath || '';
+    }
+
+    function provedorLaudoRegistro(registro) {
+        return registro?.laudoSupabasePath || registro?.laudoStorageProvider === 'supabase' ? 'supabase' : 'firebase';
+    }
+
+    function nomeSeguroLaudo(nome) {
+        return String(nome || 'laudo.pdf').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120) || 'laudo.pdf';
+    }
+
+    async function enviarLaudoSupabase(arquivo, categoria, registroId) {
+        if (!firestoreDb) throw new Error('Firebase/Firestore não está conectado para salvar os dados do registro.');
+        if (!inicializarSupabase()) throw new Error('Informe a Project URL e a chave pública do Supabase em Configurações.');
+        const caminho = `${categoria}/${registroId}/${Date.now()}_${nomeSeguroLaudo(arquivo.name)}`;
+        const { error } = await clienteSupabase.storage.from(SUPABASE_BUCKET_LAUDOS).upload(caminho, arquivo, {
+            contentType: 'application/pdf',
+            upsert: false
+        });
+        if (error) throw error;
+        return caminho;
+    }
+
+    async function removerLaudoSupabase(caminho) {
+        if (!caminho || !inicializarSupabase()) return;
+        const { error } = await clienteSupabase.storage.from(SUPABASE_BUCKET_LAUDOS).remove([caminho]);
+        if (error) console.warn('Não foi possível remover o laudo antigo do Supabase:', error);
+    }
+
+    async function removerLaudoRegistro(registro) {
+        if (!registro) return;
+        if (registro.laudoSupabasePath || registro.laudoStorageProvider === 'supabase') {
+            await removerLaudoSupabase(registro.laudoSupabasePath || registro.laudoStoragePath);
+        } else if (registro.laudoStoragePath && firebaseStorage) {
+            await firebaseStorage.ref(registro.laudoStoragePath).delete().catch(erro => console.warn('Laudo anterior mantido no Firebase Storage:', erro));
+        }
+    }
+
+    async function baixarArquivoLaudo(storagePath, nomeArquivo, provedor = 'firebase') {
         if (!storagePath) return alert('Este registro ainda não possui um caminho de arquivo salvo.');
-        let url = '';
         try {
-            url = await firebaseStorage.ref(storagePath).getDownloadURL();
-            const resposta = await fetch(url);
-            if (!resposta.ok) throw new Error(`Falha ao obter o arquivo (HTTP ${resposta.status}).`);
-            const blob = await resposta.blob();
+            let blob;
+            if (provedor === 'supabase') {
+                if (!inicializarSupabase()) throw new Error('Configure o Supabase em Configurações para baixar este laudo.');
+                const { data, error } = await clienteSupabase.storage.from(SUPABASE_BUCKET_LAUDOS).download(storagePath);
+                if (error) throw error;
+                blob = data;
+            } else {
+                if (!firebaseStorage) throw new Error('Firebase Storage não conectado para localizar um laudo antigo.');
+                const url = await firebaseStorage.ref(storagePath).getDownloadURL();
+                const resposta = await fetch(url);
+                if (!resposta.ok) throw new Error(`Falha ao obter o arquivo (HTTP ${resposta.status}).`);
+                blob = await resposta.blob();
+            }
             const urlTemporaria = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = urlTemporaria;
@@ -2574,23 +2660,18 @@
             document.body.appendChild(link);
             link.click();
             link.remove();
-            setTimeout(() => URL.revokeObjectURL(urlTemporaria), 1000);
+            setTimeout(() => URL.revokeObjectURL(urlTemporaria), 30000);
         } catch (erro) {
             console.error('Falha ao baixar laudo:', erro);
-            if (url) {
-                window.open(url, '_blank', 'noopener,noreferrer');
-                alert('O navegador abriu o PDF em outra aba. Use o botão de download do visualizador para salvá-lo.');
-            } else {
-                alert('Não foi possível localizar o laudo. Verifique o caminho exibido no registro e as regras/permissões do Firebase Storage.');
-            }
+            alert(`Não foi possível baixar o laudo. Confira a configuração do Supabase, as políticas de acesso do bucket e o caminho salvo.\n${erro.message || erro}`);
         }
     }
 
     async function baixarLaudo(id) {
         const manutencao = db.manutencoes.find(item => String(item.id) === String(id));
         if (!manutencao) return alert('Registro de manutenção não encontrado.');
-        if (!manutencao.laudoStoragePath) return alert('Este registro não possui arquivo armazenado no Firebase Storage.');
-        await baixarArquivoLaudo(manutencao.laudoStoragePath, manutencao.laudoNome || 'laudo.pdf');
+        if (!temLaudoArmazenado(manutencao)) return alert('Este registro não possui laudo armazenado.');
+        await baixarArquivoLaudo(caminhoLaudoRegistro(manutencao), manutencao.laudoNome || 'laudo.pdf', provedorLaudoRegistro(manutencao));
     }
 
     function fecharModalManutencao() { document.getElementById('modal-manutencao').classList.add('hidden'); }
@@ -2618,34 +2699,30 @@
             laudo: manutencaoAnterior?.laudo || '',
             status: obterStatusManutencao({ data: dataRealizada, proxima: proximaManutencao }).texto
         };
-        let novoLaudoRef = null;
+        let novoLaudoPath = null;
         if (arquivoLaudoSelecionado) {
-            if (!firestoreDb || !firebaseStorage) return alert('Para anexar laudos, conecte o Firebase e habilite o Firebase Storage.');
-            const nomeSeguro = arquivoLaudoSelecionado.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120) || 'laudo.pdf';
-            const caminho = `laudos/${manId}/${Date.now()}_${nomeSeguro}`;
-            novoLaudoRef = firebaseStorage.ref(caminho);
             try {
-                await novoLaudoRef.put(arquivoLaudoSelecionado, { contentType: 'application/pdf', contentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(arquivoLaudoSelecionado.name)}` });
-                dados.laudoStoragePath = caminho;
+                novoLaudoPath = await enviarLaudoSupabase(arquivoLaudoSelecionado, 'manutencoes', manId);
+                dados.laudoSupabasePath = novoLaudoPath;
+                dados.laudoStorageProvider = 'supabase';
+                delete dados.laudoStoragePath;
                 dados.laudoNome = arquivoLaudoSelecionado.name;
                 dados.laudoContentType = 'application/pdf';
                 dados.laudoAtualizadoEm = new Date().toISOString();
             } catch (erro) {
-                console.error('Falha ao enviar laudo:', erro);
-                return alert('Não foi possível enviar o laudo. Verifique se o Firebase Storage está habilitado e as regras permitem o envio.');
+                console.error('Falha ao enviar laudo da manutenção ao Supabase:', erro);
+                return alert(`Não foi possível enviar o laudo ao Supabase. Verifique Project URL, chave, bucket “laudos” e políticas de acesso.\n${erro.message || erro}`);
             }
         }
         try {
             if (firestoreDb) await firestoreDb.collection('manutencoes').doc(manId).set(dados);
             else if (arquivoLaudoSelecionado) throw new Error('Banco de dados indisponível.');
         } catch (erro) {
-            if (novoLaudoRef) await novoLaudoRef.delete().catch(() => {});
+            if (novoLaudoPath) await removerLaudoSupabase(novoLaudoPath);
             console.error('Falha ao salvar manutenção:', erro);
-            return alert('Não foi possível salvar a manutenção. O registro anterior foi mantido; tente novamente.');
+            return alert('Não foi possível salvar a manutenção no Firestore. O registro anterior foi mantido; tente novamente.');
         }
-        if (novoLaudoRef && manutencaoAnterior?.laudoStoragePath) {
-            firebaseStorage.ref(manutencaoAnterior.laudoStoragePath).delete().catch(erro => console.warn('Laudo anterior mantido no armazenamento:', erro));
-        }
+        if (novoLaudoPath && manutencaoAnterior) await removerLaudoRegistro(manutencaoAnterior);
         arquivoLaudoSelecionado = null;
         const idx = db.manutencoes.findIndex(m => m.id == manId);
         if (idx !== -1) db.manutencoes[idx] = dados;
@@ -3027,8 +3104,8 @@
     async function baixarLaudoRastreabilidade(id) {
         const transferencia = db.transferencias.find(item => String(item.id) === String(id));
         if (!transferencia) return alert('Registro de rastreabilidade não encontrado.');
-        if (!transferencia.laudoStoragePath) return alert('Este registro não possui laudo armazenado.');
-        await baixarArquivoLaudo(transferencia.laudoStoragePath, transferencia.laudoNome || 'laudo.pdf');
+        if (!temLaudoArmazenado(transferencia)) return alert('Este registro não possui laudo armazenado.');
+        await baixarArquivoLaudo(caminhoLaudoRegistro(transferencia), transferencia.laudoNome || 'laudo.pdf', provedorLaudoRegistro(transferencia));
     }
 
     function renderizarRastreabilidade() {
@@ -3039,8 +3116,8 @@
         } else {
             let html = '';
             db.transferencias.forEach(t => {
-                const laudo = t.laudoStoragePath
-                    ? `<div class="flex flex-col gap-1"><span class="text-slate-200">${escaparTextoChamado(t.laudoNome || 'PDF anexado')}</span><button type="button" onclick="baixarLaudoRastreabilidade('${t.id}')" class="w-fit bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><code class="max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no Firebase Storage">${escaparTextoChamado(t.laudoStoragePath)}</code></div>`
+                const laudo = temLaudoArmazenado(t)
+                    ? `<div class="flex flex-col gap-1"><span class="text-slate-200">${escaparTextoChamado(t.laudoNome || 'PDF anexado')}</span><button type="button" onclick="baixarLaudoRastreabilidade('${t.id}')" class="w-fit bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><code class="max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no armazenamento de laudos">${escaparTextoChamado(caminhoLaudoRegistro(t))}</code></div>`
                     : (t.laudo ? escaparTextoChamado(t.laudo) : '<span class="text-slate-500">—</span>');
                 html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${formatarDataBrasileira(t.data)}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td><td class="p-3.5 text-xs">${laudo}</td></tr>`;
             });
@@ -3092,22 +3169,19 @@
             motivo: document.getElementById('tr-motivo').value
         };
 
-        let novoLaudoRef = null;
+        let novoLaudoPath = null;
         const arquivo = arquivoLaudoRastreabilidadeSelecionado;
         if (arquivo) {
-            if (!firestoreDb || !firebaseStorage) return alert('Para anexar um PDF à rastreabilidade, conecte o Firebase e habilite o Firebase Storage.');
-            const nomeSeguro = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120) || 'laudo.pdf';
-            const caminho = `laudos/rastreabilidade/${trId}/${Date.now()}_${nomeSeguro}`;
-            novoLaudoRef = firebaseStorage.ref(caminho);
             try {
-                await novoLaudoRef.put(arquivo, { contentType: 'application/pdf', contentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(arquivo.name)}` });
-                dados.laudoStoragePath = caminho;
+                novoLaudoPath = await enviarLaudoSupabase(arquivo, 'rastreabilidade', trId);
+                dados.laudoSupabasePath = novoLaudoPath;
+                dados.laudoStorageProvider = 'supabase';
                 dados.laudoNome = arquivo.name;
                 dados.laudoContentType = 'application/pdf';
                 dados.laudoAtualizadoEm = new Date().toISOString();
             } catch (erro) {
-                console.error('Falha ao enviar laudo da rastreabilidade:', erro);
-                return alert(`Não foi possível enviar o PDF. Verifique o Firebase Storage e as permissões. Caminho previsto: ${caminho}`);
+                console.error('Falha ao enviar laudo da rastreabilidade ao Supabase:', erro);
+                return alert(`Não foi possível enviar o PDF ao Supabase. Verifique Project URL, chave, bucket “laudos” e políticas de acesso.\n${erro.message || erro}`);
             }
         }
 
@@ -3121,9 +3195,9 @@
                 throw new Error('O banco de dados está desconectado.');
             }
         } catch (erro) {
-            if (novoLaudoRef) await novoLaudoRef.delete().catch(() => {});
+            if (novoLaudoPath) await removerLaudoSupabase(novoLaudoPath);
             console.error('Falha ao salvar transferência:', erro);
-            return alert('Não foi possível salvar a transferência. O PDF enviado foi removido para evitar arquivo órfão; tente novamente.');
+            return alert('Não foi possível salvar a transferência. O PDF enviado foi removido do Supabase para evitar arquivo órfão; tente novamente.');
         }
 
         eq.setor = destino;
@@ -3890,6 +3964,8 @@
         if (document.getElementById('config-url-publica')) document.getElementById('config-url-publica').value = db.config.urlPublica || '';
         if (document.getElementById('config-gemini-key')) document.getElementById('config-gemini-key').value = db.config.geminiKey || '';
         if (document.getElementById('config-copyright')) document.getElementById('config-copyright').value = db.config.copyright || '';
+        if (document.getElementById('config-supabase-url')) document.getElementById('config-supabase-url').value = db.config.supabaseUrl || '';
+        if (document.getElementById('config-supabase-anon-key')) document.getElementById('config-supabase-anon-key').value = db.config.supabaseAnonKey || '';
         if (document.getElementById('config-cor') && db.config.cor) document.getElementById('config-cor').value = db.config.cor;
 
         document.getElementById('texto-copyright').innerText = db.config.copyright || '© 2026 Laboratório Pasteur SM - Todos os direitos reservados.';
@@ -3900,6 +3976,8 @@
         db.config.cor = document.getElementById('config-cor').value;
         db.config.urlPublica = document.getElementById('config-url-publica').value.trim();
         db.config.copyright = document.getElementById('config-copyright').value.trim() || '© 2026 Laboratório Pasteur SM';
+        db.config.supabaseUrl = document.getElementById('config-supabase-url').value.trim().replace(/\/$/, '');
+        db.config.supabaseAnonKey = document.getElementById('config-supabase-anon-key').value.trim();
         const chaveApi = document.getElementById('config-gemini-key').value.trim();
         if (chaveApi) db.config.geminiKey = chaveApi;
 
@@ -3909,6 +3987,7 @@
             reader.onload = async function(e) {
                 db.config.logo = e.target.result;
                 await salvarConfiguracoesFirebase();
+                inicializarSupabase();
                 aplicarConfiguracoes();
                 aplicarModulosSistema();
                 alert('Salvo com sucesso!');
@@ -3916,6 +3995,7 @@
             reader.readAsDataURL(logoInput.files[0]);
         } else {
             await salvarConfiguracoesFirebase();
+            inicializarSupabase();
             aplicarConfiguracoes();
             aplicarModulosSistema();
             alert('Salvo com sucesso!');
