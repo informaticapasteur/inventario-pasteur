@@ -96,6 +96,133 @@
         background-size: 20px 20px;
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
+
+
+    /* Ajustes de responsividade para telas menores */
+    @media (max-width: 767px) {
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        #app-principal,
+        #app-principal > main,
+        #app-principal main {
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        #app-principal > header {
+            flex-wrap: wrap;
+            gap: .75rem;
+            padding: .75rem !important;
+        }
+
+        #app-principal > header > div:last-child {
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        #banner-alerta-criticos {
+            flex-wrap: wrap;
+            gap: .75rem;
+            padding: .75rem !important;
+        }
+
+        #app-principal > nav {
+            gap: .4rem;
+            padding: .5rem .75rem !important;
+            overscroll-behavior-x: contain;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #app-principal > nav > button {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        #app-principal main {
+            padding: .75rem !important;
+        }
+
+        #app-principal main section > .flex.items-center.justify-between,
+        #app-principal main section > .flex.flex-wrap.items-center.justify-between {
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: .75rem;
+        }
+
+        #app-principal main section > .flex.items-center.justify-between > button,
+        #app-principal main section > .flex.flex-wrap.items-center.justify-between > button {
+            max-width: 100%;
+            white-space: normal;
+        }
+
+        #aba-setores .flex:has(> input) {
+            flex-wrap: wrap;
+        }
+
+        #aba-setores .flex:has(> input) > input {
+            min-width: 0;
+            flex-basis: 100%;
+        }
+
+        /* Tabelas extensas passam a rolar horizontalmente, em vez de serem cortadas. */
+        #aba-monitoramento .overflow-hidden,
+        #aba-manutencao .overflow-hidden,
+        #aba-validacao .overflow-hidden,
+        #aba-financeiro .overflow-hidden,
+        #aba-rastreabilidade .overflow-hidden,
+        #aba-usuarios .overflow-hidden,
+        #aba-helpdesk .overflow-hidden,
+        #aba-setores .overflow-hidden {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #app-principal main table {
+            min-width: max-content;
+        }
+
+        #app-principal main th,
+        #app-principal main td {
+            white-space: nowrap;
+        }
+
+        #aba-relatorios > .grid:first-child {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #app-principal main input,
+        #app-principal main select,
+        #app-principal main textarea {
+            max-width: 100%;
+        }
+
+        #app-principal main canvas,
+        #app-principal main img {
+            max-width: 100%;
+        }
+    }
+
+    @media (max-width: 380px) {
+        #aba-relatorios > .grid:first-child {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        #app-principal > header > div:first-child {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        #empresa-nome {
+            overflow-wrap: anywhere;
+        }
+    }
+
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
