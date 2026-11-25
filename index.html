@@ -1121,7 +1121,7 @@
                 <input type="file" id="man-laudo-arquivo" accept=".pdf,application/pdf" onchange="selecionarArquivoLaudo(this)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200">
                 <p id="man-laudo-info" class="mt-1 text-[11px] text-slate-400">Nenhum arquivo novo selecionado.</p>
                 <div id="man-laudo-existente" class="hidden mt-2 text-xs text-sky-300"></div>
-                <p class="text-[10px] text-slate-500">Ao editar, deixe sem seleção para manter o laudo já anexado.</p>
+                <p class="text-[10px] text-slate-500">Ao editar, deixe sem seleção para manter o laudo já anexado ou use “Remover laudo” para excluí-lo.</p>
             </div>
         </div>
         <div class="flex justify-end gap-2 pt-3">
@@ -2618,7 +2618,7 @@
                         <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.data)}</td>
                         <td class="p-3.5 text-slate-300">${formatarDataBrasileira(m.proxima)}</td>
                         <td class="p-3.5 text-slate-400 text-xs">${m.laudoNome || m.laudo || (temLaudoArmazenado(m) ? 'Laudo anexado' : '-')}
-                            ${temLaudoArmazenado(m) ? `<button onclick="baixarLaudo('${m.id}')" class="ml-2 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><div class="mt-1 max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no armazenamento de laudos">Armazenado em: <code>${escaparTextoChamado(caminhoLaudoRegistro(m))}</code></div>` : (typeof m.laudo === 'string' && /^https?:\/\//i.test(m.laudo) ? `<a href="${m.laudo}" target="_blank" rel="noopener noreferrer" class="ml-2 text-sky-300 underline">Abrir</a>` : '')}
+                            ${temLaudoArmazenado(m) ? `<button onclick="baixarLaudo('${m.id}')" class="ml-2 bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><button type="button" onclick="excluirLaudoAnexado('manutencao', '${m.id}')" class="ml-1 bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Excluir laudo"><i class="fa-solid fa-trash"></i> Excluir</button><div class="mt-1 max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no armazenamento de laudos">Armazenado em: <code>${escaparTextoChamado(caminhoLaudoRegistro(m))}</code></div>` : (typeof m.laudo === 'string' && /^https?:\/\//i.test(m.laudo) ? `<a href="${m.laudo}" target="_blank" rel="noopener noreferrer" class="ml-2 text-sky-300 underline">Abrir</a>` : '')}
                         </td>
                         <td class="p-3.5"><span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold ${obterStatusManutencao(m).classes}">${obterStatusManutencao(m).texto}</span></td>
                         <td class="p-3.5 text-center space-x-2">
@@ -2681,6 +2681,12 @@
                     botaoBaixar.textContent = 'Baixar';
                     botaoBaixar.onclick = () => baixarLaudo(m.id);
                     laudoExistente.appendChild(botaoBaixar);
+                    const botaoExcluirLaudo = document.createElement('button');
+                    botaoExcluirLaudo.type = 'button';
+                    botaoExcluirLaudo.className = 'ml-2 text-red-300 underline cursor-pointer';
+                    botaoExcluirLaudo.textContent = 'Remover laudo';
+                    botaoExcluirLaudo.onclick = () => excluirLaudoAnexado('manutencao', m.id);
+                    laudoExistente.appendChild(botaoExcluirLaudo);
                 } else {
                     laudoExistente.classList.add('hidden');
                     if (m.laudo) document.getElementById('man-laudo-info').textContent = `Registro antigo: ${m.laudo}. Anexe um PDF para habilitar o download no sistema.`;
@@ -2799,6 +2805,64 @@
         if (!manutencao) return alert('Registro de manutenção não encontrado.');
         if (!temLaudoArmazenado(manutencao)) return alert('Este registro não possui laudo armazenado.');
         await baixarArquivoLaudo(caminhoLaudoRegistro(manutencao), manutencao.laudoNome || 'laudo.pdf', provedorLaudoRegistro(manutencao));
+    }
+
+    async function excluirLaudoAnexado(tipo, id) {
+        const manutencao = tipo === 'manutencao';
+        const colecao = manutencao ? 'manutencoes' : 'transferencias';
+        const registro = (manutencao ? db.manutencoes : db.transferencias)
+            .find(item => String(item.id) === String(id));
+        if (!registro || !temLaudoArmazenado(registro)) return alert('Este registro não possui um laudo armazenado para excluir.');
+        if (!firestoreDb) return alert('Conecte-se ao banco de dados para excluir o laudo com segurança.');
+        const nome = registro.laudoNome || 'laudo anexado';
+        if (!confirm(`Excluir permanentemente “${nome}” deste registro?`)) return;
+
+        let arquivoRemovido = false;
+        try {
+            const caminho = caminhoLaudoRegistro(registro);
+            if (provedorLaudoRegistro(registro) === 'supabase') {
+                if (!inicializarSupabase()) throw new Error('Configure a conexão com o Supabase em Configurações.');
+                if (!caminho) throw new Error('O caminho do arquivo não está salvo no registro.');
+                const { error } = await clienteSupabase.storage.from(SUPABASE_BUCKET_LAUDOS).remove([caminho]);
+                if (error) throw error;
+            } else {
+                if (!firebaseStorage) throw new Error('O armazenamento Firebase não está conectado.');
+                if (!caminho) throw new Error('O caminho do arquivo não está salvo no registro.');
+                await firebaseStorage.ref(caminho).delete();
+            }
+            arquivoRemovido = true;
+
+            const apagarCampo = firebase.firestore.FieldValue.delete();
+            const atualizacao = {
+                laudoSupabasePath: apagarCampo,
+                laudoStoragePath: apagarCampo,
+                laudoStorageProvider: apagarCampo,
+                laudoNome: apagarCampo,
+                laudoContentType: apagarCampo,
+                laudoAtualizadoEm: apagarCampo,
+                laudo: apagarCampo
+            };
+            await firestoreDb.collection(colecao).doc(String(registro.id)).update(atualizacao);
+
+            ['laudoSupabasePath', 'laudoStoragePath', 'laudoStorageProvider', 'laudoNome', 'laudoContentType', 'laudoAtualizadoEm', 'laudo']
+                .forEach(campo => delete registro[campo]);
+            if (manutencao) {
+                const info = document.getElementById('man-laudo-info');
+                if (info) info.textContent = 'O laudo anexado foi removido.';
+                const existente = document.getElementById('man-laudo-existente');
+                if (existente) { existente.replaceChildren(); existente.classList.add('hidden'); }
+                renderizarManutencao();
+            } else {
+                renderizarRastreabilidade();
+            }
+            alert('Laudo excluído com sucesso.');
+        } catch (erro) {
+            console.error('Falha ao excluir laudo anexado:', erro);
+            const detalhe = arquivoRemovido
+                ? 'O arquivo foi removido do armazenamento, mas não foi possível atualizar o registro no banco. Atualize a página e confira o registro.'
+                : 'Não foi possível excluir o arquivo. Verifique as permissões do armazenamento e tente novamente.';
+            alert(`${detalhe}\n${erro.message || erro}`);
+        }
     }
 
     function fecharModalManutencao() { document.getElementById('modal-manutencao').classList.add('hidden'); }
@@ -3235,6 +3299,10 @@
         await baixarArquivoLaudo(caminhoLaudoRegistro(transferencia), transferencia.laudoNome || 'laudo.pdf', provedorLaudoRegistro(transferencia));
     }
 
+    async function excluirLaudoRastreabilidade(id) {
+        return excluirLaudoAnexado('rastreabilidade', id);
+    }
+
     function renderizarRastreabilidade() {
         const tbody = document.getElementById('tabela-rastreio-body');
         if (!tbody) return;
@@ -3244,7 +3312,7 @@
             let html = '';
             db.transferencias.forEach(t => {
                 const laudo = temLaudoArmazenado(t)
-                    ? `<div class="flex flex-col gap-1"><span class="text-slate-200">${escaparTextoChamado(t.laudoNome || 'PDF anexado')}</span><button type="button" onclick="baixarLaudoRastreabilidade('${t.id}')" class="w-fit bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><code class="max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no armazenamento de laudos">${escaparTextoChamado(caminhoLaudoRegistro(t))}</code></div>`
+                    ? `<div class="flex flex-col gap-1"><span class="text-slate-200">${escaparTextoChamado(t.laudoNome || 'PDF anexado')}</span><button type="button" onclick="baixarLaudoRastreabilidade('${t.id}')" class="w-fit bg-sky-950/60 text-sky-300 border border-sky-800/60 hover:bg-sky-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Baixar laudo"><i class="fa-solid fa-download"></i> Baixar</button><button type="button" onclick="excluirLaudoRastreabilidade('${t.id}')" class="w-fit bg-red-950/60 text-red-300 border border-red-800/60 hover:bg-red-900 px-2 py-1 rounded-lg font-semibold cursor-pointer" title="Excluir laudo"><i class="fa-solid fa-trash"></i> Excluir</button><code class="max-w-xs break-all text-[10px] text-slate-500" title="Local do arquivo no armazenamento de laudos">${escaparTextoChamado(caminhoLaudoRegistro(t))}</code></div>`
                     : (t.laudo ? escaparTextoChamado(t.laudo) : '<span class="text-slate-500">—</span>');
                 html += `<tr class="border-b border-slate-700/50"><td class="p-3.5 text-slate-300">${formatarDataBrasileira(t.data)}</td><td class="p-3.5 text-white">${t.equipamento}</td><td class="p-3.5 text-slate-300">${t.origem}</td><td class="p-3.5 text-sky-400 font-semibold">${t.destino}</td><td class="p-3.5 text-slate-300">${t.motivo}</td><td class="p-3.5 text-xs">${laudo}</td></tr>`;
             });
