@@ -4197,29 +4197,70 @@
         }
     }
 
-    async function chamarGeminiComRetry(promptText, maxTentativas = 3) {
+    // Uma única camada de chamada para o chat e os relatórios: troca de modelo automática
+    // se o modelo principal estiver temporariamente indisponível.
+    async function chamarGeminiComRetry(promptText, maxTentativas = 2) {
         const apiKey = db.config && db.config.geminiKey ? db.config.geminiKey.trim() : '';
         if (!apiKey) throw new Error('Chave da API do Gemini não configurada nas Configurações.');
-        
-        const { GoogleGenerativeAI } = await import("https://esm.run/@google/generative-ai");
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
-        let tentativa = 0;
-        while (tentativa < maxTentativas) {
-            try {
-                const result = await model.generateContent(promptText);
-                const response = await result.response;
-                return response.text();
-            } catch (err) {
-                tentativa++;
-                if ((err.message.includes('503') || err.message.includes('high demand')) && tentativa < maxTentativas) {
-                    await new Promise(resolve => setTimeout(resolve, 2000 * tentativa));
-                    continue;
+        // IDs estáveis publicados pelo Google. Flash-Lite é o fallback rápido para indisponibilidade.
+        const modelos = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+        const tentativas = Math.max(1, Math.min(3, Number(maxTentativas) || 2));
+        let ultimoErro = null;
+
+        for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
+            for (let indiceModelo = 0; indiceModelo < modelos.length; indiceModelo++) {
+                const modelo = modelos[indiceModelo];
+                if (tentativa > 1) {
+                    await new Promise(resolve => setTimeout(resolve, 900 * tentativa));
                 }
-                throw err;
+
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelo)}:generateContent`;
+                    const resposta = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+                        body: JSON.stringify({
+                            contents: [{ role: 'user', parts: [{ text: String(promptText || '') }] }]
+                        })
+                    });
+
+                    const dados = await resposta.json().catch(() => ({}));
+                    if (!resposta.ok) {
+                        const mensagemApi = dados?.error?.message || `HTTP ${resposta.status}`;
+                        const erro = new Error(`Gemini ${modelo} (${resposta.status}): ${mensagemApi}`);
+                        erro.status = resposta.status;
+                        throw erro;
+                    }
+
+                    const partes = dados?.candidates?.[0]?.content?.parts || [];
+                    const texto = partes.map(parte => parte?.text || '').filter(Boolean).join('');
+                    if (!texto) {
+                        const motivo = dados?.promptFeedback?.blockReason || 'A API não retornou texto.';
+                        throw new Error(`Resposta vazia do Gemini (${motivo}).`);
+                    }
+
+                    if (indiceModelo > 0) {
+                        console.info(`Gemini: resposta concluída usando o modelo alternativo ${modelo}.`);
+                    }
+                    return texto;
+                } catch (erro) {
+                    ultimoErro = erro;
+                    const status = Number(erro?.status || 0);
+                    const mensagem = String(erro?.message || erro || '').toLowerCase();
+                    const indisponibilidade = [408, 429, 500, 502, 503, 504].includes(status)
+                        || status === 0
+                        || status === 404
+                        || /high demand|overload|temporarily unavailable|resource exhausted|failed to fetch|networkerror/.test(mensagem);
+
+                    // Erros de chave, permissão ou conteúdo não melhoram trocando de modelo.
+                    if (!indisponibilidade) throw erro;
+                }
             }
         }
+
+        const detalhe = ultimoErro?.message ? ` Detalhe: ${ultimoErro.message}` : '';
+        throw new Error(`Os modelos Gemini principal e alternativo estão indisponíveis no momento. Aguarde um pouco e tente novamente.${detalhe}`);
     }
 
     const CAMPOS_EDITAVEIS_IA = new Set(['codigo','nome','tipo','setor','ip','serial','posse','status','dataEntrada','dataSaida']);
